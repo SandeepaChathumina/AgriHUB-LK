@@ -1,32 +1,28 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import mongoose, { mongo } from 'mongoose';
+import mongoose from 'mongoose';
+import dotenv from 'dotenv'; 
 
-//import routes
+dotenv.config();
 
-//import models
-
+import authRoutes from './routes/authRoutes.js'; 
 
 const app = express();
 
-mongoose.connect('mongodb+srv://sandeepa:sandeepapass@cluster0.qyhffjr.mongodb.net/?appName=Cluster0').then(
-  () => {
-    console.log('Connected to MongoDB');
-  }
-).catch(
-  () => {
-    console.log('Connection failed');
-  }
-);
-
 app.use(bodyParser.json());
 
-//routes
+app.use('/api/auth', authRoutes);
 
- 
-app.listen(3000, () => {
-    console.log('Server is running on port 3000');
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log('Connected to MongoDB');
+  })
+  .catch((err) => {
+    console.log('Connection failed:', err.message); 
+  });
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });
-
-
-//mongodb+srv://sandeepa:sandeepapass@cluster0.qyhffjr.mongodb.net/?appName=Cluster0
