@@ -6,12 +6,14 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import authRoutes from './routes/authRoutes.js'; 
+import productRoutes from './routes/productRoutes.js';
 
 const app = express();
 
 app.use(bodyParser.json());
 
 app.use('/api/auth', authRoutes);
+app.use('/api/products', productRoutes);
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
