@@ -5,7 +5,7 @@ import Transporter from '../models/Transporter.js';
 import Admin from '../models/Admin.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-
+import sendEmail from '../utils/sendEmail.js';
 
 export const register = async (req, res) => {
   try {
@@ -100,5 +100,21 @@ export const getAllUsers = async (req, res) => {
 
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// --- TEMPORARY EMAIL TEST ---
+export const testEmail = async (req, res) => {
+  try {
+    await sendEmail({
+      email: req.body.email, 
+      subject: 'AgriHUB-LK Test Email',
+      message: 'Hello! If you are reading this, your Nodemailer is working perfectly!',
+    });
+
+    res.status(200).json({ message: 'Test email sent successfully!' });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: 'Email failed to send', error: error.message });
   }
 };
