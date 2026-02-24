@@ -1,6 +1,6 @@
 import express from 'express';
 // Make sure to add getAllUsers to your import list!
-import { register, login, getAllUsers,testEmail,verifyEmail } from '../controllers/authController.js';
+import { register, login, getAllUsers,testEmail,verifyEmail,requestVerificationOTP } from '../controllers/authController.js';
 
 const router = express.Router();
 
@@ -17,5 +17,7 @@ router.get('/users', getAllUsers);
 router.post('/test-email', testEmail);
 
 router.post('/verify-email', verifyEmail);
+
+router.post('/request-otp', requestVerificationOTP);
 
 export default router;

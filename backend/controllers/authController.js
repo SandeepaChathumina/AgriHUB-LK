@@ -45,26 +45,12 @@ export const register = async (req, res) => {
         return res.status(400).json({ message: 'Invalid role provided' });
     }
 
-    // --- NEW: GENERATE OTP AND EXPIRATION ---
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-    newUser.otp = otpCode;
-    newUser.otpExpires = Date.now() + 10 * 60 * 1000; // Expires in 10 minutes
-
-    // Save the user to the database with the OTP attached
+    // Just save the user normally! No OTP generated here anymore.
     await newUser.save();
 
-    // --- NEW: SEND THE OTP EMAIL ---
-    const emailMessage = `Hello ${newUser.fullName},\n\nWelcome to AgriHUB-LK! Your account verification code is: ${otpCode}\n\nThis code will expire in 10 minutes.`;
-    await sendEmail({
-      email: newUser.email,
-      subject: 'AgriHUB-LK - Verify Your Account',
-      message: emailMessage
-    });
-
-    // Update the response message to notify the user
     res.status(201).json({ 
-      message: `${role} registered successfully! Please check your email for the OTP to verify your account.`, 
-      user: { id: newUser._id, email: newUser.email, role: newUser.role } 
+      message: `${role} registered successfully! You can verify your account later.`, 
+      user: { id: newUser._id, email: newUser.email, role: newUser.role, isVerified: newUser.isVerified } 
     });
 
   } catch (error) {
@@ -131,6 +117,45 @@ export const testEmail = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: 'Email failed to send', error: error.message });
+  }
+};
+
+// --- REQUEST OTP (ON DEMAND) ---
+export const requestVerificationOTP = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // 1. Find the user
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // 2. Check if they are already verified
+    if (user.isVerified) {
+      return res.status(400).json({ message: 'Account is already verified' });
+    }
+
+    // 3. Generate new OTP and expiration (10 minutes)
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    user.otp = otpCode;
+    user.otpExpires = Date.now() + 10 * 60 * 1000; 
+
+    await user.save();
+
+    // 4. Send the Email
+    const emailMessage = `Hello ${user.fullName},\n\nYou requested an account verification code. Your OTP is: ${otpCode}\n\nThis code will expire in 10 minutes.`;
+    
+    await sendEmail({
+      email: user.email,
+      subject: 'AgriHUB-LK - Your Verification Code',
+      message: emailMessage
+    });
+
+    res.status(200).json({ message: 'OTP sent successfully to your email!' });
+
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
