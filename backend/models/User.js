@@ -14,6 +14,8 @@ const UserSchema = new mongoose.Schema({
   isVerified: { type: Boolean, default: false },
   otp: { type: String },
   otpExpires: { type: Date },
+  resetPasswordOtp: { type: String },
+  resetPasswordExpires: { type: Date },
   location: {
     address: { type: String },
     city: { type: String },

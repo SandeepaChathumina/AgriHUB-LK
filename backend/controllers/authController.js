@@ -197,3 +197,74 @@ export const verifyEmail = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
+// --- FORGOT PASSWORD (SEND OTP) ---
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Generate a 6-digit OTP for password reset
+    const resetOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Save it to the database (expires in 15 minutes)
+    user.resetPasswordOtp = resetOtp;
+    user.resetPasswordExpires = Date.now() + 15 * 60 * 1000;
+    await user.save();
+
+    // Send the email
+    const emailMessage = `Hello ${user.fullName},\n\nYou requested a password reset. Your OTP is: ${resetOtp}\n\nThis code will expire in 15 minutes. If you did not request this, please ignore this email.`;
+    
+    await sendEmail({
+      email: user.email,
+      subject: 'AgriHUB-LK - Password Reset Code',
+      message: emailMessage
+    });
+
+    res.status(200).json({ message: 'Password reset OTP sent to your email' });
+
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// --- RESET PASSWORD (UPDATE WITH NEW PASSWORD) ---
+export const resetPassword = async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // 1. Check if the OTP is valid
+    if (user.resetPasswordOtp !== otp) {
+      return res.status(400).json({ message: 'Invalid OTP' });
+    }
+
+    // 2. Check if the OTP has expired
+    if (user.resetPasswordExpires < Date.now()) {
+      return res.status(400).json({ message: 'OTP has expired. Please request a new one.' });
+    }
+
+    // 3. Hash the new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    // 4. Update the user's password and clear the reset fields
+    user.password = hashedPassword;
+    user.resetPasswordOtp = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.status(200).json({ message: 'Password reset successfully! You can now log in with your new password.' });
+
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
