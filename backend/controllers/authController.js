@@ -38,17 +38,32 @@ export const register = async (req, res) => {
       case 'Transporter':
         newUser = new Transporter(userData);
         break;
-    case 'Admin':                          
-    newUser = new Admin(userData);       
-    break;
+      case 'Admin':                          
+        newUser = new Admin(userData);       
+        break;
       default:
         return res.status(400).json({ message: 'Invalid role provided' });
     }
 
+    // --- NEW: GENERATE OTP AND EXPIRATION ---
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    newUser.otp = otpCode;
+    newUser.otpExpires = Date.now() + 10 * 60 * 1000; // Expires in 10 minutes
+
+    // Save the user to the database with the OTP attached
     await newUser.save();
 
+    // --- NEW: SEND THE OTP EMAIL ---
+    const emailMessage = `Hello ${newUser.fullName},\n\nWelcome to AgriHUB-LK! Your account verification code is: ${otpCode}\n\nThis code will expire in 10 minutes.`;
+    await sendEmail({
+      email: newUser.email,
+      subject: 'AgriHUB-LK - Verify Your Account',
+      message: emailMessage
+    });
+
+    // Update the response message to notify the user
     res.status(201).json({ 
-      message: `${role} registered successfully!`, 
+      message: `${role} registered successfully! Please check your email for the OTP to verify your account.`, 
       user: { id: newUser._id, email: newUser.email, role: newUser.role } 
     });
 
@@ -116,5 +131,44 @@ export const testEmail = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: 'Email failed to send', error: error.message });
+  }
+};
+
+// --- VERIFY OTP METHOD ---
+export const verifyEmail = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    // 1. Find the user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // 2. Check if they are already verified
+    if (user.isVerified) {
+      return res.status(400).json({ message: 'User is already verified' });
+    }
+
+    // 3. Check if the OTP matches
+    if (user.otp !== otp) {
+      return res.status(400).json({ message: 'Invalid OTP code' });
+    }
+
+    // 4. Check if the OTP has expired
+    if (user.otpExpires < Date.now()) {
+      return res.status(400).json({ message: 'OTP has expired. Please request a new one.' });
+    }
+
+    // 5. Success! Mark as verified and clear the OTP fields for security
+    user.isVerified = true;
+    user.otp = undefined;
+    user.otpExpires = undefined;
+    await user.save();
+
+    res.status(200).json({ message: 'Email verified successfully! You can now log in.' });
+
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
