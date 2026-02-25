@@ -8,6 +8,7 @@ dotenv.config();
 import authRoutes from './routes/authRoutes.js'; 
 import productRoutes from './routes/productRoutes.js';
 import orderRoutes from './routes/orderRoutes.js'; 
+import notificationRoutes from './routes/notificationRoutes.js';
 
 const app = express();
 
@@ -15,7 +16,8 @@ app.use(bodyParser.json());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
-app.use('/api/orders', orderRoutes); 
+app.use('/api/orders', orderRoutes);
+app.use('/api/notifications', notificationRoutes); 
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
