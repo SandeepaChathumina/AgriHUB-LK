@@ -11,6 +11,8 @@ import orderRoutes from './routes/orderRoutes.js';
 import vehicleRoutes from './routes/vehicleRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import userRoutes from './routes/userRoutes.js';
+import chatRoutes from './routes/chatRoutes.js';
+
 
 const app = express();
 
@@ -22,6 +24,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/notifications', notificationRoutes); 
 app.use('/api/users', userRoutes);
+app.use('/api/chat', chatRoutes);
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
