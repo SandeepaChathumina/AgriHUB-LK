@@ -1,23 +1,25 @@
-import express from 'express';
-import { 
-    placeOrder, 
-    getMyOrders, 
-    updateOrder, 
-    deleteOrder 
-} from '../controllers/orderController.js';
+import express from "express";
+import {
+  placeOrder,
+  getMyOrders,
+  updateOrder,
+  deleteOrder,
+} from "../controllers/orderController.js";
+import { protect,authorizeRoles } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// Create order
-router.post('/', placeOrder);
+router.use(protect); // All routes require authentication
 
-// Get orders by distributor
-router.get('/my-orders', getMyOrders);
+// Only Distributors can place or view their orders
+router.post('/', authorizeRoles('Distributor'), placeOrder);
+
+router.get('/my-orders', authorizeRoles('Distributor'), getMyOrders);
 
 // Update order
-router.put('/:id', updateOrder);
+router.put("/:id", authorizeRoles('Distributor'), updateOrder);
 
 // Delete order
-router.delete('/:id', deleteOrder);
+router.delete("/:id", authorizeRoles('Distributor'), deleteOrder);
 
 export default router;
