@@ -114,3 +114,85 @@ export const markAsRead = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
+// 3. Admin: Get ALL notifications (with filters for Role and Read Status)
+export const getAllNotificationsAdmin = async (req, res) => {
+  try {
+    const { role, isRead } = req.query;
+    let query = {};
+
+    // Filter by Read Status (true or false)
+    if (isRead && isRead !== 'All') {
+      query.isRead = isRead === 'true';
+    }
+
+    // Filter by User Role (Farmer, Distributor, etc.)
+    if (role && role !== 'All') {
+      // First, find all users with that specific role
+      const targetUsers = await User.find({ role }).select('_id');
+      const userIds = targetUsers.map(user => user._id);
+      
+      // Then, only look for notifications sent to those specific users
+      query.recipient = { $in: userIds };
+    }
+
+    // Fetch notifications and attach the recipient's name and role so the Admin can see who it's for
+    const notifications = await Notification.find(query)
+      .sort({ createdAt: -1 })
+      .populate('recipient', 'fullName role email')
+      .populate('sender', 'fullName');
+
+    res.status(200).json({ success: true, count: notifications.length, notifications });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// 4. Admin: Update a notification (ONLY if unread)
+export const updateNotificationAdmin = async (req, res) => {
+  try {
+    const { title, message } = req.body;
+    const notificationId = req.params.id;
+
+    const notification = await Notification.findById(notificationId);
+
+    if (!notification) {
+      return res.status(404).json({ message: 'Notification not found' });
+    }
+
+    // SECURITY CHECK: Block update if already read!
+    if (notification.isRead) {
+      return res.status(400).json({ 
+        message: 'Cannot update this notification because the user has already read it.' 
+      });
+    }
+
+    // Update the fields
+    notification.title = title || notification.title;
+    notification.message = message || notification.message;
+    await notification.save();
+
+    res.status(200).json({ message: 'Notification updated successfully', notification });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// 5. Admin: Delete a notification
+export const deleteNotificationAdmin = async (req, res) => {
+  try {
+    const notificationId = req.params.id;
+
+    const notification = await Notification.findById(notificationId);
+
+    if (!notification) {
+      return res.status(404).json({ message: 'Notification not found' });
+    }
+
+    await notification.deleteOne();
+
+    res.status(200).json({ message: 'Notification deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};

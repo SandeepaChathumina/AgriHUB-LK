@@ -3,7 +3,10 @@ import {
   getUsersForNotification, 
   sendNotification, 
   getMyNotifications, 
-  markAsRead 
+  markAsRead ,
+  getAllNotificationsAdmin,
+  updateNotificationAdmin,
+  deleteNotificationAdmin
 } from '../controllers/notificationController.js';
 import { protect, authorizeRoles } from '../middleware/authMiddleware.js';
 
@@ -18,6 +21,15 @@ router.get('/admin/users', protect, authorizeRoles('Admin'), getUsersForNotifica
 // POST /api/notifications/admin/send
 // Admin sending a notification (Single or Bulk)
 router.post('/admin/send', protect, authorizeRoles('Admin'), sendNotification);
+
+// GET /api/notifications/admin/manage?role=Farmer&isRead=false
+router.get('/admin/manage', protect, authorizeRoles('Admin'), getAllNotificationsAdmin);
+
+// PUT /api/notifications/admin/manage/:id
+router.put('/admin/manage/:id', protect, authorizeRoles('Admin'), updateNotificationAdmin);
+
+// DELETE /api/notifications/admin/manage/:id
+router.delete('/admin/manage/:id', protect, authorizeRoles('Admin'), deleteNotificationAdmin);
 
 
 // USER ROUTES (For everyone who is logged in)
