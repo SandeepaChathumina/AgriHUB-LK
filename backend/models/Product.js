@@ -4,7 +4,8 @@ const ProductSchema = new mongoose.Schema({
   farmer: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Farmer',
-    required: true
+    required: [true, 'Farmer ID is required'],
+    index: true
   },
   productName: {
     type: String,
@@ -56,7 +57,7 @@ const ProductSchema = new mongoose.Schema({
     type: Date
   },
   images: [{
-    type: String, // URLs to product images
+    type: String
   }],
   isAvailable: {
     type: Boolean,
@@ -67,6 +68,24 @@ const ProductSchema = new mongoose.Schema({
     enum: ['Available', 'Reserved', 'Sold Out', 'Pending'],
     default: 'Available'
   },
+  pickupLocation: {
+    type: {
+      type: String,
+      enum: ['Farmer Location', 'Custom Location'],
+      default: 'Farmer Location'
+    },
+    address: String,
+    city: String,
+    district: String,
+    coordinates: {
+      lat: Number,
+      lng: Number
+    },
+    instructions: {
+      type: String,
+      maxlength: [200, 'Pickup instructions cannot exceed 200 characters']
+    }
+  },
   location: {
     address: String,
     city: String,
@@ -75,13 +94,31 @@ const ProductSchema = new mongoose.Schema({
   totalSold: {
     type: Number,
     default: 0
+  },
+  viewCount: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: true
 });
 
-// Index for search functionality
+// Indexes for search
 ProductSchema.index({ productName: 'text', description: 'text', category: 'text' });
+ProductSchema.index({ farmer: 1, createdAt: -1 });
+ProductSchema.index({ status: 1, isAvailable: 1 });
+ProductSchema.index({ 'pickupLocation.district': 1, category: 1 });
+ProductSchema.index({ price: 1 });
+
+// COMMENT OUT THE PRE-SAVE MIDDLEWARE TEMPORARILY TO TEST
+// ProductSchema.pre('save', async function(next) {
+//   try {
+//     // Your code here
+//     next();
+//   } catch (error) {
+//     next(error);
+//   }
+// });
 
 const Product = mongoose.model('Product', ProductSchema);
 

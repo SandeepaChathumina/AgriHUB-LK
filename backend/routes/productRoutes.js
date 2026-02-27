@@ -6,20 +6,23 @@ import {
   getProductById,
   updateProduct,
   deleteProduct,
-  toggleAvailability
+  toggleAvailability,
+  getProductsByDistrict
 } from '../controllers/productController.js';
+import { protect, authorizeRoles } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
 // Public routes
 router.get('/', getAllProducts);
+router.get('/location/:district', getProductsByDistrict);
 router.get('/:id', getProductById);
 
-// Farmer only routes (authentication removed - now public)
-router.post('/', createProduct);
-router.get('/farmer/my-products', getMyProducts);
-router.put('/:id', updateProduct);
-router.delete('/:id', deleteProduct);
-router.patch('/:id/availability', toggleAvailability);
+// Protected routes - Farmers only
+router.post('/', protect, authorizeRoles('Farmer'), createProduct);
+router.get('/farmer/my-products', protect, authorizeRoles('Farmer'), getMyProducts);
+router.put('/:id', protect, authorizeRoles('Farmer'), updateProduct);
+router.patch('/:id/availability', protect, authorizeRoles('Farmer'), toggleAvailability);
+router.delete('/:id', protect, deleteProduct); // Delete can be by owner or admin
 
 export default router;
