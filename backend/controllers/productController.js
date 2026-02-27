@@ -9,7 +9,6 @@ export const createProduct = async (req, res) => {
     console.log('User:', req.user);
     console.log('Request body:', req.body);
     
-   
     if (!req.user) {
       return res.status(401).json({ 
         success: false,
@@ -18,7 +17,6 @@ export const createProduct = async (req, res) => {
     }
     
     const userId = req.user._id;
-    
     
     const farmer = await Farmer.findById(userId);
     if (!farmer) {
@@ -30,6 +28,7 @@ export const createProduct = async (req, res) => {
 
     const productData = req.body;
 
+    
     const requiredFields = ['productName', 'category', 'quantity', 'unit', 'price'];
     const missingFields = requiredFields.filter(field => !productData[field]);
     
@@ -40,25 +39,62 @@ export const createProduct = async (req, res) => {
       });
     }
 
-    let pickupLocation = productData.pickupLocation || {};
-    
-
-    if (!pickupLocation.type) {
-      pickupLocation.type = 'Farmer Location';
+    if (!productData.pickupLocation) {
+      return res.status(400).json({
+        success: false,
+        message: 'Pickup location is required'
+      });
     }
 
-    
-    if (pickupLocation.type === 'Farmer Location') {
-      pickupLocation = {
-        type: 'Farmer Location',
-        address: farmer.location?.address || '',
-        city: farmer.location?.city || '',
-        district: farmer.location?.district || '',
-        instructions: pickupLocation.instructions || ''
-      };
+    if (!productData.pickupLocation.address) {
+      return res.status(400).json({
+        success: false,
+        message: 'Pickup address is required'
+      });
     }
 
-   
+    if (!productData.pickupLocation.coordinates) {
+      return res.status(400).json({
+        success: false,
+        message: 'Pickup location coordinates are required'
+      });
+    }
+
+    if (!productData.pickupLocation.coordinates.lat || !productData.pickupLocation.coordinates.lng) {
+      return res.status(400).json({
+        success: false,
+        message: 'Both latitude and longitude are required for pickup location'
+      });
+    }
+
+    // Validate coordinate ranges
+    const lat = Number(productData.pickupLocation.coordinates.lat);
+    const lng = Number(productData.pickupLocation.coordinates.lng);
+
+    if (lat < -90 || lat > 90) {
+      return res.status(400).json({
+        success: false,
+        message: 'Latitude must be between -90 and 90'
+      });
+    }
+
+    if (lng < -180 || lng > 180) {
+      return res.status(400).json({
+        success: false,
+        message: 'Longitude must be between -180 and 180'
+      });
+    }
+
+    let pickupLocation = { ...productData.pickupLocation };
+    
+    
+    const isFarmerLocation = farmer.location?.coordinates && 
+      Math.abs(farmer.location.coordinates.lat - lat) < 0.0001 && 
+      Math.abs(farmer.location.coordinates.lng - lng) < 0.0001;
+
+    pickupLocation.type = isFarmerLocation ? 'Farmer Location' : 'Custom Location';
+
+    
     const product = new Product({
       productName: productData.productName,
       category: productData.category,
@@ -74,7 +110,17 @@ export const createProduct = async (req, res) => {
       images: productData.images || [],
       isAvailable: productData.isAvailable !== undefined ? productData.isAvailable : true,
       status: productData.status || 'Available',
-      pickupLocation,
+      pickupLocation: {
+        type: pickupLocation.type,
+        address: pickupLocation.address,
+        city: pickupLocation.city || farmer.location?.city || '',
+        district: pickupLocation.district || farmer.location?.district || '',
+        coordinates: {
+          lat: lat,
+          lng: lng
+        },
+        instructions: pickupLocation.instructions || ''
+      },
       farmer: userId
     });
 
@@ -112,7 +158,7 @@ export const getAllProducts = async (req, res) => {
       sortOrder = 'desc'
     } = req.query;
 
-   
+    
     const filter = { isAvailable: true };
 
     if (category) filter.category = category;
@@ -128,12 +174,12 @@ export const getAllProducts = async (req, res) => {
       if (maxPrice) filter.price.$lte = Number(maxPrice);
     }
 
-    // Text search
+    
     if (search) {
       filter.$text = { $search: search };
     }
 
-    // Pagination
+    
     const skip = (Number(page) - 1) * Number(limit);
     const sort = { [sortBy]: sortOrder === 'desc' ? -1 : 1 };
 
@@ -166,7 +212,6 @@ export const getAllProducts = async (req, res) => {
 
 export const getMyProducts = async (req, res) => {
   try {
-    
     if (!req.user) {
       return res.status(401).json({
         success: false,
@@ -210,7 +255,6 @@ export const getMyProducts = async (req, res) => {
 
 export const getProductById = async (req, res) => {
   try {
-    
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({
         success: false,
@@ -228,7 +272,7 @@ export const getProductById = async (req, res) => {
       });
     }
 
-   
+    
     product.viewCount = (product.viewCount || 0) + 1;
     await product.save();
 
@@ -249,7 +293,6 @@ export const getProductById = async (req, res) => {
 
 export const updateProduct = async (req, res) => {
   try {
-    
     if (!req.user) {
       return res.status(401).json({
         success: false,
@@ -257,7 +300,6 @@ export const updateProduct = async (req, res) => {
       });
     }
     
-   
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({
         success: false,
@@ -275,7 +317,7 @@ export const updateProduct = async (req, res) => {
       });
     }
 
-    
+   
     if (product.farmer.toString() !== userId.toString()) {
       return res.status(403).json({
         success: false,
@@ -283,17 +325,64 @@ export const updateProduct = async (req, res) => {
       });
     }
 
-
     const updateData = { ...req.body };
     
     
     if (updateData.quantity) updateData.quantity = Number(updateData.quantity);
     if (updateData.price) updateData.price = Number(updateData.price);
     
+    
     if (updateData.pickupLocation) {
       
-      if (updateData.pickupLocation.type !== 'Farmer Location') {
-        updateData.pickupLocation.type = 'Custom Location';
+      if (updateData.pickupLocation.address === '') {
+        return res.status(400).json({
+          success: false,
+          message: 'Pickup address cannot be empty'
+        });
+      }
+      
+      
+      if (updateData.pickupLocation.coordinates) {
+        if (!updateData.pickupLocation.coordinates.lat || !updateData.pickupLocation.coordinates.lng) {
+          return res.status(400).json({
+            success: false,
+            message: 'Both latitude and longitude are required for pickup location'
+          });
+        }
+        
+        
+        const lat = Number(updateData.pickupLocation.coordinates.lat);
+        const lng = Number(updateData.pickupLocation.coordinates.lng);
+
+        if (lat < -90 || lat > 90) {
+          return res.status(400).json({
+            success: false,
+            message: 'Latitude must be between -90 and 90'
+          });
+        }
+
+        if (lng < -180 || lng > 180) {
+          return res.status(400).json({
+            success: false,
+            message: 'Longitude must be between -180 and 180'
+          });
+        }
+        
+        
+        updateData.pickupLocation.coordinates = {
+          lat: lat,
+          lng: lng
+        };
+        
+        
+        const farmer = await Farmer.findById(userId);
+        if (farmer.location?.coordinates) {
+          const isFarmerLocation = 
+            Math.abs(farmer.location.coordinates.lat - lat) < 0.0001 && 
+            Math.abs(farmer.location.coordinates.lng - lng) < 0.0001;
+          
+          updateData.pickupLocation.type = isFarmerLocation ? 'Farmer Location' : 'Custom Location';
+        }
       }
     }
 
@@ -318,9 +407,9 @@ export const updateProduct = async (req, res) => {
   }
 };
 
+
 export const deleteProduct = async (req, res) => {
   try {
-   
     if (!req.user) {
       return res.status(401).json({
         success: false,
@@ -373,9 +462,9 @@ export const deleteProduct = async (req, res) => {
   }
 };
 
+
 export const toggleAvailability = async (req, res) => {
   try {
-    
     if (!req.user) {
       return res.status(401).json({
         success: false,
@@ -409,7 +498,7 @@ export const toggleAvailability = async (req, res) => {
       });
     }
 
-   
+    
     if (product.farmer.toString() !== userId.toString()) {
       return res.status(403).json({
         success: false,
@@ -469,6 +558,214 @@ export const getProductsByDistrict = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error fetching products by location',
+      error: error.message
+    });
+  }
+};
+
+export const findProductsNearby = async (req, res) => {
+  try {
+    const { lat, lng, maxDistance = 10000 } = req.query; 
+    const { page = 1, limit = 10, category, minPrice, maxPrice } = req.query;
+
+    if (!lat || !lng) {
+      return res.status(400).json({
+        success: false,
+        message: 'Latitude and longitude are required'
+      });
+    }
+
+    // Validate coordinates
+    const latitude = Number(lat);
+    const longitude = Number(lng);
+
+    if (latitude < -90 || latitude > 90) {
+      return res.status(400).json({
+        success: false,
+        message: 'Latitude must be between -90 and 90'
+      });
+    }
+
+    if (longitude < -180 || longitude > 180) {
+      return res.status(400).json({
+        success: false,
+        message: 'Longitude must be between -180 and 180'
+      });
+    }
+
+    
+    const filter = {
+      isAvailable: true,
+      status: 'Available'
+    };
+
+    if (category) {
+      filter.category = category;
+    }
+
+   
+    if (minPrice || maxPrice) {
+      filter.price = {};
+      if (minPrice) filter.price.$gte = Number(minPrice);
+      if (maxPrice) filter.price.$lte = Number(maxPrice);
+    }
+
+    const products = await Product.find(filter)
+      .populate('farmer', 'fullName phone')
+      .lean();
+
+    const productsWithDistance = products.map(product => {
+      if (product.pickupLocation?.coordinates) {
+        const distance = calculateDistance(
+          latitude,
+          longitude,
+          product.pickupLocation.coordinates.lat,
+          product.pickupLocation.coordinates.lng
+        );
+        return {
+          ...product,
+          distance: Math.round(distance * 1000) / 1000 
+        };
+      }
+      return {
+        ...product,
+        distance: null
+      };
+    })
+    .filter(p => p.distance !== null && p.distance * 1000 <= maxDistance) // Convert km to m for comparison
+    .sort((a, b) => a.distance - b.distance);
+
+    
+    const startIndex = (Number(page) - 1) * Number(limit);
+    const endIndex = startIndex + Number(limit);
+    const paginatedProducts = productsWithDistance.slice(startIndex, endIndex);
+
+    res.status(200).json({
+      success: true,
+      count: paginatedProducts.length,
+      total: productsWithDistance.length,
+      page: Number(page),
+      pages: Math.ceil(productsWithDistance.length / Number(limit)),
+      products: paginatedProducts
+    });
+  } catch (error) {
+    console.error('Find nearby products error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error finding nearby products',
+      error: error.message
+    });
+  }
+};
+
+
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; 
+  const dLat = deg2rad(lat2 - lat1);
+  const dLon = deg2rad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = R * c; 
+  return distance;
+}
+
+function deg2rad(deg) {
+  return deg * (Math.PI / 180);
+}
+
+
+export const getProductsByFarmer = async (req, res) => {
+  try {
+    const { farmerId } = req.params;
+    const { page = 1, limit = 10, status = 'Available' } = req.query;
+
+    if (!mongoose.Types.ObjectId.isValid(farmerId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid farmer ID format'
+      });
+    }
+
+    const filter = {
+      farmer: farmerId,
+      isAvailable: true,
+      status: status
+    };
+
+    const products = await Product.find(filter)
+      .populate('farmer', 'fullName phone location')
+      .skip((Number(page) - 1) * Number(limit))
+      .limit(Number(limit))
+      .sort({ createdAt: -1 });
+
+    const total = await Product.countDocuments(filter);
+
+    res.status(200).json({
+      success: true,
+      count: products.length,
+      total,
+      page: Number(page),
+      pages: Math.ceil(total / Number(limit)),
+      products
+    });
+  } catch (error) {
+    console.error('Get products by farmer error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching products by farmer',
+      error: error.message
+    });
+  }
+};
+
+export const getProductStats = async (req, res) => {
+  try {
+    const stats = await Product.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalProducts: { $sum: 1 },
+          totalValue: { $sum: { $multiply: ['$price', '$quantity'] } },
+          averagePrice: { $avg: '$price' },
+          availableProducts: {
+            $sum: { $cond: [{ $eq: ['$isAvailable', true] }, 1, 0] }
+          },
+          soldOutProducts: {
+            $sum: { $cond: [{ $eq: ['$status', 'Sold Out'] }, 1, 0] }
+          }
+        }
+      }
+    ]);
+
+    const categoryStats = await Product.aggregate([
+      {
+        $group: {
+          _id: '$category',
+          count: { $sum: 1 },
+          totalValue: { $sum: { $multiply: ['$price', '$quantity'] } }
+        }
+      }
+    ]);
+
+    res.status(200).json({
+      success: true,
+      stats: stats[0] || {
+        totalProducts: 0,
+        totalValue: 0,
+        averagePrice: 0,
+        availableProducts: 0,
+        soldOutProducts: 0
+      },
+      categoryStats
+    });
+  } catch (error) {
+    console.error('Get product stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching product statistics',
       error: error.message
     });
   }

@@ -74,12 +74,21 @@ const ProductSchema = new mongoose.Schema({
       enum: ['Farmer Location', 'Custom Location'],
       default: 'Farmer Location'
     },
-    address: String,
+    address: {
+      type: String,
+      required: [true, 'Pickup address is required']
+    },
     city: String,
     district: String,
     coordinates: {
-      lat: Number,
-      lng: Number
+      lat: {
+        type: Number,
+        required: [true, 'Latitude is required for pickup location']
+      },
+      lng: {
+        type: Number,
+        required: [true, 'Longitude is required for pickup location']
+      }
     },
     instructions: {
       type: String,
