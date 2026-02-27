@@ -8,7 +8,7 @@ import * as paymentController from "./paymentController.js";
 
 export const placeOrder = async (req, res) => {
   try {
-    const { productId, quantity } = req.body;
+    const { productId, quantity, deliveryAddress} = req.body;
 
     // 1. Validate Product and Stock
     const product = await Product.findById(productId);
@@ -30,8 +30,11 @@ export const placeOrder = async (req, res) => {
       quantity,
       totalPrice: totalPriceLKR,
       totalPriceUSD: totalPriceUSD || 0,
+      deliveryAddress,
       paymentStatus: 'unpaid', // Default status for new orders
-      status: 'Pending'
+      deliveryStatus: 'Pending',
+      status: 'Pending',
+      
     });
 
     // 4. Generate Stripe Checkout Session using the Service Layer
@@ -175,7 +178,8 @@ export const verifyPayment = async (req, res) => {
         if (session.payment_status === 'paid') {
             await Order.findByIdAndUpdate(session.metadata.orderId, { 
                 paymentStatus: 'paid', 
-                status: 'Confirmed' 
+                status: 'Confirmed',
+                deliveryStatus: 'Requested' 
             });
 
             res.send(`
