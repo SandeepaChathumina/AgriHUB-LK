@@ -1,0 +1,39 @@
+======================================================
+AGRIHUB-LK: OFFICIAL SYSTEM KNOWLEDGE BASE & USER GUIDE
+======================================================
+
+1. SYSTEM OVERVIEW
+System Name: AgriHUB-LK
+Purpose: A comprehensive agricultural supply chain platform connecting Farmers, Distributors, and Transporters in Sri Lanka to streamline crop sales and logistics.
+
+2. USER ROLES & PERMISSIONS
+The system uses strict Role-Based Access Control (RBAC). Users can only perform actions assigned to their specific role:
+- Admin: Manages the entire platform. Can view all users, delete malicious accounts, and send targeted system notifications.
+- Farmer: The primary suppliers. Once their email is verified, Farmers can add new crops to the marketplace, manage their product inventory, and view incoming orders.
+- Distributor: The buyers. Distributors can browse the marketplace, purchase crops from Farmers, and track their supply orders.
+- Transporter: The logistics partners. Transporters manage delivery vehicles and accept delivery jobs to move crops from Farmers to Distributors.
+
+3. ACCOUNT SECURITY & MANAGEMENT
+- Email Verification: New accounts must be verified before performing core actions (like a Farmer adding a crop). Users must request a verification OTP, which sends a 6-digit code to their email. The code expires in 10 minutes.
+- Forgot Password: If a user forgets their password, they can request a reset OTP from the login page. A 6-digit code will be emailed to them, which expires in 15 minutes.
+- Profile Updates: Users can update their personal details (like Full Name and Phone Number) at any time from their Profile Dashboard. 
+- Password Updates: Passwords cannot be changed directly from the profile update screen for security reasons; users must use the official password reset flow.
+- Account Deletion: Users have the right to permanently delete their own account from the Profile Dashboard.
+
+4. NOTIFICATION SYSTEM
+- Receiving Messages: Users receive direct, individualized notifications in their inbox. Clicking a notification marks it as "Read".
+- Admin Broadcasts: Admins can send bulk notifications filtered by User Role (e.g., only Farmers) and Verification Status (e.g., only Unverified users). 
+- Notification Security: Once a user has marked a notification as "Read", Admins cannot edit or alter the message. 
+
+5. FREQUENTLY ASKED QUESTIONS (FAQ)
+Q: How do I add a new crop to sell?
+A: You must be registered as a 'Farmer' and your email must be 'Verified'. Once verified, navigate to the 'My Crops' or 'Products' dashboard and click 'Add New Product'.
+
+Q: I am a Transporter. How do I start?
+A: Ensure your account is verified. You will need to register your vehicle details in the system before you can accept delivery orders.
+
+Q: Why did an Admin delete my account?
+A: Admins have the authority to remove accounts that violate platform policies, post fake products, or engage in fraudulent activities. 
+
+Q: How do I contact the System Administrator?
+A: For urgent platform issues, please send an email directly to support@agrihub.lk.
