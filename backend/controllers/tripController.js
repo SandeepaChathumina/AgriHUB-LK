@@ -3,7 +3,6 @@ import Order from '../models/Order.js';
 import Vehicle from '../models/Vehicle.js';
 import Transporter from '../models/Transporter.js';
 import mongoose from 'mongoose';
-import { calculateDistance, calculateDuration, validateCoordinates } from '../utils/distanceCalculator.js';
 
 // Check vehicle availability
 const checkVehicleAvailability = async (vehicleId, scheduledPickup, estimatedDelivery, excludeTripId = null) => {
@@ -81,8 +80,7 @@ export const createTrip = async (req, res) => {
       estimatedDelivery,
       baseFare,
       distanceCharge,
-      additionalCharges,
-      specialInstructions
+      additionalCharges
     } = req.body;
 
     const transporterId = req.user._id;
@@ -180,24 +178,6 @@ export const createTrip = async (req, res) => {
       });
     }
 
-    // Calculate distance
-    let distance = null;
-    let estimatedDuration = null;
-
-    if (pickupLocation.coordinates && dropoffLocation.coordinates) {
-      try {
-        distance = calculateDistance(
-          pickupLocation.coordinates.lat,
-          pickupLocation.coordinates.lng,
-          dropoffLocation.coordinates.lat,
-          dropoffLocation.coordinates.lng
-        );
-        estimatedDuration = calculateDuration(distance);
-      } catch (error) {
-        console.warn('Distance calculation failed:', error.message);
-      }
-    }
-
     // Create trip
     const tripData = {
       order: orderId,
@@ -207,21 +187,12 @@ export const createTrip = async (req, res) => {
         address: pickupLocation.address,
         city: pickupLocation.city || order.product?.farmer?.location?.city,
         district: pickupLocation.district || order.product?.farmer?.location?.district,
-        coordinates: pickupLocation.coordinates,
-        instructions: pickupLocation.instructions,
-        contactPerson: {
-          name: order.product?.farmer?.fullName,
-          phone: order.product?.farmer?.phone
-        }
+        coordinates: pickupLocation.coordinates
       },
       dropoffLocation: {
         address: dropoffLocation.addressLine,
         city: dropoffLocation.city,
-        coordinates: dropoffLocation.coordinates,
-        contactPerson: {
-          name: order.distributor?.fullName,
-          phone: order.distributor?.phone
-        }
+        coordinates: dropoffLocation.coordinates
       },
       schedule: {
         scheduledPickup: pickupDate,
@@ -233,9 +204,6 @@ export const createTrip = async (req, res) => {
         additionalCharges: additionalCharges || [],
         totalCost: Number(baseFare) + (Number(distanceCharge) || 0)
       },
-      distance: distance ? { value: Number(distance.toFixed(2)) } : undefined,
-      estimatedDuration,
-      specialInstructions,
       createdBy: transporterId
     };
 

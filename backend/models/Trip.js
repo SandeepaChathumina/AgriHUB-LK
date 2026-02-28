@@ -5,7 +5,6 @@ const TripSchema = new mongoose.Schema({
     type: String,
     unique: true,
     sparse: true
-    // NO index: true here - removed completely
   },
 
   order: {
@@ -43,11 +42,6 @@ const TripSchema = new mongoose.Schema({
     coordinates: {
       lat: Number,
       lng: Number
-    },
-    instructions: String,
-    contactPerson: {
-      name: String,
-      phone: String
     }
   },
 
@@ -63,11 +57,6 @@ const TripSchema = new mongoose.Schema({
     coordinates: {
       lat: Number,
       lng: Number
-    },
-    instructions: String,
-    contactPerson: {
-      name: String,
-      phone: String
     }
   },
 
@@ -83,13 +72,6 @@ const TripSchema = new mongoose.Schema({
     actualPickup: Date,
     actualDelivery: Date
   },
-
-  distance: {
-    value: Number,
-    unit: { type: String, enum: ['km'], default: 'km' }
-  },
-
-  estimatedDuration: Number,
 
   costs: {
     baseFare: {
@@ -119,8 +101,6 @@ const TripSchema = new mongoose.Schema({
     enum: ['LKR', 'USD']
   },
 
-  specialInstructions: String,
-
   timeline: [{
     status: String,
     timestamp: { type: Date, default: Date.now },
@@ -139,15 +119,13 @@ const TripSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
-// Define indexes HERE - only once
-// This is the ONLY place where indexes are defined
-TripSchema.index({ tripId: 1 });
+// Indexes
 TripSchema.index({ transporter: 1, tripStatus: 1 });
 TripSchema.index({ vehicle: 1, tripStatus: 1 });
 TripSchema.index({ 'schedule.scheduledPickup': 1 });
 
-// Generate Trip ID
-TripSchema.pre('save', async function(next) {
+// Generate Trip ID - FIXED: Don't use next() with async function
+TripSchema.pre('save', async function() {
   if (this.isNew) {
     try {
       const Trip = mongoose.model('Trip');
@@ -156,23 +134,19 @@ TripSchema.pre('save', async function(next) {
       const year = date.getFullYear().toString().slice(-2);
       const month = (date.getMonth() + 1).toString().padStart(2, '0');
       this.tripId = `TRIP${year}${month}${String(count + 1).padStart(4, '0')}`;
-      next();
     } catch (error) {
-      next(error);
+      throw error; // Just throw the error instead of passing to next()
     }
-  } else {
-    next();
   }
 });
 
-// Calculate total cost
-TripSchema.pre('save', function(next) {
+// Calculate total cost - FIXED: Don't use next parameter
+TripSchema.pre('save', function() {
   try {
     const additionalTotal = this.costs.additionalCharges?.reduce((sum, charge) => sum + (charge.amount || 0), 0) || 0;
     this.costs.totalCost = this.costs.baseFare + this.costs.distanceCharge + additionalTotal;
-    next();
   } catch (error) {
-    next(error);
+    throw error;
   }
 });
 
