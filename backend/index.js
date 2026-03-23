@@ -13,7 +13,7 @@ import notificationRoutes from './routes/notificationRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 import tripRoutes from './routes/tripRoutes.js';
-
+import reviewRoutes from './routes/reviewRoutes.js';
 
 const app = express();
 
@@ -27,7 +27,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/trips', tripRoutes);
-
+app.use('/api/reviews', reviewRoutes);
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log('Connected to MongoDB');
