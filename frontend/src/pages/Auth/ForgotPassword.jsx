@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
+import AuthNav from '../../components/AuthNav'
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('')
@@ -39,8 +40,10 @@ const ForgotPassword = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 px-4 py-10">
-      <div className="mx-auto flex max-w-md flex-col gap-6 rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
+    <div className="min-h-screen bg-slate-50 ">
+      <AuthNav />
+      <div className="px-4 py-10 mt-20">
+        <div className="mx-auto flex max-w-md flex-col gap-6 rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
         <div className="space-y-1 text-center">
           <p className="text-xs font-semibold uppercase tracking-wide text-emerald-600">Password reset</p>
           <h1 className="text-2xl font-semibold text-slate-900">Request a reset code</h1>
@@ -78,6 +81,7 @@ const ForgotPassword = () => {
             {isSubmitting ? 'Sending code...' : 'Send reset code'}
           </button>
         </form>
+      </div>
       </div>
     </div>
   )
