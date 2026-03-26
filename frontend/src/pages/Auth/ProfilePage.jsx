@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
 import { useAuth } from '../../context/AuthContext'
+import ProfileNav from '../../components/ProfileNav'
 
 const ProfilePage = () => {
   const { token, logout } = useAuth()
@@ -195,7 +196,9 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 px-4 py-10">
+    <>
+      <ProfileNav active="profile"/>
+    <div className="min-h-screen  px-4 py-10">
       <div className="mx-auto flex max-w-4xl flex-col gap-8">
         <div className="flex flex-col gap-2 text-left">
           <p className="text-xs font-semibold uppercase tracking-wide text-emerald-600">Profile management</p>
@@ -467,6 +470,7 @@ const ProfilePage = () => {
         )}
       </div>
     </div>
+    </>
   )
 }
 

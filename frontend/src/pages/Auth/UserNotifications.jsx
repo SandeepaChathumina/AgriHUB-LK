@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
 import { useAuth } from '../../context/AuthContext'
+import ProfileNav from '../../components/ProfileNav'
 
 const statusFilters = ['All', 'Unread', 'Read']
 
@@ -81,6 +82,9 @@ const UserNotifications = () => {
   const formatDate = (d) => new Date(d).toLocaleString()
 
   return (
+    <>
+        <ProfileNav />
+   
     <div className="min-h-screen bg-slate-50 px-4 py-8">
       <div className="mx-auto flex max-w-5xl flex-col gap-6">
         <header className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
@@ -164,6 +168,7 @@ const UserNotifications = () => {
         </section>
       </div>
     </div>
+     </>
   )
 }
 
