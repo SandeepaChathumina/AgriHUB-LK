@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 
 const RegisterForm = () => {
-  const [formValues, setFormValues] = useState({
+  const initialFormState = {
     // Base User Fields
     fullName: '',
     email: '',
@@ -25,15 +27,22 @@ const RegisterForm = () => {
     // Transporter Specific
     companyName: '',
     fleetSize: '',
-  });
+  };
+
+  const [formValues, setFormValues] = useState(initialFormState);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [status, setStatus] = useState({ type: '', message: '' });
+  const navigate = useNavigate();
 
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormValues((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+    setStatus({ type: '', message: '' });
+    setIsSubmitting(true);
     
     // Transform the flat state into the nested structure your backend expects
     const payload = {
@@ -53,22 +62,46 @@ const RegisterForm = () => {
     if (formValues.role === 'Farmer') {
       payload.farmSize = Number(formValues.farmSize);
       payload.nicNumber = formValues.nicNumber;
-      // Convert comma separated string to array
-      payload.mainCrops = formValues.mainCrops.split(',').map(crop => crop.trim()).filter(Boolean); 
-    } 
+      payload.mainCrops = formValues.mainCrops.split(',').map(crop => crop.trim()).filter(Boolean);
+    }
     else if (formValues.role === 'Distributor') {
       payload.businessName = formValues.businessName;
       payload.businessRegNumber = formValues.businessRegNumber;
       payload.warehouseCapacity = Number(formValues.warehouseCapacity);
-    } 
+    }
     else if (formValues.role === 'Transporter') {
       payload.companyName = formValues.companyName;
       payload.businessRegNumber = formValues.businessRegNumber;
       payload.fleetSize = Number(formValues.fleetSize);
     }
 
-    console.log("Ready to send to backend:", payload);
-    // TODO: wire up registration API call with the 'payload' object
+    try {
+      const response = await fetch('http://localhost:3000/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => ({}));
+        const message = errorBody?.message || 'Registration failed. Please try again.';
+        throw new Error(message);
+      }
+
+      await response.json();
+      setStatus({ type: 'success', message: 'Registration successful. Redirecting to home...' });
+      toast.success('Registration successful');
+      setFormValues(initialFormState);
+      navigate('/', { replace: true });
+    } catch (error) {
+      const message = error?.message || 'Registration failed. Please try again.';
+      setStatus({ type: 'error', message });
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -216,11 +249,20 @@ const RegisterForm = () => {
         )}
       </div>
 
+      {status.message && (
+        <div
+          className={`rounded-lg px-4 py-3 text-sm ${status.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}
+        >
+          {status.message}
+        </div>
+      )}
+
       <button
         type="submit"
-        className="w-full mt-4 rounded-xl bg-green-500 px-4 py-4 text-base font-bold text-white shadow-lg shadow-green-500/30 transition hover:bg-green-600 focus:ring-2 focus:ring-green-400 focus:ring-offset-2 active:scale-95"
+        disabled={isSubmitting}
+        className="w-full mt-4 rounded-xl bg-green-500 px-4 py-4 text-base font-bold text-white shadow-lg shadow-green-500/30 transition hover:bg-green-600 focus:ring-2 focus:ring-green-400 focus:ring-offset-2 active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
       >
-        Create Account
+        {isSubmitting ? 'Creating Account...' : 'Create Account'}
       </button>
     </form>
   );

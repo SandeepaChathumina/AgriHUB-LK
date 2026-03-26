@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv'; 
 import http from 'http';
 import { Server } from 'socket.io';
+import cors from 'cors';
 
 import authRoutes from './routes/authRoutes.js'; 
 import productRoutes from './routes/productRoutes.js';
@@ -20,6 +21,11 @@ dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
+
+app.use(cors({
+  origin: 'http://localhost:5173', 
+  credentials: true
+}));
 
 const io = new Server(server, {
   cors: {

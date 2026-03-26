@@ -1,20 +1,65 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
+import { useAuth } from '../../context/AuthContext';
 
 const LoginForm = () => {
-  const [formValues, setFormValues] = useState({
+  const initialFormState = {
     email: '',
     password: '',
-  });
+  };
+
+  const [formValues, setFormValues] = useState(initialFormState);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [status, setStatus] = useState({ type: '', message: '' });
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormValues((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (event) => {
+const handleSubmit = async (event) => {
     event.preventDefault();
-    console.log(formValues);
-    // TODO: wire up login API call
+    setStatus({ type: '', message: '' });
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch('http://localhost:3000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formValues),
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => ({}));
+        const message = errorBody?.message || 'Login failed. Please try again.';
+        throw new Error(message);
+      }
+
+      // ❌ Oyaage kalin code eke thibbe mehemai:
+      // await response.json(); 
+      // Eken data eka kohewath save wenne na.
+
+      // ✅ Meka mehema wenas karanna:
+      const data = await response.json();
+      
+      // Context eke thiyena login function ekata pass karanna
+      login(data.user, data.token);
+
+      setStatus({ type: 'success', message: 'Login successful. Redirecting...' });
+      toast.success('Login successful');
+      setFormValues(initialFormState);
+      
+      // Dan Dashboard ekata yanna
+      navigate('/dashboard', { replace: true });
+      
+    } catch (error) {
+      // ... error handling
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -45,11 +90,20 @@ const LoginForm = () => {
           required
         />
       </div>
+      {status.message && (
+        <div
+          className={`rounded-lg px-4 py-3 text-sm ${status.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}
+        >
+          {status.message}
+        </div>
+      )}
+
       <button
         type="submit"
-        className="w-full mt-2 rounded-xl bg-green-500 px-4 py-4 text-base font-bold text-white shadow-lg shadow-green-500/30 transition hover:bg-green-600 focus:ring-2 focus:ring-green-400 focus:ring-offset-2 active:scale-95"
+        disabled={isSubmitting}
+        className="w-full mt-2 rounded-xl bg-green-500 px-4 py-4 text-base font-bold text-white shadow-lg shadow-green-500/30 transition hover:bg-green-600 focus:ring-2 focus:ring-green-400 focus:ring-offset-2 active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
       >
-        Login
+        {isSubmitting ? 'Logging in...' : 'Login'}
       </button>
     </form>
   );
