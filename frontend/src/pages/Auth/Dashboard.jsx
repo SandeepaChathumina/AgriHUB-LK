@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
 import { useAuth } from '../../context/AuthContext'
+import FarmerPanel from './components/FarmerPanel'
+import DistributorPanel from './components/DistributorPanel'
+import TransporterPanel from './components/TransporterPanel'
+import MemberPanel from './components/MemberPanel'
 
 function Dashboard() {
   const { user, token, isAuthReady, logout } = useAuth()
@@ -55,34 +59,6 @@ function Dashboard() {
 
     fetchProfile()
   }, [token])
-
-  const roleActionMap = {
-    Farmer: [
-      { title: 'Profile', to: '/profile' },
-      { title: 'My Orders', to: '/orders' },
-      { title: 'My Crops', to: '/crops' },
-      { title: 'Messages', to: '/chat' },
-    ],
-    Distributor: [
-      { title: 'Profile', to: '/profile' },
-      { title: 'Inventory', to: '/inventory' },
-      { title: 'Orders', to: '/orders' },
-      { title: 'Messages', to: '/chat' },
-    ],
-    Transporter: [
-      { title: 'Profile', to: '/profile' },
-      { title: 'Trips', to: '/trips' },
-      { title: 'Vehicles', to: '/vehicles' },
-      { title: 'Messages', to: '/chat' },
-    ],
-    Member: [
-      { title: 'Profile', to: '/profile' },
-      { title: 'Orders', to: '/orders' },
-      { title: 'Messages', to: '/chat' },
-    ],
-  }
-
-  const links = roleActionMap[displayRole] || roleActionMap.Member
 
   const handleLogout = () => {
     logout()
@@ -181,25 +157,13 @@ function Dashboard() {
             </div>
           </div>
 
-          <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 md:col-span-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Quick Links</p>
-                <p className="mt-1 text-lg font-semibold text-slate-900">Frequently used</p>
-              </div>
-            </div>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {links.map((item) => (
-                <Link
-                  key={item.title}
-                  to={item.to}
-                  className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-emerald-200 hover:bg-white"
-                >
-                  <span>{item.title}</span>
-                  <span className="text-slate-400">→</span>
-                </Link>
-              ))}
-            </div>
+          <div className="md:col-span-2">
+            {displayRole === 'Farmer' && <FarmerPanel />}
+            {displayRole === 'Distributor' && <DistributorPanel />}
+            {displayRole === 'Transporter' && <TransporterPanel />}
+            {displayRole !== 'Farmer' && displayRole !== 'Distributor' && displayRole !== 'Transporter' && (
+              <MemberPanel />
+            )}
           </div>
         </div>
       </div>
