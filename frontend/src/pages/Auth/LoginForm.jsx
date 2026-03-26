@@ -56,7 +56,9 @@ const handleSubmit = async (event) => {
       navigate('/dashboard', { replace: true });
       
     } catch (error) {
-      // ... error handling
+      const message = error?.message || 'Login failed. Please try again.';
+      setStatus({ type: 'error', message });
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -105,6 +107,12 @@ const handleSubmit = async (event) => {
       >
         {isSubmitting ? 'Logging in...' : 'Login'}
       </button>
+
+      <div className="text-right text-sm text-emerald-700 font-semibold">
+        <button type="button" onClick={() => navigate('/forgot-password')} className="underline hover:text-emerald-800">
+          Forgot password?
+        </button>
+      </div>
     </form>
   );
 };
