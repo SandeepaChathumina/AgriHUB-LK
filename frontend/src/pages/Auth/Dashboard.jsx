@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { use, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
 import { useAuth } from '../../context/AuthContext'
@@ -19,6 +19,10 @@ function Dashboard() {
   const displayRole = profile?.role || user?.role || 'Member'
   const initial = (displayName?.[0] || 'U').toUpperCase()
   const isVerified = Boolean(profile?.isVerified ?? user?.isVerified)
+
+  useEffect(() => {
+  console.log('auth user', user)
+}, [user])
 
   useEffect(() => {
     if (!isAuthReady) return
@@ -97,6 +101,7 @@ function Dashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-10">
+       
       <div className="mx-auto flex max-w-5xl flex-col gap-8">
         <div className="flex flex-col gap-3 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">

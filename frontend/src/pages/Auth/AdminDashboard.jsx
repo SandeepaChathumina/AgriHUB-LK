@@ -3,9 +3,10 @@ import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
 import { useAuth } from '../../context/AuthContext'
 
+import { adminLinks } from '../../config/adminLinks' 
+
 function AdminDashboard() {
   const { user, token, isAuthReady, logout } = useAuth()
-
   const [profile, setProfile] = useState(null)
   const [loadingProfile, setLoadingProfile] = useState(false)
   const [requestingOtp, setRequestingOtp] = useState(false)
@@ -16,31 +17,25 @@ function AdminDashboard() {
   const initial = (displayName?.[0] || 'A').toUpperCase()
   const isVerified = Boolean(profile?.isVerified ?? user?.isVerified)
 
-  // Gate access: require auth and enforce admin role
   useEffect(() => {
     if (!isAuthReady) return
-
     if (!token) {
       navigate('/login')
       return
     }
-
     const role = profile?.role || user?.role
     if (role && role !== 'Admin') {
       navigate('/dashboard')
     }
   }, [token, user?.role, profile?.role, navigate, isAuthReady])
 
-  // Load full profile so email + verification state are fresh
   useEffect(() => {
     if (!token) return
     const fetchProfile = async () => {
       setLoadingProfile(true)
       try {
         const res = await fetch('http://localhost:3000/api/users/profile', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         })
         if (!res.ok) {
           const body = await res.json().catch(() => ({}))
@@ -54,18 +49,8 @@ function AdminDashboard() {
         setLoadingProfile(false)
       }
     }
-
     fetchProfile()
   }, [token])
-
-  const links = [
-    { title: 'Manage Users', to: '/admin/users' },
-    { title: 'Manage Notifications', to: '/admin/notifications' },
-    { title: 'Manage Profile', to: '/profile' },
-    { title: 'Verify Email', to: '/verify-email' },
-    { title: 'Reset Password', to: '/reset-password' },
-    { title: 'Home', to: '/' },
-  ]
 
   const handleLogout = () => {
     logout()
@@ -78,7 +63,6 @@ function AdminDashboard() {
       return
     }
     const email = profile?.email || user?.email
-
     setRequestingOtp(true)
     try {
       const res = await fetch('http://localhost:3000/api/auth/request-otp', {
@@ -86,12 +70,10 @@ function AdminDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       })
-
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
         throw new Error(body?.message || 'Failed to request OTP')
       }
-
       const body = await res.json().catch(() => ({}))
       toast.success(body?.message || 'OTP sent to your email')
       navigate('/verify-email', { state: { email } })
@@ -105,6 +87,8 @@ function AdminDashboard() {
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-10">
       <div className="mx-auto flex max-w-5xl flex-col gap-8">
+        
+        
         <div className="flex flex-col gap-3 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-xl font-bold text-emerald-700">
@@ -144,24 +128,7 @@ function AdminDashboard() {
 
         <div className="grid gap-4 md:grid-cols-3">
           <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Profile</p>
-            <p className="mt-2 text-lg font-semibold text-slate-900">Overview</p>
-            <div className="mt-4 space-y-2 text-sm text-slate-700">
-              <div className="flex justify-between">
-                <span>Name</span>
-                <span className="font-semibold text-slate-900">{displayName}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Role</span>
-                <span className="font-semibold text-slate-900">{displayRole}</span>
-              </div>
-              {token && (
-                <div className="flex justify-between">
-                  <span>Session</span>
-                  <span className="truncate text-emerald-700" title={token}>Active</span>
-                </div>
-              )}
-            </div>
+       
           </div>
 
           <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 md:col-span-2">
@@ -171,8 +138,9 @@ function AdminDashboard() {
                 <p className="mt-1 text-lg font-semibold text-slate-900">Key actions</p>
               </div>
             </div>
+            
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {links.map((item) => (
+              {adminLinks.map((item) => (
                 <Link
                   key={item.title}
                   to={item.to}
@@ -183,6 +151,7 @@ function AdminDashboard() {
                 </Link>
               ))}
             </div>
+
           </div>
         </div>
       </div>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
-import AuthNav from '../../components/AuthNav'
+import NavForVerify from '../../components/NavForVerify'
 
 const VerifyEmail = () => {
   const location = useLocation()
@@ -54,7 +54,7 @@ const VerifyEmail = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-10">
-      <AuthNav />
+      <NavForVerify />
       <div className="mx-auto flex max-w-md flex-col gap-6 rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200 mt-20">
         <div className="space-y-1 text-center">
           <p className="text-xs font-semibold uppercase tracking-wide text-emerald-600">Verify your account</p>

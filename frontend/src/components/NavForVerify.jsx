@@ -2,7 +2,7 @@ import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
-const AdminNav = () => {
+const NavForVerify = () => {
   const { logout } = useAuth()
   const navigate = useNavigate()
 
@@ -18,7 +18,7 @@ const AdminNav = () => {
           AgriHUB.LK
         </Link>
         <nav className="flex items-center gap-3 text-sm font-semibold">
-          <Link to="/admin-dashboard" className="rounded-lg px-3 py-2 text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-700">Dashboard</Link>
+          <Link to="/dashboard" className="rounded-lg px-3 py-2 text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-700">Dashboard</Link>
           <button
             type="button"
             onClick={handleLogout}
@@ -32,4 +32,4 @@ const AdminNav = () => {
   )
 }
 
-export default AdminNav
+export default NavForVerify

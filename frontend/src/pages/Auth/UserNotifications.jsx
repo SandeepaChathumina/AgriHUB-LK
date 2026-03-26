@@ -85,7 +85,7 @@ const UserNotifications = () => {
     <>
         <ProfileNav />
    
-    <div className="min-h-screen bg-slate-50 px-4 py-8">
+    <div className="min-h-screen px-4 py-8">
       <div className="mx-auto flex max-w-5xl flex-col gap-6">
         <header className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <div>

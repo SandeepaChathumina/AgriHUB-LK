@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
 import { useAuth } from '../../context/AuthContext'
+import AdminNav from '../../components/AdminNav'
 
 function AdminUsers() {
   const { token, user, isAuthReady, logout } = useAuth()
@@ -80,7 +81,12 @@ function AdminUsers() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 px-4 py-10">
+
+    <>
+
+    <AdminNav />
+
+    <div className="min-h-screen px-4 py-10">
       <div className="mx-auto flex max-w-6xl flex-col gap-6">
         <div className="flex flex-col gap-3 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 md:flex-row md:items-center md:justify-between">
           <div>
@@ -89,18 +95,7 @@ function AdminUsers() {
             <p className="text-sm text-slate-600">View and remove users. Admin token required.</p>
           </div>
           <div className="flex gap-3">
-            <button
-              onClick={() => navigate('/admin-dashboard')}
-              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50"
-            >
-              Back to Admin Dashboard
-            </button>
-            <button
-              onClick={() => { logout(); navigate('/') }}
-              className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
-            >
-              Logout
-            </button>
+           
           </div>
         </div>
 
@@ -159,6 +154,7 @@ function AdminUsers() {
         </div>
       </div>
     </div>
+    </>
   )
 }
 
