@@ -7,6 +7,7 @@ import AuthPage from './pages/Auth/AuthPage.jsx'
 import { AuthProvider } from './context/AuthContext.jsx' 
 import Dashboard from './pages/Auth/Dashboard.jsx'
 import AdminDashboard from './pages/Auth/AdminDashboard.jsx'
+import AdminUsers from './pages/Auth/AdminUsers.jsx'
 import VerifyEmail from './pages/Auth/VerifyEmail.jsx'
 import ForgotPassword from './pages/Auth/ForgotPassword.jsx'
 import ResetPassword from './pages/Auth/ResetPassword.jsx'
@@ -24,6 +25,7 @@ function App() {
           <Route path="/" element={<Homepage />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />

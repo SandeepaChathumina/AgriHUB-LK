@@ -4,7 +4,7 @@ import { toast } from 'react-hot-toast'
 import { useAuth } from '../../context/AuthContext'
 
 function AdminDashboard() {
-  const { user, token, logout } = useAuth()
+  const { user, token, isAuthReady, logout } = useAuth()
 
   const [profile, setProfile] = useState(null)
   const [loadingProfile, setLoadingProfile] = useState(false)
@@ -18,6 +18,8 @@ function AdminDashboard() {
 
   // Gate access: require auth and enforce admin role
   useEffect(() => {
+    if (!isAuthReady) return
+
     if (!token) {
       navigate('/login')
       return
@@ -27,7 +29,7 @@ function AdminDashboard() {
     if (role && role !== 'Admin') {
       navigate('/dashboard')
     }
-  }, [token, user?.role, profile?.role, navigate])
+  }, [token, user?.role, profile?.role, navigate, isAuthReady])
 
   // Load full profile so email + verification state are fresh
   useEffect(() => {
@@ -57,6 +59,7 @@ function AdminDashboard() {
   }, [token])
 
   const links = [
+    { title: 'Manage Users', to: '/admin/users' },
     { title: 'Manage Profile', to: '/profile' },
     { title: 'Verify Email', to: '/verify-email' },
     { title: 'Reset Password', to: '/reset-password' },

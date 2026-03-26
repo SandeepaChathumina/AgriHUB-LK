@@ -7,6 +7,7 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null); // Holds { id, fullName, role }
   const [token, setToken] = useState(null); // Holds the JWT string
+  const [isAuthReady, setIsAuthReady] = useState(false);
 
   // Rehydrate auth state on load so refreshes keep the session
   useEffect(() => {
@@ -22,6 +23,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('authToken');
       }
     }
+    setIsAuthReady(true);
   }, []);
 
   // Call this function when login is successful
@@ -30,6 +32,7 @@ export const AuthProvider = ({ children }) => {
     setToken(authToken);
     localStorage.setItem('authUser', JSON.stringify(userData));
     localStorage.setItem('authToken', authToken);
+    setIsAuthReady(true);
   };
 
   // Call this function to clear data on logout
@@ -38,10 +41,11 @@ export const AuthProvider = ({ children }) => {
     setToken(null);
     localStorage.removeItem('authUser');
     localStorage.removeItem('authToken');
+    setIsAuthReady(true);
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
+    <AuthContext.Provider value={{ user, token, isAuthReady, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

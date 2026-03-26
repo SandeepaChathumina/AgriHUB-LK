@@ -4,7 +4,7 @@ import { toast } from 'react-hot-toast'
 import { useAuth } from '../../context/AuthContext'
 
 function Dashboard() {
-  const { user, token, logout } = useAuth()
+  const { user, token, isAuthReady, logout } = useAuth()
 
   const [profile, setProfile] = useState(null)
   const [loadingProfile, setLoadingProfile] = useState(false)
@@ -17,6 +17,8 @@ function Dashboard() {
   const isVerified = Boolean(profile?.isVerified ?? user?.isVerified)
 
   useEffect(() => {
+    if (!isAuthReady) return
+
     if (!token) {
       navigate('/login')
       return
@@ -26,7 +28,7 @@ function Dashboard() {
     if (role === 'Admin') {
       navigate('/admin-dashboard')
     }
-  }, [token, user?.role, profile?.role, navigate])
+  }, [token, user?.role, profile?.role, navigate, isAuthReady])
 
   useEffect(() => {
     if (!token) return
