@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
 import { useAuth } from '../../context/AuthContext'
 import FarmerPanel from './components/FarmerPanel'
@@ -117,6 +117,12 @@ function Dashboard() {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <Link
+              to="/notifications"
+              className="rounded-xl border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-emerald-700 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50"
+            >
+              Notifications
+            </Link>
             {!isVerified && (
               <button
                 onClick={handleVerify}

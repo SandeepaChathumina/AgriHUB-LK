@@ -8,6 +8,8 @@ import { AuthProvider } from './context/AuthContext.jsx'
 import Dashboard from './pages/Auth/Dashboard.jsx'
 import AdminDashboard from './pages/Auth/AdminDashboard.jsx'
 import AdminUsers from './pages/Auth/AdminUsers.jsx'
+import AdminNotifications from './pages/Auth/AdminNotifications.jsx'
+import UserNotifications from './pages/Auth/UserNotifications.jsx'
 import VerifyEmail from './pages/Auth/VerifyEmail.jsx'
 import ForgotPassword from './pages/Auth/ForgotPassword.jsx'
 import ResetPassword from './pages/Auth/ResetPassword.jsx'
@@ -26,6 +28,8 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/notifications" element={<AdminNotifications />} />
+          <Route path="/notifications" element={<UserNotifications />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
