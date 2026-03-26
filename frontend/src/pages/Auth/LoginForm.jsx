@@ -52,8 +52,9 @@ const handleSubmit = async (event) => {
       toast.success('Login successful');
       setFormValues(initialFormState);
       
-      // Dan Dashboard ekata yanna
-      navigate('/dashboard', { replace: true });
+      // Redirect based on role
+      const targetRoute = data?.user?.role === 'Admin' ? '/admin-dashboard' : '/dashboard';
+      navigate(targetRoute, { replace: true });
       
     } catch (error) {
       const message = error?.message || 'Login failed. Please try again.';

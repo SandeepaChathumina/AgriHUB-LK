@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
 import { useAuth } from '../../context/AuthContext'
 
-function Dashboard() {
+function AdminDashboard() {
   const { user, token, logout } = useAuth()
 
   const [profile, setProfile] = useState(null)
@@ -11,11 +11,12 @@ function Dashboard() {
   const [requestingOtp, setRequestingOtp] = useState(false)
   const navigate = useNavigate()
 
-  const displayName = profile?.fullName || user?.fullName || 'Guest User'
-  const displayRole = profile?.role || user?.role || 'Member'
-  const initial = (displayName?.[0] || 'U').toUpperCase()
+  const displayName = profile?.fullName || user?.fullName || 'Admin'
+  const displayRole = profile?.role || user?.role || 'Admin'
+  const initial = (displayName?.[0] || 'A').toUpperCase()
   const isVerified = Boolean(profile?.isVerified ?? user?.isVerified)
 
+  // Gate access: require auth and enforce admin role
   useEffect(() => {
     if (!token) {
       navigate('/login')
@@ -23,11 +24,12 @@ function Dashboard() {
     }
 
     const role = profile?.role || user?.role
-    if (role === 'Admin') {
-      navigate('/admin-dashboard')
+    if (role && role !== 'Admin') {
+      navigate('/dashboard')
     }
   }, [token, user?.role, profile?.role, navigate])
 
+  // Load full profile so email + verification state are fresh
   useEffect(() => {
     if (!token) return
     const fetchProfile = async () => {
@@ -54,33 +56,12 @@ function Dashboard() {
     fetchProfile()
   }, [token])
 
-  const roleActionMap = {
-    Farmer: [
-      { title: 'Profile', to: '/profile' },
-      { title: 'My Orders', to: '/orders' },
-      { title: 'My Crops', to: '/crops' },
-      { title: 'Messages', to: '/chat' },
-    ],
-    Distributor: [
-      { title: 'Profile', to: '/profile' },
-      { title: 'Inventory', to: '/inventory' },
-      { title: 'Orders', to: '/orders' },
-      { title: 'Messages', to: '/chat' },
-    ],
-    Transporter: [
-      { title: 'Profile', to: '/profile' },
-      { title: 'Trips', to: '/trips' },
-      { title: 'Vehicles', to: '/vehicles' },
-      { title: 'Messages', to: '/chat' },
-    ],
-    Member: [
-      { title: 'Profile', to: '/profile' },
-      { title: 'Orders', to: '/orders' },
-      { title: 'Messages', to: '/chat' },
-    ],
-  }
-
-  const links = roleActionMap[displayRole] || roleActionMap.Member
+  const links = [
+    { title: 'Manage Profile', to: '/profile' },
+    { title: 'Verify Email', to: '/verify-email' },
+    { title: 'Reset Password', to: '/reset-password' },
+    { title: 'Home', to: '/' },
+  ]
 
   const handleLogout = () => {
     logout()
@@ -135,7 +116,7 @@ function Dashboard() {
                   {isVerified ? 'Verified' : 'Pending Verification'}
                 </span>
               </div>
-              <p className="text-sm text-slate-600">Securely manage your profile, actions, and quick links below.</p>
+              <p className="text-sm text-slate-600">Admin console for verification, user oversight, and profile management.</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -145,7 +126,7 @@ function Dashboard() {
                 className="rounded-xl border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-emerald-700 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50"
                 disabled={loadingProfile || requestingOtp}
               >
-                {loadingProfile || requestingOtp ? 'Sending OTP...' : `Verify ${displayRole}`}
+                {loadingProfile || requestingOtp ? 'Sending OTP...' : 'Verify Account'}
               </button>
             )}
             <button
@@ -182,8 +163,8 @@ function Dashboard() {
           <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 md:col-span-2">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Quick Links</p>
-                <p className="mt-1 text-lg font-semibold text-slate-900">Frequently used</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Admin Links</p>
+                <p className="mt-1 text-lg font-semibold text-slate-900">Key actions</p>
               </div>
             </div>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -205,4 +186,4 @@ function Dashboard() {
   )
 }
 
-export default Dashboard
+export default AdminDashboard

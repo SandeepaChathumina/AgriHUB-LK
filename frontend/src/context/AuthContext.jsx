@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 // 1. Create the Context
 const AuthContext = createContext();
@@ -8,16 +8,36 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null); // Holds { id, fullName, role }
   const [token, setToken] = useState(null); // Holds the JWT string
 
+  // Rehydrate auth state on load so refreshes keep the session
+  useEffect(() => {
+    const storedUser = localStorage.getItem('authUser');
+    const storedToken = localStorage.getItem('authToken');
+
+    if (storedUser && storedToken) {
+      try {
+        setUser(JSON.parse(storedUser));
+        setToken(storedToken);
+      } catch (err) {
+        localStorage.removeItem('authUser');
+        localStorage.removeItem('authToken');
+      }
+    }
+  }, []);
+
   // Call this function when login is successful
   const login = (userData, authToken) => {
     setUser(userData);
     setToken(authToken);
+    localStorage.setItem('authUser', JSON.stringify(userData));
+    localStorage.setItem('authToken', authToken);
   };
 
   // Call this function to clear data on logout
   const logout = () => {
     setUser(null);
     setToken(null);
+    localStorage.removeItem('authUser');
+    localStorage.removeItem('authToken');
   };
 
   return (

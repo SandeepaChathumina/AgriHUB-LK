@@ -35,6 +35,30 @@ export const updateUserProfile = async (req, res) => {
     
     if (req.body.location) user.location = req.body.location;
 
+    // Role-specific updates
+    switch (user.role) {
+      case 'Farmer': {
+        if (req.body.farmSize !== undefined) user.farmSize = req.body.farmSize;
+        if (req.body.nicNumber !== undefined) user.nicNumber = req.body.nicNumber;
+        if (req.body.mainCrops !== undefined) user.mainCrops = req.body.mainCrops;
+        break;
+      }
+      case 'Distributor': {
+        if (req.body.businessName !== undefined) user.businessName = req.body.businessName;
+        if (req.body.businessRegNumber !== undefined) user.businessRegNumber = req.body.businessRegNumber;
+        if (req.body.warehouseCapacity !== undefined) user.warehouseCapacity = req.body.warehouseCapacity;
+        break;
+      }
+      case 'Transporter': {
+        if (req.body.companyName !== undefined) user.companyName = req.body.companyName;
+        if (req.body.businessRegNumber !== undefined) user.businessRegNumber = req.body.businessRegNumber;
+        if (req.body.fleetSize !== undefined) user.fleetSize = req.body.fleetSize;
+        break;
+      }
+      default:
+        break;
+    }
+
     const updatedUser = await user.save();
 
     updatedUser.password = undefined;
