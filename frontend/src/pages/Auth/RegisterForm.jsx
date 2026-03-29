@@ -8,6 +8,7 @@ const RegisterForm = () => {
     fullName: '',
     email: '',
     password: '',
+    confirmPassword: '',
     phone: '',
     role: 'Farmer', // Match this with your Mongoose Discriminator Name
     address: '',
@@ -35,13 +36,69 @@ const RegisterForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
+  const demoProfile = {
+    fullName: 'Demo Farmer',
+    email: 'demo.farmer@agrihub.lk',
+    password: 'DemoPass123!',
+    confirmPassword: 'DemoPass123!',
+    phone: '0712345678',
+    role: 'Farmer',
+    address: '123 Demo Road',
+    city: 'Colombo',
+    district: 'Colombo',
+    farmSize: '5',
+    mainCrops: 'Rice, Vegetables',
+    nicNumber: '199012345678',
+    businessName: '',
+    businessRegNumber: '',
+    warehouseCapacity: '',
+    companyName: '',
+    fleetSize: '',
+  };
+
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormValues((prev) => ({ ...prev, [name]: value }));
   };
 
+  const validateForm = () => {
+    if (!formValues.fullName.trim()) return 'Full name is required.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formValues.email)) return 'Enter a valid email address.';
+    if (formValues.password.length < 8) return 'Password must be at least 8 characters.';
+    if (!/[A-Z]/.test(formValues.password)) return 'Password needs at least one uppercase letter.';
+    if (!/\d/.test(formValues.password)) return 'Password needs at least one number.';
+    if (formValues.password !== formValues.confirmPassword) return 'Passwords do not match.';
+    if (!/^0\d{9}$/.test(formValues.phone)) return 'Phone must be 10 digits starting with 0.';
+
+    if (formValues.role === 'Farmer') {
+      if (!formValues.nicNumber.trim()) return 'NIC number is required for farmers.';
+      if (!formValues.farmSize || Number(formValues.farmSize) <= 0) return 'Farm size must be a positive number.';
+    }
+
+    if (formValues.role === 'Distributor') {
+      if (!formValues.businessName.trim()) return 'Business name is required for distributors.';
+      if (!formValues.businessRegNumber.trim()) return 'Business reg number is required for distributors.';
+      if (formValues.warehouseCapacity && Number(formValues.warehouseCapacity) < 0) return 'Warehouse capacity cannot be negative.';
+    }
+
+    if (formValues.role === 'Transporter') {
+      if (!formValues.companyName.trim()) return 'Company name is required for transporters.';
+      if (!formValues.businessRegNumber.trim()) return 'Business reg number is required for transporters.';
+      if (formValues.fleetSize && Number(formValues.fleetSize) <= 0) return 'Fleet size must be a positive number.';
+    }
+
+    return '';
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
+    const validationMessage = validateForm();
+    if (validationMessage) {
+      setStatus({ type: 'error', message: validationMessage });
+      toast.error(validationMessage);
+      return;
+    }
+
     setStatus({ type: '', message: '' });
     setIsSubmitting(true);
     
@@ -105,6 +162,17 @@ const RegisterForm = () => {
     }
   };
 
+  const handleDemoFill = () => {
+    setFormValues(demoProfile);
+    setStatus({ type: '', message: '' });
+  };
+
+  const passwordChecks = {
+    length: formValues.password.length >= 8,
+    upper: /[A-Z]/.test(formValues.password),
+    number: /\d/.test(formValues.password),
+  };
+
   return (
     <form className="flex flex-col gap-6 w-full max-w-md mx-auto" onSubmit={handleSubmit}>
       
@@ -154,12 +222,34 @@ const RegisterForm = () => {
                 )}
               </button>
             </div>
+            <div className="mt-2 space-y-1 text-xs text-slate-600">
+              <div className={`flex items-center gap-2 ${passwordChecks.length ? 'text-emerald-700' : 'text-slate-500'}`}>
+                <span className={`h-2 w-2 rounded-full ${passwordChecks.length ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                <span>At least 8 characters</span>
+              </div>
+              <div className={`flex items-center gap-2 ${passwordChecks.upper ? 'text-emerald-700' : 'text-slate-500'}`}>
+                <span className={`h-2 w-2 rounded-full ${passwordChecks.upper ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                <span>At least one uppercase letter</span>
+              </div>
+              <div className={`flex items-center gap-2 ${passwordChecks.number ? 'text-emerald-700' : 'text-slate-500'}`}>
+                <span className={`h-2 w-2 rounded-full ${passwordChecks.number ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                <span>At least one number</span>
+              </div>
+            </div>
           </div>
-          <div className="space-y-1">
-            <label className="text-sm font-semibold text-slate-800" htmlFor="phone">Phone Number</label>
-            <input id="phone" name="phone" type="tel" value={formValues.phone} onChange={handleChange} required
-              className="w-full rounded-xl border border-emerald-200 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
-              placeholder="07X XXX XXXX" />
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <label className="text-sm font-semibold text-slate-800" htmlFor="confirmPassword">Confirm Password</label>
+              <input id="confirmPassword" name="confirmPassword" type={showPassword ? 'text' : 'password'} value={formValues.confirmPassword} onChange={handleChange} required
+                className="w-full rounded-xl border border-emerald-200 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
+                placeholder="Re-enter your password" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-semibold text-slate-800" htmlFor="phone">Phone Number</label>
+              <input id="phone" name="phone" type="tel" value={formValues.phone} onChange={handleChange} required
+                className="w-full rounded-xl border border-emerald-200 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
+                placeholder="07X XXX XXXX" />
+            </div>
           </div>
         </div>
       </div>
@@ -286,6 +376,15 @@ const RegisterForm = () => {
         className="w-full mt-4 rounded-xl bg-green-500 px-4 py-4 text-base font-bold text-white shadow-lg shadow-green-500/30 transition hover:bg-green-600 focus:ring-2 focus:ring-green-400 focus:ring-offset-2 active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
       >
         {isSubmitting ? 'Creating Account...' : 'Create Account'}
+      </button>
+
+      <button
+        type="button"
+        onClick={handleDemoFill}
+        disabled={isSubmitting}
+        className="w-full rounded-xl border border-emerald-200 px-4 py-3 text-base font-semibold text-emerald-800 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 focus:ring-2 focus:ring-emerald-200 focus:ring-offset-2 active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
+      >
+        Fill demo details
       </button>
     </form>
   );

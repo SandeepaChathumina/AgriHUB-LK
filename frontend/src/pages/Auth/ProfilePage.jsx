@@ -94,8 +94,41 @@ const ProfilePage = () => {
     setFormValues((prev) => ({ ...prev, [name]: value }))
   }
 
+  const validateProfile = () => {
+    if (!formValues.fullName.trim()) return 'Full name is required.'
+    if (!formValues.phone.trim()) return 'Phone is required.'
+    if (!formValues.location.address.trim()) return 'Address is required.'
+    if (!formValues.location.city.trim()) return 'City is required.'
+    if (!formValues.location.district.trim()) return 'District is required.'
+
+    if (formValues.role === 'Farmer') {
+      if (!formValues.nicNumber.trim()) return 'NIC number is required for farmers.'
+      if (formValues.farmSize && Number(formValues.farmSize) <= 0) return 'Farm size must be a positive number.'
+    }
+
+    if (formValues.role === 'Distributor') {
+      if (!formValues.businessName.trim()) return 'Business name is required for distributors.'
+      if (!formValues.businessRegNumber.trim()) return 'Business reg number is required for distributors.'
+      if (formValues.warehouseCapacity && Number(formValues.warehouseCapacity) < 0) return 'Warehouse capacity cannot be negative.'
+    }
+
+    if (formValues.role === 'Transporter') {
+      if (!formValues.companyName.trim()) return 'Company name is required for transporters.'
+      if (!formValues.businessRegNumber.trim()) return 'Business reg number is required for transporters.'
+      if (formValues.fleetSize && Number(formValues.fleetSize) <= 0) return 'Fleet size must be a positive number.'
+    }
+
+    return ''
+  }
+
   const handleSubmit = async (event) => {
     event.preventDefault()
+    const validationMessage = validateProfile()
+    if (validationMessage) {
+      setStatus({ type: 'error', message: validationMessage })
+      toast.error(validationMessage)
+      return
+    }
     if (!token) {
       toast.error('Not authenticated')
       return
@@ -241,6 +274,7 @@ const ProfilePage = () => {
                   type="tel"
                   value={formValues.phone}
                   onChange={handleChange}
+                  required
                   className="w-full rounded-xl border border-emerald-200 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
                   placeholder="07X XXX XXXX"
                 />

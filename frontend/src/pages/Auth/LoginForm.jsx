@@ -16,12 +16,19 @@ const LoginForm = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
 
+  const demoProfiles = {
+    Admin: { email: 'admin@agrihub.lk', password: 'Password@123' },
+    Farmer: { email: 'kamal.farmer@gmail.com', password: 'Password@123' },
+    Transporter: { email: 'sunil.logistics@hotmail.com', password: 'Password@123' },
+    Distributor: { email: 'nimal.dist@yahoo.com', password: 'Password@123' },
+  };
+
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormValues((prev) => ({ ...prev, [name]: value }));
   };
 
-const handleSubmit = async (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     setStatus({ type: '', message: '' });
     setIsSubmitting(true);
@@ -58,6 +65,13 @@ const handleSubmit = async (event) => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleDemoFill = (profileKey) => {
+    const profile = demoProfiles[profileKey];
+    if (!profile) return;
+    setFormValues(profile);
+    setStatus({ type: '', message: '' });
   };
 
   return (
@@ -125,6 +139,20 @@ const handleSubmit = async (event) => {
       >
         {isSubmitting ? 'Logging in...' : 'Login'}
       </button>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {Object.keys(demoProfiles).map((role) => (
+          <button
+            key={role}
+            type="button"
+            onClick={() => handleDemoFill(role)}
+            disabled={isSubmitting}
+            className="w-full rounded-xl border border-emerald-200 px-4 py-3 text-base font-semibold text-emerald-800 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 focus:ring-2 focus:ring-emerald-200 focus:ring-offset-2 active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            Use {role} demo
+          </button>
+        ))}
+      </div>
 
       <div className="text-right text-sm text-emerald-700 font-semibold">
         <button type="button" onClick={() => navigate('/forgot-password')} className="underline hover:text-emerald-800">

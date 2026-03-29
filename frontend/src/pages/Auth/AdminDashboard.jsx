@@ -53,6 +53,8 @@ function AdminDashboard() {
   }, [token])
 
   const handleLogout = () => {
+    const confirmed = window.confirm('Are you sure you want to log out?')
+    if (!confirmed) return
     logout()
     navigate('/')
   }
@@ -119,6 +121,7 @@ function AdminDashboard() {
             )}
             <button
               onClick={handleLogout}
+              type="button"
               className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
             >
               Logout
