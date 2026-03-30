@@ -15,6 +15,15 @@ import ForgotPassword from './pages/Auth/ForgotPassword.jsx'
 import ResetPassword from './pages/Auth/ResetPassword.jsx'
 import ProfilePage from './pages/Auth/ProfilePage.jsx'
 
+// NEW IMPORTS - Product Management
+import ProductList from './pages/products/ProductList.jsx'
+import AddProduct from './pages/products/AddProduct.jsx'
+import EditProduct from './pages/products/EditProduct.jsx'
+
+// NEW IMPORTS - Review Management
+import ProductReviews from './pages/reviews/ProductReviews.jsx'
+import PendingReviews from './pages/reviews/PendingReviews.jsx'
+
 function App() {
   return (
     // AuthProvider eken mulu app ekama wrap karanawa
@@ -37,6 +46,15 @@ function App() {
           
           <Route path="/login" element={<AuthPage initialMode="login" />} />
           <Route path="/register" element={<AuthPage initialMode="register" />} />
+          
+          {/* NEW - Product Routes */}
+          <Route path="/products" element={<ProductList />} />
+          <Route path="/products/add" element={<AddProduct />} />
+          <Route path="/products/edit/:id" element={<EditProduct />} />
+          
+          {/* NEW - Review Routes */}
+          <Route path="/reviews/:targetType/:targetId" element={<ProductReviews />} />
+          <Route path="/pending-reviews" element={<PendingReviews />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
