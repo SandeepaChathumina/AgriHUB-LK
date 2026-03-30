@@ -78,65 +78,24 @@ const ProductList = () => {
     fetchProducts();
   };
 
-  const handleDelete = async (productId) => {
-    if (!window.confirm('Are you sure you want to delete this product?')) return;
-    
-    try {
-      const res = await fetch(`http://localhost:3000/api/products/${productId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (!res.ok) throw new Error('Failed to delete product');
-      
-      toast.success('Product deleted successfully');
-      fetchProducts();
-    } catch (error) {
-      toast.error(error.message);
-    }
-  };
-
-  const toggleAvailability = async (productId, currentStatus) => {
-    try {
-      const res = await fetch(`http://localhost:3000/api/products/${productId}/availability`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ isAvailable: !currentStatus })
-      });
-      
-      if (!res.ok) throw new Error('Failed to update status');
-      
-      toast.success(`Product ${!currentStatus ? 'activated' : 'deactivated'}`);
-      fetchProducts();
-    } catch (error) {
-      toast.error(error.message);
-    }
+  const handleOrderNow = (product) => {
+    // Navigate to order page
+    navigate(`/order/${product._id}`, { state: { product } });
   };
 
   return (
     <>
       <ProfileNav active="products" links={[
-        { key: 'products', label: 'My Products', to: '/products' },
-        { key: 'add-product', label: 'Add Product', to: '/products/add' }
+        { key: 'products', label: 'All Products', to: '/products' },
+        ...(user?.role === 'Farmer' ? [{ key: 'my-products', label: 'My Products', to: '/my-products' }] : [])
       ]} />
       
       <div className="min-h-screen bg-slate-50 px-4 py-8">
         <div className="mx-auto max-w-7xl">
           {/* Header */}
-          <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900">My Products</h1>
-              <p className="text-slate-600">Manage your agricultural products inventory</p>
-            </div>
-            <Link
-              to="/products/add"
-              className="rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
-            >
-              + Add New Product
-            </Link>
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-slate-900">All Products</h1>
+            <p className="text-slate-600">Browse fresh agricultural products from local farmers</p>
           </div>
 
           {/* Filters */}
@@ -196,22 +155,32 @@ const ProductList = () => {
             </div>
           ) : products.length === 0 ? (
             <div className="rounded-2xl bg-white p-12 text-center shadow-sm ring-1 ring-slate-200">
-              <p className="text-slate-500">No products found. Start by adding your first product!</p>
+              <p className="text-slate-500">No products found.</p>
             </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {products.map(product => (
                 <div key={product._id} className="group rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
                   <div className="relative h-48 overflow-hidden rounded-t-2xl bg-slate-100">
-                    {product.images?.[0] ? (
+                    {product.images && product.images.length > 0 ? (
                       <img
                         src={product.images[0]}
                         alt={product.productName}
-                        className="h-full w-full object-cover"
+                        className="h-full w-full object-cover group-hover:scale-105 transition duration-300"
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center text-slate-400">
-                        No Image
+                        <div className="text-center">
+                          <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <span className="text-xs">No Image</span>
+                        </div>
+                      </div>
+                    )}
+                    {product.images && product.images.length > 1 && (
+                      <div className="absolute bottom-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
+                        +{product.images.length - 1}
                       </div>
                     )}
                     <span className={`absolute right-2 top-2 rounded-full px-2 py-1 text-xs font-semibold ${
@@ -222,35 +191,29 @@ const ProductList = () => {
                   </div>
                   
                   <div className="p-4">
-                    <h3 className="text-lg font-semibold text-slate-900">{product.productName}</h3>
+                    <h3 className="text-lg font-semibold text-slate-900 line-clamp-1">{product.productName}</h3>
                     <p className="text-sm text-slate-500">{product.category} • {product.quantity}{product.unit}</p>
-                    <p className="mt-2 text-xl font-bold text-emerald-600">LKR {product.price}</p>
-                    <p className="mt-1 text-xs text-slate-400">Pickup: {product.pickupLocation?.district}</p>
+                    <p className="mt-1 text-xs text-slate-400">
+                      <span className="font-medium text-slate-600">Seller:</span> {product.farmer?.fullName || 'Unknown Farmer'}
+                    </p>
+                    <p className="mt-2 text-xl font-bold text-emerald-600">LKR {product.price.toLocaleString()}</p>
+                    <p className="mt-1 text-xs text-slate-400">📍 Pickup: {product.pickupLocation?.district || 'N/A'}</p>
                     
-                    <div className="mt-4 flex gap-2">
-                      <Link
-                        to={`/products/edit/${product._id}`}
-                        className="flex-1 rounded-lg border border-emerald-200 px-3 py-2 text-center text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50"
-                      >
-                        Edit
-                      </Link>
-                      <button
-                        onClick={() => toggleAvailability(product._id, product.isAvailable)}
-                        className={`flex-1 rounded-lg px-3 py-2 text-center text-sm font-semibold transition ${
-                          product.isAvailable
-                            ? 'border border-red-200 text-red-700 hover:bg-red-50'
-                            : 'border border-emerald-200 text-emerald-700 hover:bg-emerald-50'
-                        }`}
-                      >
-                        {product.isAvailable ? 'Deactivate' : 'Activate'}
-                      </button>
-                      <button
-                        onClick={() => handleDelete(product._id)}
-                        className="rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-50"
-                      >
-                        Delete
-                      </button>
-                    </div>
+                    {/* Only Order Now Button - No Edit/Delete buttons */}
+                    {product.isAvailable ? (
+                      <div className="mt-4">
+                        <button
+                          onClick={() => handleOrderNow(product)}
+                          className="w-full rounded-lg bg-emerald-600 px-4 py-2 text-center text-sm font-semibold text-white transition hover:bg-emerald-700"
+                        >
+                          Order Now
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="mt-4 text-center text-sm text-red-500">
+                        Currently Unavailable
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

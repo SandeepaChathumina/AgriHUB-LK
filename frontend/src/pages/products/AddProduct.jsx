@@ -8,7 +8,11 @@ const AddProduct = () => {
   const { token, user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
   const [farmerLocation, setFarmerLocation] = useState(null);
+  const [imageFiles, setImageFiles] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [uploadedImageUrls, setUploadedImageUrls] = useState([]);
   
   const [formData, setFormData] = useState({
     productName: '',
@@ -23,6 +27,7 @@ const AddProduct = () => {
     harvestDate: '',
     expiryDate: '',
     isAvailable: true,
+    images: [],
     pickupLocation: {
       type: 'Farmer Location',
       address: '',
@@ -66,6 +71,75 @@ const AddProduct = () => {
       }
     } catch (error) {
       console.error('Failed to fetch profile:', error);
+    }
+  };
+
+  const handleImageSelect = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length + imageFiles.length > 5) {
+      toast.error('Maximum 5 images allowed');
+      return;
+    }
+    
+    // Validate file sizes
+    const invalidFiles = files.filter(file => file.size > 5 * 1024 * 1024);
+    if (invalidFiles.length > 0) {
+      toast.error('Each image must be less than 5MB');
+      return;
+    }
+    
+    setImageFiles([...imageFiles, ...files]);
+    
+    // Create previews
+    const newPreviews = files.map(file => URL.createObjectURL(file));
+    setImagePreviews([...imagePreviews, ...newPreviews]);
+  };
+
+  const removeImage = (index) => {
+    // Revoke object URL to avoid memory leaks
+    URL.revokeObjectURL(imagePreviews[index]);
+    
+    const newFiles = [...imageFiles];
+    const newPreviews = [...imagePreviews];
+    newFiles.splice(index, 1);
+    newPreviews.splice(index, 1);
+    setImageFiles(newFiles);
+    setImagePreviews(newPreviews);
+  };
+
+  const uploadImages = async () => {
+    if (imageFiles.length === 0) return [];
+    
+    setUploadingImages(true);
+    const formData = new FormData();
+    imageFiles.forEach(file => {
+      formData.append('images', file);
+    });
+    
+    try {
+      const res = await fetch('http://localhost:3000/api/products/upload-images', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        body: formData
+      });
+      
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || 'Failed to upload images');
+      }
+      
+      const data = await res.json();
+      const imageUrls = data.images.map(img => img.url);
+      setUploadedImageUrls(imageUrls);
+      toast.success(`${imageUrls.length} images uploaded successfully`);
+      return imageUrls;
+    } catch (error) {
+      toast.error(error.message);
+      return [];
+    } finally {
+      setUploadingImages(false);
     }
   };
 
@@ -139,12 +213,22 @@ const AddProduct = () => {
 
     setLoading(true);
     try {
+      // Upload images first
+      let imageUrls = [];
+      if (imageFiles.length > 0) {
+        imageUrls = await uploadImages();
+        if (imageUrls.length === 0 && imageFiles.length > 0) {
+          throw new Error('Failed to upload images');
+        }
+      }
+      
       const payload = {
         ...formData,
         quantity: parseFloat(formData.quantity),
         price: parseFloat(formData.price),
         harvestDate: formData.harvestDate || null,
         expiryDate: formData.expiryDate || null,
+        images: imageUrls,
         pickupLocation: {
           ...formData.pickupLocation,
           coordinates: {
@@ -169,7 +253,7 @@ const AddProduct = () => {
       }
 
       toast.success('Product created successfully!');
-      navigate('/products');
+      navigate('/my-products');
     } catch (error) {
       toast.error(error.message);
     } finally {
@@ -180,7 +264,7 @@ const AddProduct = () => {
   return (
     <>
       <ProfileNav active="add-product" links={[
-        { key: 'products', label: 'My Products', to: '/products' },
+        { key: 'my-products', label: 'My Products', to: '/my-products' },
         { key: 'add-product', label: 'Add Product', to: '/products/add' }
       ]} />
       
@@ -192,6 +276,63 @@ const AddProduct = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Image Upload Section */}
+            <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+              <h2 className="mb-4 text-xl font-semibold text-slate-900">Product Images</h2>
+              <div className="space-y-4">
+                <div className="flex items-center justify-center w-full">
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl border-emerald-300 bg-emerald-50 cursor-pointer hover:bg-emerald-100 transition">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <svg className="w-8 h-8 mb-2 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      <p className="mb-2 text-sm text-slate-600">
+                        <span className="font-semibold">Click to upload</span> or drag and drop
+                      </p>
+                      <p className="text-xs text-slate-500">PNG, JPG, GIF up to 5MB (Max 5 images)</p>
+                    </div>
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      multiple
+                      onChange={handleImageSelect}
+                      disabled={uploadingImages}
+                    />
+                  </label>
+                </div>
+                
+                {/* Image Previews */}
+                {imagePreviews.length > 0 && (
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {imagePreviews.map((preview, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={preview}
+                          alt={`Preview ${index + 1}`}
+                          className="w-full h-32 object-cover rounded-lg border border-emerald-200"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {uploadingImages && (
+                  <div className="text-center text-emerald-600">
+                    <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600"></div>
+                    <p className="mt-2">Uploading images to Cloudinary...</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Basic Information */}
             <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
               <h2 className="mb-4 text-xl font-semibold text-slate-900">Basic Information</h2>
@@ -417,14 +558,14 @@ const AddProduct = () => {
             <div className="flex gap-4">
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || uploadingImages}
                 className="flex-1 rounded-xl bg-emerald-600 px-6 py-3 font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
               >
-                {loading ? 'Creating...' : 'Create Product'}
+                {loading ? 'Creating...' : uploadingImages ? 'Uploading Images...' : 'Create Product'}
               </button>
               <button
                 type="button"
-                onClick={() => navigate('/products')}
+                onClick={() => navigate('/my-products')}
                 className="rounded-xl border border-slate-300 px-6 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
               >
                 Cancel

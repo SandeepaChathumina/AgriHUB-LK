@@ -1,7 +1,72 @@
 import Product from '../models/Product.js';
 import Farmer from '../models/Farmer.js';
 import mongoose from 'mongoose';
+import cloudinary from '../config/cloudinary.js';
+import fs from 'fs';
 
+// Upload images to Cloudinary
+export const uploadProductImages = async (req, res) => {
+  try {
+    const { CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET } = process.env;
+    if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_API_KEY || !CLOUDINARY_API_SECRET) {
+      return res.status(500).json({
+        success: false,
+        message: 'Cloudinary is not configured properly. Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET.'
+      });
+    }
+
+    console.log('uploadProductImages: req.files length', req.files?.length);
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No files uploaded'
+      });
+    }
+
+    const uploadedImages = [];
+    
+    for (const file of req.files) {
+      try {
+        // Upload to Cloudinary
+        const result = await cloudinary.uploader.upload(file.path, {
+          folder: 'agrihub/products',
+          transformation: [
+            { width: 800, height: 800, crop: 'limit' },
+            { quality: 'auto' }
+          ]
+        });
+        
+        uploadedImages.push({
+          url: result.secure_url,
+          publicId: result.public_id
+        });
+        
+        // Delete local file after upload
+        if (fs.existsSync(file.path)) {
+          fs.unlinkSync(file.path);
+        }
+      } catch (uploadError) {
+        console.error('Cloudinary upload error:', uploadError);
+        if (fs.existsSync(file.path)) {
+          fs.unlinkSync(file.path);
+        }
+        throw uploadError;
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      images: uploadedImages
+    });
+  } catch (error) {
+    console.error('Image upload error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to upload images',
+      error: error.message
+    });
+  }
+};
 
 export const createProduct = async (req, res) => {
   try {
@@ -28,7 +93,6 @@ export const createProduct = async (req, res) => {
 
     const productData = req.body;
 
-    
     const requiredFields = ['productName', 'category', 'quantity', 'unit', 'price'];
     const missingFields = requiredFields.filter(field => !productData[field]);
     
@@ -87,13 +151,23 @@ export const createProduct = async (req, res) => {
 
     let pickupLocation = { ...productData.pickupLocation };
     
-    
     const isFarmerLocation = farmer.location?.coordinates && 
       Math.abs(farmer.location.coordinates.lat - lat) < 0.0001 && 
       Math.abs(farmer.location.coordinates.lng - lng) < 0.0001;
 
     pickupLocation.type = isFarmerLocation ? 'Farmer Location' : 'Custom Location';
 
+    // Parse images from request body
+    let images = [];
+    if (productData.images) {
+      try {
+        images = typeof productData.images === 'string' 
+          ? JSON.parse(productData.images) 
+          : productData.images;
+      } catch (e) {
+        images = [];
+      }
+    }
     
     const product = new Product({
       productName: productData.productName,
@@ -107,7 +181,7 @@ export const createProduct = async (req, res) => {
       quality: productData.quality || 'Standard',
       harvestDate: productData.harvestDate || null,
       expiryDate: productData.expiryDate || null,
-      images: productData.images || [],
+      images: images,
       isAvailable: productData.isAvailable !== undefined ? productData.isAvailable : true,
       status: productData.status || 'Available',
       pickupLocation: {
@@ -142,7 +216,6 @@ export const createProduct = async (req, res) => {
   }
 };
 
-
 export const getAllProducts = async (req, res) => {
   try {
     const {
@@ -158,7 +231,6 @@ export const getAllProducts = async (req, res) => {
       sortOrder = 'desc'
     } = req.query;
 
-    
     const filter = { isAvailable: true };
 
     if (category) filter.category = category;
@@ -174,12 +246,10 @@ export const getAllProducts = async (req, res) => {
       if (maxPrice) filter.price.$lte = Number(maxPrice);
     }
 
-    
     if (search) {
       filter.$text = { $search: search };
     }
 
-    
     const skip = (Number(page) - 1) * Number(limit);
     const sort = { [sortBy]: sortOrder === 'desc' ? -1 : 1 };
 
@@ -208,7 +278,6 @@ export const getAllProducts = async (req, res) => {
     });
   }
 };
-
 
 export const getMyProducts = async (req, res) => {
   try {
@@ -252,7 +321,6 @@ export const getMyProducts = async (req, res) => {
   }
 };
 
-
 export const getProductById = async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
@@ -272,7 +340,6 @@ export const getProductById = async (req, res) => {
       });
     }
 
-    
     product.viewCount = (product.viewCount || 0) + 1;
     await product.save();
 
@@ -289,7 +356,6 @@ export const getProductById = async (req, res) => {
     });
   }
 };
-
 
 export const updateProduct = async (req, res) => {
   try {
@@ -317,7 +383,6 @@ export const updateProduct = async (req, res) => {
       });
     }
 
-   
     if (product.farmer.toString() !== userId.toString()) {
       return res.status(403).json({
         success: false,
@@ -327,20 +392,16 @@ export const updateProduct = async (req, res) => {
 
     const updateData = { ...req.body };
     
-    
     if (updateData.quantity) updateData.quantity = Number(updateData.quantity);
     if (updateData.price) updateData.price = Number(updateData.price);
     
-    
     if (updateData.pickupLocation) {
-      
       if (updateData.pickupLocation.address === '') {
         return res.status(400).json({
           success: false,
           message: 'Pickup address cannot be empty'
         });
       }
-      
       
       if (updateData.pickupLocation.coordinates) {
         if (!updateData.pickupLocation.coordinates.lat || !updateData.pickupLocation.coordinates.lng) {
@@ -349,7 +410,6 @@ export const updateProduct = async (req, res) => {
             message: 'Both latitude and longitude are required for pickup location'
           });
         }
-        
         
         const lat = Number(updateData.pickupLocation.coordinates.lat);
         const lng = Number(updateData.pickupLocation.coordinates.lng);
@@ -368,12 +428,10 @@ export const updateProduct = async (req, res) => {
           });
         }
         
-        
         updateData.pickupLocation.coordinates = {
           lat: lat,
           lng: lng
         };
-        
         
         const farmer = await Farmer.findById(userId);
         if (farmer.location?.coordinates) {
@@ -406,7 +464,6 @@ export const updateProduct = async (req, res) => {
     });
   }
 };
-
 
 export const deleteProduct = async (req, res) => {
   try {
@@ -446,6 +503,19 @@ export const deleteProduct = async (req, res) => {
       });
     }
 
+    // Delete images from Cloudinary if they exist
+    if (product.images && product.images.length > 0) {
+      for (const image of product.images) {
+        if (image.publicId) {
+          try {
+            await cloudinary.uploader.destroy(image.publicId);
+          } catch (cloudinaryError) {
+            console.error('Failed to delete image from Cloudinary:', cloudinaryError);
+          }
+        }
+      }
+    }
+
     await product.deleteOne();
 
     res.status(200).json({
@@ -461,7 +531,6 @@ export const deleteProduct = async (req, res) => {
     });
   }
 };
-
 
 export const toggleAvailability = async (req, res) => {
   try {
@@ -498,7 +567,6 @@ export const toggleAvailability = async (req, res) => {
       });
     }
 
-    
     if (product.farmer.toString() !== userId.toString()) {
       return res.status(403).json({
         success: false,
@@ -524,7 +592,6 @@ export const toggleAvailability = async (req, res) => {
     });
   }
 };
-
 
 export const getProductsByDistrict = async (req, res) => {
   try {
@@ -565,7 +632,7 @@ export const getProductsByDistrict = async (req, res) => {
 
 export const findProductsNearby = async (req, res) => {
   try {
-    const { lat, lng, maxDistance = 10000 } = req.query; 
+    const { lat, lng, maxDistance = 10000 } = req.query;
     const { page = 1, limit = 10, category, minPrice, maxPrice } = req.query;
 
     if (!lat || !lng) {
@@ -575,7 +642,6 @@ export const findProductsNearby = async (req, res) => {
       });
     }
 
-    // Validate coordinates
     const latitude = Number(lat);
     const longitude = Number(lng);
 
@@ -593,7 +659,6 @@ export const findProductsNearby = async (req, res) => {
       });
     }
 
-    
     const filter = {
       isAvailable: true,
       status: 'Available'
@@ -603,7 +668,6 @@ export const findProductsNearby = async (req, res) => {
       filter.category = category;
     }
 
-   
     if (minPrice || maxPrice) {
       filter.price = {};
       if (minPrice) filter.price.$gte = Number(minPrice);
@@ -613,6 +677,18 @@ export const findProductsNearby = async (req, res) => {
     const products = await Product.find(filter)
       .populate('farmer', 'fullName phone')
       .lean();
+
+    const calculateDistance = (lat1, lon1, lat2, lon2) => {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = 
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    };
 
     const productsWithDistance = products.map(product => {
       if (product.pickupLocation?.coordinates) {
@@ -624,7 +700,7 @@ export const findProductsNearby = async (req, res) => {
         );
         return {
           ...product,
-          distance: Math.round(distance * 1000) / 1000 
+          distance: Math.round(distance * 1000) / 1000
         };
       }
       return {
@@ -632,10 +708,9 @@ export const findProductsNearby = async (req, res) => {
         distance: null
       };
     })
-    .filter(p => p.distance !== null && p.distance * 1000 <= maxDistance) // Convert km to m for comparison
+    .filter(p => p.distance !== null && p.distance * 1000 <= maxDistance)
     .sort((a, b) => a.distance - b.distance);
 
-    
     const startIndex = (Number(page) - 1) * Number(limit);
     const endIndex = startIndex + Number(limit);
     const paginatedProducts = productsWithDistance.slice(startIndex, endIndex);
@@ -657,25 +732,6 @@ export const findProductsNearby = async (req, res) => {
     });
   }
 };
-
-
-function calculateDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371; 
-  const dLat = deg2rad(lat2 - lat1);
-  const dLon = deg2rad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const distance = R * c; 
-  return distance;
-}
-
-function deg2rad(deg) {
-  return deg * (Math.PI / 180);
-}
-
 
 export const getProductsByFarmer = async (req, res) => {
   try {

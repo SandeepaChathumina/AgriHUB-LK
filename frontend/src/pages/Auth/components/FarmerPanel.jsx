@@ -7,7 +7,7 @@ const FarmerPanel = ({ links = [] }) => {
   
   const defaultLinks = [
     { title: 'Profile', to: '/profile' },
-    { title: 'My Products', to: '/products' },
+    { title: 'My Products', to: '/my-products' },  // Changed from /products to /my-products
     { title: 'Add Product', to: '/products/add' },
     { title: 'Orders', to: '/orders' },
     { title: 'Pending Reviews', to: '/pending-reviews' },

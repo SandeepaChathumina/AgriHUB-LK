@@ -3,7 +3,6 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import Homepage from './pages/homePage.jsx'
 import AuthPage from './pages/Auth/AuthPage.jsx'
-// AuthProvider eka import karaganna
 import { AuthProvider } from './context/AuthContext.jsx' 
 import Dashboard from './pages/Auth/Dashboard.jsx'
 import AdminDashboard from './pages/Auth/AdminDashboard.jsx'
@@ -19,6 +18,7 @@ import ProfilePage from './pages/Auth/ProfilePage.jsx'
 import ProductList from './pages/products/ProductList.jsx'
 import AddProduct from './pages/products/AddProduct.jsx'
 import EditProduct from './pages/products/EditProduct.jsx'
+import MyProducts from './pages/products/MyProducts.jsx'  // Add this import
 
 // NEW IMPORTS - Review Management
 import ProductReviews from './pages/reviews/ProductReviews.jsx'
@@ -26,10 +26,8 @@ import PendingReviews from './pages/reviews/PendingReviews.jsx'
 
 function App() {
   return (
-    // AuthProvider eken mulu app ekama wrap karanawa
     <AuthProvider>
       <BrowserRouter>
-        {/* Toaster eka methana thiyena eka hondai, ethakota app eke onama thanaka indan toast calls wada karanawa */}
         <Toaster position="top-right" />
         
         <Routes>
@@ -47,12 +45,13 @@ function App() {
           <Route path="/login" element={<AuthPage initialMode="login" />} />
           <Route path="/register" element={<AuthPage initialMode="register" />} />
           
-          {/* NEW - Product Routes */}
+          {/* Product Routes */}
           <Route path="/products" element={<ProductList />} />
+          <Route path="/my-products" element={<MyProducts />} />  {/* Add this route */}
           <Route path="/products/add" element={<AddProduct />} />
           <Route path="/products/edit/:id" element={<EditProduct />} />
           
-          {/* NEW - Review Routes */}
+          {/* Review Routes */}
           <Route path="/reviews/:targetType/:targetId" element={<ProductReviews />} />
           <Route path="/pending-reviews" element={<PendingReviews />} />
         </Routes>
