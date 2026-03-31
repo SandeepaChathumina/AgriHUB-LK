@@ -1,15 +1,21 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
 
 const FarmerPanel = ({ links = [] }) => {
+  const { user } = useAuth();
+  
   const defaultLinks = [
     { title: 'Profile', to: '/profile' },
-    { title: 'My Crops', to: '/crops' },
+    { title: 'My Products', to: '/my-products' },  // Changed from /products to /my-products
+    { title: 'Add Product', to: '/products/add' },
     { title: 'Orders', to: '/orders' },
+    { title: 'Pending Reviews', to: '/pending-reviews' },
+    { title: 'My Reviews', to: `/reviews/Farmer/${user?.id}` },
     { title: 'Market Prices', to: '/prices' },
-  ]
+  ];
 
-  const items = links.length ? links : defaultLinks
+  const items = links.length ? links : defaultLinks;
 
   return (
     <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
@@ -32,10 +38,10 @@ const FarmerPanel = ({ links = [] }) => {
         ))}
       </div>
       <div className="mt-4 rounded-xl border border-dashed border-emerald-200 bg-emerald-50/40 p-4 text-sm text-emerald-800">
-        Add farmer-specific widgets and analytics here.
+        🌾 Manage your products and harvest listings. Keep inventory updated for buyers.
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default FarmerPanel
+export default FarmerPanel;
