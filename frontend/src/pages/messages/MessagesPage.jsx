@@ -139,6 +139,11 @@ const MessagesPage = () => {
     try {
       const res = await fetchConversation(token, targetUser._id);
       setMessages(res?.data || []);
+
+      // Opening a conversation marks inbound messages as read in backend.
+      if (!silent) {
+        void loadSidebarData({ silent: true });
+      }
     } catch (error) {
       if (!silent) {
         toast.error(error.message || 'Failed to load conversation');
@@ -191,17 +196,28 @@ const MessagesPage = () => {
         map.set(item.user._id, {
           ...item.user,
           lastMessage: item.lastMessage,
+          unreadCount: item.unreadCount || 0,
         });
       }
     });
 
     chatUsers.forEach((item) => {
       if (item?._id && !map.has(item._id)) {
-        map.set(item._id, item);
+        map.set(item._id, {
+          ...item,
+          unreadCount: 0,
+        });
       }
     });
 
-    const allUsers = Array.from(map.values());
+    const allUsers = Array.from(map.values()).sort((a, b) => {
+      const unreadDiff = (b.unreadCount || 0) - (a.unreadCount || 0);
+      if (unreadDiff !== 0) return unreadDiff;
+
+      const aTime = new Date(a.lastMessage?.createdAt || 0).getTime();
+      const bTime = new Date(b.lastMessage?.createdAt || 0).getTime();
+      return bTime - aTime;
+    });
     const term = search.trim().toLowerCase();
 
     if (!term) return allUsers;
@@ -264,6 +280,7 @@ const MessagesPage = () => {
                 <div className="space-y-2 overflow-y-auto pr-1">
                   {mergedUsers.map((item) => {
                     const isActive = activeUser?._id === item._id;
+                    const hasUnread = (item.unreadCount || 0) > 0;
                     return (
                       <button
                         key={item._id}
@@ -271,13 +288,26 @@ const MessagesPage = () => {
                         className={`w-full rounded-xl border px-3 py-2 text-left transition ${
                           isActive
                             ? 'border-emerald-300 bg-emerald-50'
-                            : 'border-slate-200 bg-white hover:border-emerald-200 hover:bg-emerald-50/40'
+                            : hasUnread
+                              ? 'border-amber-300 bg-amber-50/60 hover:border-amber-400'
+                              : 'border-slate-200 bg-white hover:border-emerald-200 hover:bg-emerald-50/40'
                         }`}
                       >
-                        <p className="text-sm font-semibold text-slate-900">{item.fullName}</p>
+                        <div className="flex items-start justify-between gap-2">
+                          <p className={`text-sm ${hasUnread ? 'font-bold text-slate-900' : 'font-semibold text-slate-900'}`}>
+                            {item.fullName}
+                          </p>
+                          {hasUnread && (
+                            <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-bold text-white">
+                              {item.unreadCount > 99 ? '99+' : item.unreadCount}
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs text-slate-500">{item.role} • {item.email}</p>
                         {item.lastMessage?.content ? (
-                          <p className="mt-1 line-clamp-1 text-xs text-slate-600">{item.lastMessage.content}</p>
+                          <p className={`mt-1 line-clamp-1 text-xs ${hasUnread ? 'font-semibold text-slate-800' : 'text-slate-600'}`}>
+                            {item.lastMessage.content}
+                          </p>
                         ) : (
                           <p className="mt-1 text-xs text-slate-400">No messages yet</p>
                         )}
