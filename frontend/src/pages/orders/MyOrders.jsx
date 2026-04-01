@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import ProfileNav from '../../components/ProfileNav';
 import { useAuth } from '../../context/AuthContext';
@@ -10,6 +10,7 @@ const EDITABLE_STATUSES = ['Pending', 'Confirmed', 'Shipped', 'Cancelled'];
 const MyOrders = () => {
   const { token, user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,6 +38,25 @@ const MyOrders = () => {
 
     void loadOrders();
   }, [token, user?.role, pagination.page]);
+
+  useEffect(() => {
+    const payment = searchParams.get('payment');
+    if (!payment) return;
+
+    const orderId = searchParams.get('orderId');
+
+    if (payment === 'success') {
+      toast.success(orderId ? `Payment successful. Order ID: ${orderId}` : 'Payment successful');
+    } else if (payment === 'failed') {
+      toast.error('Payment was not completed');
+    } else if (payment === 'cancelled') {
+      toast('Payment was cancelled');
+    } else {
+      toast.error('Payment verification failed');
+    }
+
+    setSearchParams({}, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const loadOrders = async () => {
     setLoading(true);

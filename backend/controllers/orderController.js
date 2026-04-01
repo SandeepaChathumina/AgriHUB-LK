@@ -3,6 +3,8 @@ import Product from "../models/Product.js";
 import { getUSDPrice } from "../utils/currencyConverter.js";
 import * as paymentController from "./paymentController.js";
 
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+
 //Place a new order with Stripe Integration
 //POST /api/orders
 
@@ -165,35 +167,33 @@ export const deleteOrder = async (req, res) => {
 
 // In orderController.js
 export const verifyPayment = async (req, res) => {
-    try {
-        const { session_id } = req.query; 
+  try {
+    const { session_id } = req.query;
 
-        if (!session_id) {
-            return res.status(400).send("Session ID is missing.");
-        }
-
-        // Use the named import 'paymentController' you defined at the top
-        const session = await paymentController.verifyStripeSession(session_id);
-
-        if (session.payment_status === 'paid') {
-            await Order.findByIdAndUpdate(session.metadata.orderId, { 
-                paymentStatus: 'paid', 
-                status: 'Confirmed',
-                deliveryStatus: 'Requested' 
-            });
-
-            res.send(`
-                <div style="font-family: sans-serif; text-align: center; padding: 50px;">
-                    <h1 style="color: #28a745;">Payment Successful!</h1>
-                    <p>Order ID: ${session.metadata.orderId}</p>
-                    <a href="http://localhost:3000/api/orders/my-orders">View My Orders</a>
-                </div>
-            `);
-        } else {
-            res.status(400).send("Payment not completed.");
-        }
-    } catch (error) {
-        console.error("Verification Error:", error.message);
-        res.status(500).send("Internal Server Error.");
+    if (!session_id) {
+      return res.redirect(`${FRONTEND_URL}/orders?payment=error&reason=missing_session`);
     }
+
+    // Use the named import 'paymentController' you defined at the top
+    const session = await paymentController.verifyStripeSession(session_id);
+
+    if (session.payment_status === 'paid') {
+      await Order.findByIdAndUpdate(session.metadata.orderId, {
+        paymentStatus: 'paid',
+        status: 'Confirmed',
+        deliveryStatus: 'Requested'
+      });
+
+      return res.redirect(`${FRONTEND_URL}/orders?payment=success&orderId=${session.metadata.orderId}`);
+    }
+
+    return res.redirect(`${FRONTEND_URL}/orders?payment=failed`);
+  } catch (error) {
+    console.error("Verification Error:", error.message);
+    return res.redirect(`${FRONTEND_URL}/orders?payment=error`);
+  }
+};
+
+export const cancelPayment = async (req, res) => {
+  return res.redirect(`${FRONTEND_URL}/orders?payment=cancelled`);
 };

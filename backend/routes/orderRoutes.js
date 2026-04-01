@@ -5,7 +5,8 @@ import {
   getMyOrders, 
   updateOrder, 
   deleteOrder,
-  verifyPayment
+  verifyPayment,
+  cancelPayment
 
 } from '../controllers/orderController.js'; 
 
@@ -15,6 +16,7 @@ const router = express.Router();
 
 // 1. Public Route (No 'protect' middleware)
 router.get('/success', verifyPayment);
+router.get('/cancel', cancelPayment);
 
 // 2. Protected Routes
 router.use(protect);
