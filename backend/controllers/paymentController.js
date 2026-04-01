@@ -6,6 +6,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export const createStripeSession = async (order, product) => {
     try {
+        const backendUrl = process.env.BACKEND_URL || 'http://localhost:3000';
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             line_items: [{
@@ -21,8 +22,8 @@ export const createStripeSession = async (order, product) => {
             }],
             mode: 'payment',
             // Redirects for Postman/Browser testing
-            success_url: `http://localhost:3000/api/orders/success?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `http://localhost:3000/api/orders/cancel`,
+            success_url: `${backendUrl}/api/orders/success?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${backendUrl}/api/orders/cancel`,
             metadata: { orderId: order._id.toString() }
         });
 

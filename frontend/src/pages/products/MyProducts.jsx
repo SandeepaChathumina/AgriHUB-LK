@@ -228,7 +228,7 @@ const MyProducts = () => {
           {/* Filters */}
           <div className="mb-6 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
             <form onSubmit={handleSearch} className="flex flex-wrap gap-4">
-              <div className="flex-1 min-w-[200px]">
+              <div className="flex-1 min-w-50">
                 <input
                   type="text"
                   placeholder="Search by product name..."
