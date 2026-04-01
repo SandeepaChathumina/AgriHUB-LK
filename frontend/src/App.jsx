@@ -24,6 +24,9 @@ import MyProducts from './pages/products/MyProducts.jsx'  // Add this import
 import CreateOrder from './pages/orders/CreateOrder.jsx'
 import MyOrders from './pages/orders/MyOrders.jsx'
 
+// NEW IMPORTS - Messaging
+import MessagesPage from './pages/messages/MessagesPage.jsx'
+
 // NEW IMPORTS - Review Management
 import ProductReviews from './pages/reviews/ProductReviews.jsx'
 import PendingReviews from './pages/reviews/PendingReviews.jsx'
@@ -58,6 +61,10 @@ function App() {
           {/* Order Routes */}
           <Route path="/order/:productId" element={<CreateOrder />} />
           <Route path="/orders" element={<MyOrders />} />
+
+          {/* Messaging Routes */}
+          <Route path="/chat" element={<MessagesPage />} />
+          <Route path="/messages" element={<MessagesPage />} />
           
           {/* Review Routes */}
           <Route path="/reviews/:targetType/:targetId" element={<ProductReviews />} />

@@ -10,6 +10,7 @@ const FarmerPanel = ({ links = [] }) => {
     { title: 'My Products', to: '/my-products' },  // Changed from /products to /my-products
     { title: 'Add Product', to: '/products/add' },
     { title: 'Orders', to: '/orders' },
+    { title: 'Messages', to: '/chat' },
     { title: 'Pending Reviews', to: '/pending-reviews' },
     { title: 'My Reviews', to: `/reviews/Farmer/${user?.id}` },
     { title: 'Market Prices', to: '/prices' },

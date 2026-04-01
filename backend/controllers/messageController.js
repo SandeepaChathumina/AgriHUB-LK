@@ -215,9 +215,24 @@ export const getConversationList = async (req, res) => {
       }
     }
 
+    const conversations = await Promise.all(
+      Array.from(conversationMap.values()).map(async (conversation) => {
+        const unreadCount = await Message.countDocuments({
+          sender: conversation.user._id,
+          receiver: currentUserId,
+          isRead: false,
+        });
+
+        return {
+          ...conversation,
+          unreadCount,
+        };
+      })
+    );
+
     return res.status(200).json({
       success: true,
-      data: Array.from(conversationMap.values()),
+      data: conversations,
     });
   } catch (error) {
     return res.status(500).json({
