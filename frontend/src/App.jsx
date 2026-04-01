@@ -20,6 +20,10 @@ import AddProduct from './pages/products/AddProduct.jsx'
 import EditProduct from './pages/products/EditProduct.jsx'
 import MyProducts from './pages/products/MyProducts.jsx'  // Add this import
 
+// NEW IMPORTS - Order Management
+import CreateOrder from './pages/orders/CreateOrder.jsx'
+import MyOrders from './pages/orders/MyOrders.jsx'
+
 // NEW IMPORTS - Review Management
 import ProductReviews from './pages/reviews/ProductReviews.jsx'
 import PendingReviews from './pages/reviews/PendingReviews.jsx'
@@ -50,6 +54,10 @@ function App() {
           <Route path="/my-products" element={<MyProducts />} />  {/* Add this route */}
           <Route path="/products/add" element={<AddProduct />} />
           <Route path="/products/edit/:id" element={<EditProduct />} />
+
+          {/* Order Routes */}
+          <Route path="/order/:productId" element={<CreateOrder />} />
+          <Route path="/orders" element={<MyOrders />} />
           
           {/* Review Routes */}
           <Route path="/reviews/:targetType/:targetId" element={<ProductReviews />} />
