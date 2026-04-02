@@ -68,38 +68,82 @@ const VehicleSchema = new mongoose.Schema({
     default: 'Available'
   },
   
-  manufacturingYear: Number,
+  manufacturingYear: {
+    type: Number,
+    min: 1950,
+    max: new Date().getFullYear()
+  },
+  
   lastMaintenanceDate: Date,
   nextMaintenanceDue: Date,
   insuranceExpiry: Date,
-  registrationExpiry: Date
+  registrationExpiry: Date,
+  
+  images: [{
+    url: String,
+    publicId: String
+  }]
 }, { timestamps: true });
 
-// Fixed pre-save hook - async function WITHOUT next parameter
+// Fixed pre-save hook - generate unique vehicle ID per transporter
 VehicleSchema.pre('save', async function() {
-  // Only generate vehicleId for new documents
   if (this.isNew) {
     try {
       const Vehicle = mongoose.model('Vehicle');
       
-      // Count existing vehicles for this transporter and category
-      const count = await Vehicle.countDocuments({
-        transporter: this.transporter,
-        category: this.category
-      });
+      // Get all vehicles for this transporter
+      const vehicles = await Vehicle.find({ transporter: this.transporter });
       
-      // Generate vehicle ID (e.g., T001, L002, etc.)
+      // Count existing vehicles for this transporter
+      const count = vehicles.length;
+      
+      // Get prefix based on category
       const prefix = { 
-        'Truck': 'T', 
-        'Lorry': 'L', 
-        'Pickup': 'P', 
-        'Van': 'V' 
-      }[this.category] || 'V';
+        'Truck': 'TRK',
+        'Lorry': 'LRY', 
+        'Pickup': 'PCK', 
+        'Van': 'VAN'
+      }[this.category] || 'VEH';
       
-      this.vehicleId = `${prefix}${String(count + 1).padStart(3, '0')}`;
+      // Generate unique ID (e.g., TRK001, LRY002, etc.)
+      let newId = `${prefix}${String(count + 1).padStart(3, '0')}`;
+      
+      // Ensure uniqueness across all vehicles (not just this transporter's)
+      let existingVehicle = await Vehicle.findOne({ vehicleId: newId });
+      let counter = 1;
+      
+      while (existingVehicle) {
+        newId = `${prefix}${String(count + counter).padStart(3, '0')}`;
+        existingVehicle = await Vehicle.findOne({ vehicleId: newId });
+        counter++;
+      }
+      
+      this.vehicleId = newId;
     } catch (error) {
-      // In async middleware without next, throw the error
       throw error;
+    }
+  }
+  
+  // Auto set status to Offline if insurance or registration expired
+  const today = new Date();
+  if (this.insuranceExpiry && new Date(this.insuranceExpiry) < today) {
+    this.status = 'Offline';
+  }
+  if (this.registrationExpiry && new Date(this.registrationExpiry) < today) {
+    this.status = 'Offline';
+  }
+});
+
+// Middleware to check expiry on update
+VehicleSchema.pre('findOneAndUpdate', async function() {
+  const update = this.getUpdate();
+  if (update.$set) {
+    const today = new Date();
+    if (update.$set.insuranceExpiry && new Date(update.$set.insuranceExpiry) < today) {
+      update.$set.status = 'Offline';
+    }
+    if (update.$set.registrationExpiry && new Date(update.$set.registrationExpiry) < today) {
+      update.$set.status = 'Offline';
     }
   }
 });

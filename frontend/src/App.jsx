@@ -31,6 +31,12 @@ import MessagesPage from './pages/messages/MessagesPage.jsx'
 import ProductReviews from './pages/reviews/ProductReviews.jsx'
 import PendingReviews from './pages/reviews/PendingReviews.jsx'
 
+// it23831254 - Vehicle Management
+import Vehicles from './pages/vehicles/Vehicles.jsx';
+import AddVehicle from './pages/vehicles/AddVehicle.jsx';
+import EditVehicle from './pages/vehicles/EditVehicle.jsx';
+import VehicleDetails from './pages/vehicles/VehicleDetails.jsx';
+
 function App() {
   return (
     <AuthProvider>
@@ -69,6 +75,13 @@ function App() {
           {/* Review Routes */}
           <Route path="/reviews/:targetType/:targetId" element={<ProductReviews />} />
           <Route path="/pending-reviews" element={<PendingReviews />} />
+
+          {/* Vehicle Routes */}
+          <Route path="/vehicles" element={<Vehicles />} />
+          <Route path="/vehicles/add" element={<AddVehicle />} />
+          <Route path="/vehicles/edit/:id" element={<EditVehicle />} />
+          <Route path="/vehicles/:id" element={<VehicleDetails />} />
+
         </Routes>
       </BrowserRouter>
     </AuthProvider>
