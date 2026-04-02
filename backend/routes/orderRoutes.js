@@ -6,23 +6,24 @@ import {
   updateOrder, 
   deleteOrder,
   verifyPayment,
-  cancelPayment
-
+  cancelPayment,
+  getOrderById
 } from '../controllers/orderController.js'; 
 
 import { protect, authorizeRoles } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// 1. Public Route (No 'protect' middleware)
+// 1. Public Routes (No 'protect' middleware)
 router.get('/success', verifyPayment);
 router.get('/cancel', cancelPayment);
 
 // 2. Protected Routes
 router.use(protect);
 
-router.post('/', authorizeRoles('Distributor'), placeOrder);
 router.get('/my-orders', authorizeRoles('Distributor'), getMyOrders);
+router.post('/', authorizeRoles('Distributor'), placeOrder);
+router.get('/:id', getOrderById);
 router.put('/:id', updateOrder);
 router.delete('/:id', deleteOrder);
 

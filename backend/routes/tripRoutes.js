@@ -7,7 +7,9 @@ import {
   updateTripStatus,
   changeVehicle,
   cancelTrip,
-  getTripStats
+  getTripStats,
+  requestTrip,
+  getOrderForTrip                    // ← Added
 } from '../controllers/tripController.js';
 import { protect, authorizeRoles } from '../middleware/authMiddleware.js';
 
@@ -16,6 +18,9 @@ const router = express.Router();
 // All routes require authentication and Transporter role
 router.use(protect);
 router.use(authorizeRoles('Transporter', 'Admin'));
+
+// NEW: Get order details for trip creation
+router.get('/order/:orderId', getOrderForTrip);
 
 // Get available orders for transport
 router.get('/available-orders', getAvailableOrders);
@@ -40,5 +45,8 @@ router.patch('/:id/vehicle', changeVehicle);
 
 // Cancel trip
 router.delete('/:id', cancelTrip);
+
+// Distributor route for requesting transport - Allow Distributors
+router.post('/request', authorizeRoles('Distributor'), requestTrip);
 
 export default router;

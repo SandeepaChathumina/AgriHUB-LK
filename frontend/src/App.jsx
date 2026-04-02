@@ -23,6 +23,7 @@ import MyProducts from './pages/products/MyProducts.jsx'  // Add this import
 // NEW IMPORTS - Order Management
 import CreateOrder from './pages/orders/CreateOrder.jsx'
 import MyOrders from './pages/orders/MyOrders.jsx'
+import AvailableVehicles from './pages/orders/AvailableVehicles.jsx';
 
 // NEW IMPORTS - Messaging
 import MessagesPage from './pages/messages/MessagesPage.jsx'
@@ -36,6 +37,12 @@ import Vehicles from './pages/vehicles/Vehicles.jsx';
 import AddVehicle from './pages/vehicles/AddVehicle.jsx';
 import EditVehicle from './pages/vehicles/EditVehicle.jsx';
 import VehicleDetails from './pages/vehicles/VehicleDetails.jsx';
+
+// it23831254 - Trip Management
+import MyTrips from './pages/trips/MyTrips.jsx';
+import TripDetails from './pages/trips/TripDetails.jsx';
+import AvailableOrders from './pages/trips/AvailableOrders.jsx';
+import CreateTripPage from './pages/trips/CreateTripPage.jsx';
 
 function App() {
   return (
@@ -67,7 +74,8 @@ function App() {
           {/* Order Routes */}
           <Route path="/order/:productId" element={<CreateOrder />} />
           <Route path="/orders" element={<MyOrders />} />
-
+          <Route path="/orders/:orderId/request-transport" element={<AvailableVehicles />} />
+          
           {/* Messaging Routes */}
           <Route path="/chat" element={<MessagesPage />} />
           <Route path="/messages" element={<MessagesPage />} />
@@ -81,6 +89,12 @@ function App() {
           <Route path="/vehicles/add" element={<AddVehicle />} />
           <Route path="/vehicles/edit/:id" element={<EditVehicle />} />
           <Route path="/vehicles/:id" element={<VehicleDetails />} />
+
+          {/* Trip Routes */}
+          <Route path="/trips" element={<MyTrips />} />
+          <Route path="/trips/:id" element={<TripDetails />} />
+          <Route path="/available-orders" element={<AvailableOrders />} />
+          <Route path="/create-trip/:orderId" element={<CreateTripPage />} />
 
         </Routes>
       </BrowserRouter>

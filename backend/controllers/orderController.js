@@ -139,6 +139,30 @@ export const updateOrder = async (req, res) => {
   }
 };
 
+// Get single order by ID
+// GET /api/orders/:id
+export const getOrderById = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id)
+      .populate('product')
+      .populate('distributor', 'fullName email phone');
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    // Check if user is authorized (distributor who placed order or admin)
+    if (order.distributor._id.toString() !== req.user._id.toString() && req.user.role !== 'Admin') {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+
+    res.status(200).json({ success: true, order });
+  } catch (error) {
+    console.error('Get order by ID error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 //Cancel Order and restore stock
 //DELETE /api/orders/:id
 
