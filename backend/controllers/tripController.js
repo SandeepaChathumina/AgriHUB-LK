@@ -581,3 +581,204 @@ export const getTripStats = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// @desc    Request a trip by distributor
+// @route   POST /api/trips/request
+export const requestTrip = async (req, res) => {
+  try {
+    const {
+      orderId,
+      vehicleId,
+      scheduledPickup,
+      estimatedDelivery,
+      expectedDeliveryFee
+    } = req.body;
+
+    const distributorId = req.user._id;
+
+    console.log('Request trip received:', { orderId, vehicleId, scheduledPickup, estimatedDelivery, expectedDeliveryFee, distributorId });
+
+    // Validation
+    if (!orderId || !vehicleId || !scheduledPickup || !estimatedDelivery || !expectedDeliveryFee) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields'
+      });
+    }
+
+    // Import models if not already imported at the top
+    const Order = await import('../models/Order.js').then(m => m.default);
+    const Vehicle = await import('../models/Vehicle.js').then(m => m.default);
+    const Trip = await import('../models/Trip.js').then(m => m.default);
+
+    // Check order
+    const order = await Order.findById(orderId)
+      .populate({
+        path: 'product',
+        populate: { path: 'farmer', select: 'fullName phone location' }
+      })
+      .populate('distributor', 'fullName phone');
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    // Check if distributor owns the order
+    if (order.distributor._id.toString() !== distributorId.toString()) {
+      return res.status(403).json({ success: false, message: 'Not authorized - You do not own this order' });
+    }
+
+    // Check if order is eligible for transport
+    if (order.status !== 'Confirmed' || order.deliveryStatus !== 'Requested') {
+      return res.status(400).json({
+        success: false,
+        message: `Order is not available for transport request. Status: ${order.status}, Delivery: ${order.deliveryStatus}`
+      });
+    }
+
+    // Check vehicle
+    const vehicle = await Vehicle.findById(vehicleId);
+    if (!vehicle) {
+      return res.status(404).json({ success: false, message: 'Vehicle not found' });
+    }
+
+    if (vehicle.status !== 'Available') {
+      return res.status(400).json({
+        success: false,
+        message: `Vehicle is not available (status: ${vehicle.status})`
+      });
+    }
+
+    // Check vehicle availability for the time slot
+    const pickupDate = new Date(scheduledPickup);
+    const deliveryDate = new Date(estimatedDelivery);
+
+    if (pickupDate < new Date()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Pickup time cannot be in the past'
+      });
+    }
+
+    if (deliveryDate <= pickupDate) {
+      return res.status(400).json({
+        success: false,
+        message: 'Delivery must be after pickup'
+      });
+    }
+
+    // Get locations
+    const pickupLocation = order.product?.pickupLocation;
+    const dropoffLocation = order.deliveryAddress;
+
+    if (!pickupLocation || !dropoffLocation) {
+      return res.status(400).json({
+        success: false,
+        message: 'Pickup or dropoff location not found'
+      });
+    }
+
+    // Create trip request (status = Pending, waiting for transporter acceptance)
+    const tripData = {
+      order: orderId,
+      transporter: null,
+      vehicle: vehicleId,
+      pickupLocation: {
+        address: pickupLocation.address,
+        city: pickupLocation.city || order.product?.farmer?.location?.city,
+        district: pickupLocation.district || order.product?.farmer?.location?.district,
+        coordinates: pickupLocation.coordinates
+      },
+      dropoffLocation: {
+        address: dropoffLocation.addressLine,
+        city: dropoffLocation.city,
+        coordinates: dropoffLocation.coordinates
+      },
+      schedule: {
+        scheduledPickup: pickupDate,
+        estimatedDelivery: deliveryDate
+      },
+      costs: {
+        baseFare: Number(expectedDeliveryFee),
+        distanceCharge: 0,
+        additionalCharges: [],
+        totalCost: Number(expectedDeliveryFee)
+      },
+      tripStatus: 'Pending',
+      createdBy: distributorId
+    };
+
+    const trip = new Trip(tripData);
+    
+    // Add timeline event if the method exists
+    if (typeof trip.addTimelineEvent === 'function') {
+      trip.addTimelineEvent('Created', `Transport request created by distributor with expected fee: LKR ${expectedDeliveryFee}`, distributorId);
+    }
+    
+    await trip.save();
+
+    // Update order to show transport requested
+    order.deliveryStatus = 'Transport Requested';
+    await order.save();
+
+    await trip.populate([
+      { path: 'order', populate: { path: 'product' } },
+      { path: 'vehicle', select: 'vehicleId category registrationNumber brand model' },
+      { path: 'createdBy', select: 'fullName' }
+    ]);
+
+    res.status(201).json({
+      success: true,
+      message: 'Transport request sent successfully. Waiting for transporter acceptance.',
+      trip
+    });
+
+  } catch (error) {
+    console.error('Error requesting trip:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message || 'Failed to request transport'
+    });
+  }
+};
+
+// @desc    Get order details for trip creation (for transporters)
+// @route   GET /api/trips/order/:orderId
+export const getOrderForTrip = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const transporterId = req.user._id;
+
+    const order = await Order.findById(orderId)
+      .populate({
+        path: 'product',
+        populate: { path: 'farmer', select: 'fullName phone location' }
+      })
+      .populate('distributor', 'fullName phone email');
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    // Check if order is available for transport
+    if (order.status !== 'Confirmed' || order.deliveryStatus !== 'Requested') {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Order is not available for transport' 
+      });
+    }
+
+    // Check if already assigned to another transporter
+    if (order.transporter && order.transporter.toString() !== transporterId.toString()) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Order already assigned to another transporter' 
+      });
+    }
+
+    res.status(200).json({ success: true, order });
+  } catch (error) {
+    console.error('Get order for trip error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

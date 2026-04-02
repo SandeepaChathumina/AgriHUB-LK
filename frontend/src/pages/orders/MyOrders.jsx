@@ -289,6 +289,14 @@ const MyOrders = () => {
                             >
                               Cancel Order
                             </button>
+                            {order.deliveryStatus === 'Requested' && order.status === 'Confirmed' && (
+                              <Link
+                                to={`/orders/${order._id}/request-transport`}
+                                className="flex-1 rounded-xl border border-emerald-200 px-3 py-2 text-center text-sm font-semibold text-emerald-700 hover:bg-emerald-50"
+                              >
+                                Request Transport
+                              </Link>
+                            )}
                           </div>
                         )}
                       </div>

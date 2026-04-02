@@ -1,6 +1,14 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 
+// Navigation links 
+const quickLinks = [
+  { title: 'My Vehicles', path: '/vehicles', icon: '🚛', color: 'emerald' },
+  { title: 'My Trips', path: '/trips', icon: '📋', color: 'blue' },
+  { title: 'Available Orders', path: '/available-orders', icon: '📦', color: 'amber' },
+  { title: 'Add New Vehicle', path: '/vehicles/add', icon: '➕', color: 'purple' }
+];
+
 const TransporterPanel = ({ links = [] }) => {
   const defaultLinks = [
     { title: 'Profile', to: '/profile' },

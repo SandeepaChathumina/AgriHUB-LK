@@ -822,3 +822,64 @@ export const bulkUpdateStatus = async (req, res) => {
     });
   }
 };
+
+// @desc    Get available vehicles for transport (for distributors)
+// @route   GET /api/vehicles/available
+export const getAvailableVehicles = async (req, res) => {
+  try {
+    const { category, vehicleType, minCapacity, district, page = 1, limit = 50 } = req.query;
+    
+    // Build filter for available vehicles only
+    const filter = { status: 'Available' };
+    
+    // Apply filters
+    if (category && category !== 'All') {
+      filter.category = category;
+    }
+    if (vehicleType && vehicleType !== 'All') {
+      filter.vehicleType = vehicleType;
+    }
+    
+    // Add capacity filter if needed
+    if (minCapacity) {
+      filter['loadCapacity.weight.value'] = { $gte: parseInt(minCapacity) };
+    }
+    
+    // Pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    // Fetch vehicles with transporter details
+    let vehicles = await Vehicle.find(filter)
+      .populate('transporter', 'businessName companyName phone email location')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+    
+    // Filter by district if specified (based on transporter's location)
+    if (district && district !== 'All') {
+      vehicles = vehicles.filter(vehicle => 
+        vehicle.transporter?.location?.district === district
+      );
+    }
+    
+    // Get total count for pagination (without district filter for accurate count)
+    const total = await Vehicle.countDocuments(filter);
+    
+    res.status(200).json({
+      success: true,
+      count: vehicles.length,
+      total,
+      page: parseInt(page),
+      pages: Math.ceil(total / parseInt(limit)),
+      vehicles
+    });
+    
+  } catch (error) {
+    console.error('Error fetching available vehicles:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching available vehicles',
+      error: error.message 
+    });
+  }
+};

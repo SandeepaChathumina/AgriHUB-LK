@@ -264,7 +264,8 @@ const Vehicles = () => {
     <>
       <ProfileNav active="vehicles" links={[
         { key: 'vehicles', label: 'My Vehicles', to: '/vehicles' },
-        { key: 'trips', label: 'Trips', to: '/trips' }
+        { key: 'trips', label: 'My Trips', to: '/trips' },
+        { key: 'available', label: 'Available Orders', to: '/available-orders' }
       ]} />
 
       <div className="min-h-screen bg-slate-50 px-4 py-8">
