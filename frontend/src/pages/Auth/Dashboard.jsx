@@ -18,12 +18,10 @@ function Dashboard() {
   const displayName = profile?.fullName || user?.fullName || 'Guest User'
   const displayRole = profile?.role || user?.role || 'Member'
   const initial = (displayName?.[0] || 'U').toUpperCase()
-  const isVerified = Boolean(profile?.isVerified ?? user?.isVerified)
 
-  useEffect(() => {
-    console.log('auth user', user)
-    console.log('auth token', token)
-  }, [user])
+  // You asked: active green dot / inactive red dot
+  // Using verification state as the status source for now
+  const isActive = Boolean(profile?.isVerified ?? user?.isVerified)
 
   useEffect(() => {
     if (!isAuthReady) return
@@ -41,6 +39,7 @@ function Dashboard() {
 
   useEffect(() => {
     if (!token) return
+
     const fetchProfile = async () => {
       setLoadingProfile(true)
       try {
@@ -49,10 +48,12 @@ function Dashboard() {
             Authorization: `Bearer ${token}`,
           },
         })
+
         if (!res.ok) {
           const body = await res.json().catch(() => ({}))
           throw new Error(body?.message || 'Failed to load profile')
         }
+
         const data = await res.json()
         setProfile(data?.user || null)
       } catch (error) {
@@ -77,6 +78,7 @@ function Dashboard() {
       toast.error('Email not available for verification')
       return
     }
+
     const email = profile?.email || user?.email
 
     setRequestingOtp(true)
@@ -103,90 +105,98 @@ function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 px-4 py-10">
-
-      <div className="mx-auto flex max-w-5xl flex-col gap-8">
-        <div className="flex flex-col gap-3 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 md:flex-row md:items-center md:justify-between">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-emerald-50 px-4 py-10">
+      <div className="mx-auto flex max-w-6xl flex-col gap-8">
+        {/* Top Header Card */}
+        <div className="flex flex-col gap-4 rounded-[28px] bg-white p-6 shadow-sm ring-1 ring-slate-200 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-xl font-bold text-emerald-700">
               {initial}
             </div>
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-semibold text-slate-900">{displayName}</h1>
+
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-semibold text-slate-900">
+                    {displayName}
+                  </h1>
+
+                  {/* Active / Inactive dot */}
+                  <span className="relative flex h-3 w-3">
+                    <span
+                      className={`absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                        isActive ? 'bg-green-400' : 'bg-red-400'
+                      } animate-ping`}
+                    ></span>
+                    <span
+                      className={`relative inline-flex h-3 w-3 rounded-full ${
+                        isActive ? 'bg-green-500' : 'bg-red-500'
+                      }`}
+                    ></span>
+                  </span>
+                </div>
+
                 <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase text-slate-700">
                   {displayRole}
                 </span>
-                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${isVerified ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                  {isVerified ? 'Verified' : 'Pending Verification'}
+
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                    isActive
+                      ? 'bg-emerald-100 text-emerald-700'
+                      : 'bg-red-100 text-red-700'
+                  }`}
+                >
+                  {isActive ? 'Active' : 'Inactive'}
                 </span>
               </div>
-              <p className="text-sm text-slate-600">Securely manage your profile, actions, and quick links below.</p>
+
+              <p className="text-sm text-slate-600">
+                Securely manage your account, shortcuts, and role-based actions from your dashboard.
+              </p>
+
+              <p className="text-xs text-slate-500">
+  Welcome back 👋
+</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+
+          <div className="flex flex-wrap items-center gap-3">
             <Link
               to="/notifications"
-              className="rounded-xl border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-emerald-700 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50"
+              className="rounded-xl border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-emerald-700 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-50"
             >
               Notifications
             </Link>
-            {!isVerified && (
+
+            {!isActive && (
               <button
                 onClick={handleVerify}
-                className="rounded-xl border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-emerald-700 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50"
+                className="rounded-xl border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-emerald-700 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-60"
                 disabled={loadingProfile || requestingOtp}
               >
                 {loadingProfile || requestingOtp ? 'Sending OTP...' : `Verify ${displayRole}`}
               </button>
             )}
+
             <button
               onClick={handleLogout}
               type="button"
-              className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
+              className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800"
             >
               Logout
             </button>
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Profile</p>
-            <p className="mt-2 text-lg font-semibold text-slate-900">Overview</p>
-            <div className="mt-4 space-y-2 text-sm text-slate-700">
-              <div className="flex justify-between">
-                <span>Name</span>
-                <span className="font-semibold text-slate-900">{displayName}</span>
-              </div>
-              {/* User ID Section */}
-              <div className="flex justify-between items-center gap-4">
-                <span className="shrink-0">User ID</span>
-                <span className="truncate font-mono text-xs font-semibold text-slate-500">
-                  {user?.id}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span>Role</span>
-                <span className="font-semibold text-slate-900">{displayRole}</span>
-              </div>
-              {token && (
-                <div className="flex justify-between">
-                  <span>Session</span>
-                  <span className="truncate text-emerald-700" title={token}>Active</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="md:col-span-2">
-            {displayRole === 'Farmer' && <FarmerPanel />}
-            {displayRole === 'Distributor' && <DistributorPanel />}
-            {displayRole === 'Transporter' && <TransporterPanel />}
-            {displayRole !== 'Farmer' && displayRole !== 'Distributor' && displayRole !== 'Transporter' && (
-              <MemberPanel />
-            )}
-          </div>
+        {/* Full width role panel */}
+        <div>
+          {displayRole === 'Farmer' && <FarmerPanel />}
+          {displayRole === 'Distributor' && <DistributorPanel />}
+          {displayRole === 'Transporter' && <TransporterPanel />}
+          {displayRole !== 'Farmer' &&
+            displayRole !== 'Distributor' &&
+            displayRole !== 'Transporter' && <MemberPanel />}
         </div>
       </div>
     </div>

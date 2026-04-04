@@ -151,7 +151,7 @@ const OurMission = () => {
             </p>
           </div>
 
-          <div className="bg-gradient-to-br from-green-500/10 to-white/5 border border-white/10 rounded-3xl p-8 md:p-10 backdrop-blur-2xl">
+          <div className="bg-linear-to-br from-green-500/10 to-white/5 border border-white/10 rounded-3xl p-8 md:p-10 backdrop-blur-2xl">
             <p className="text-green-300 uppercase tracking-[0.2em] text-sm font-semibold mb-4">
               Our Vision
             </p>
@@ -231,7 +231,7 @@ const OurMission = () => {
               </p>
             </div>
 
-            <div className="bg-gradient-to-br from-green-500/15 to-transparent border border-green-500/20 rounded-3xl p-8">
+            <div className="bg-linear-to-br from-green-500/15 to-transparent border border-green-500/20 rounded-3xl p-8">
               <div className="text-6xl md:text-7xl font-black text-green-400 mb-4">
                 2
               </div>
@@ -279,7 +279,7 @@ const OurMission = () => {
 
       {/* Bottom CTA */}
       <section className="max-w-7xl mx-auto px-6 md:px-8 pb-24">
-        <div className="bg-gradient-to-r from-green-500/10 via-white/5 to-green-500/10 border border-white/10 rounded-3xl p-8 md:p-12 text-center backdrop-blur-2xl">
+        <div className="bg-linear-to-r from-green-500/10 via-white/5 to-green-500/10 border border-white/10 rounded-3xl p-8 md:p-12 text-center backdrop-blur-2xl">
           <h2 className="text-3xl md:text-4xl font-black text-white mb-4">
             Join Our Mission
           </h2>

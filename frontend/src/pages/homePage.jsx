@@ -75,7 +75,7 @@ const Homepage = () => {
             Your browser does not support the video tag.
           </video>
 
-          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-[#07140d]" />
+          <div className="absolute inset-0 bg-linear-to-b from-black/40 via-black/20 to-[#07140d]" />
         </div>
 
         {/* Navbar */}
@@ -189,7 +189,7 @@ const Homepage = () => {
           {roleCards.map((card) => (
             <div
               key={card.id}
-              className={`relative min-h-[420px] rounded-3xl overflow-hidden border border-white/10 ${card.borderHover} transition-all duration-500 group hover:-translate-y-1`}
+              className={`relative min-h-105 rounded-3xl overflow-hidden border border-white/10 ${card.borderHover} transition-all duration-500 group hover:-translate-y-1`}
               style={{
                 backgroundImage: `url(${card.image})`,
                 backgroundSize: "cover",
@@ -197,7 +197,7 @@ const Homepage = () => {
               }}
             >
               {/* Image overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/20 group-hover:from-black/85 group-hover:via-black/50 group-hover:to-black/10 transition-all duration-500" />
+              <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/55 to-black/20 group-hover:from-black/85 group-hover:via-black/50 group-hover:to-black/10 transition-all duration-500" />
 
               {/* Content */}
               <div className="relative z-10 flex h-full flex-col justify-end p-8">
@@ -222,7 +222,7 @@ const Homepage = () => {
 
       {/* ================= FINAL CTA SECTION ================= */}
       <section className="relative z-10 max-w-7xl mx-auto px-6 md:px-8 pb-16">
-        <div className="bg-gradient-to-r from-green-500/10 via-white/5 to-green-500/10 border border-white/10 rounded-3xl p-8 md:p-12 text-center backdrop-blur-2xl">
+        <div className="bg-linear-to-r from-green-500/10 via-white/5 to-green-500/10 border border-white/10 rounded-3xl p-8 md:p-12 text-center backdrop-blur-2xl">
           <h2 className="text-3xl md:text-4xl font-black text-white mb-4">
             Join the Future of Agricultural Trade
           </h2>
