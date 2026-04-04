@@ -13,6 +13,7 @@ import VerifyEmail from './pages/Auth/VerifyEmail.jsx'
 import ForgotPassword from './pages/Auth/ForgotPassword.jsx'
 import ResetPassword from './pages/Auth/ResetPassword.jsx'
 import ProfilePage from './pages/Auth/ProfilePage.jsx'
+import OurMission from "./pages/OurMission";
 
 // NEW IMPORTS - Product Management
 import ProductList from './pages/products/ProductList.jsx'
@@ -52,6 +53,7 @@ function App() {
         
         <Routes>
           <Route path="/" element={<Homepage />} />
+          <Route path="/about" element={<OurMission />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<AdminUsers />} />
