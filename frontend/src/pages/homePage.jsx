@@ -11,11 +11,11 @@ import distributorImg from "../assets/distributor.png";
 
 const Homepage = () => {
   const distributors = [
-    { name: "Cargills", logo: "/assets/partners/cargills.png" },
-    { name: "Keells", logo: "/assets/partners/keells.png" },
-    { name: "Pettah Foods", logo: "/assets/partners/pettah-foods.png" },
-    { name: "Fresh Harvest", logo: "/assets/partners/fresh-harvest.png" },
-  ];
+  { name: "Cargills", logo: "/assets/partners/cargills.png" },
+  { name: "Keells", logo: "/assets/partners/keells.png" },
+  { name: "Pettah Foods", logo: "/assets/partners/pettah-foods.webp" },
+  { name: "Fresh Harvest", logo: "/assets/partners/fresh-harvest.jpg" },
+];
 
   const transporters = [
     { name: "Lanka Transport", logo: "/assets/partners/lanka-transport.png" },
