@@ -3,6 +3,7 @@ import Review from '../models/Review.js';
 import AggregatedRating from '../models/AggregatedRating.js';
 import Order from '../models/Order.js';
 import User from '../models/User.js';
+import Product from '../models/Product.js';
 import mongoose from 'mongoose';
 
 // Helper function to update aggregated ratings
@@ -25,44 +26,46 @@ const updateAggregatedRatings = async (targetType, targetId) => {
   const distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
   reviews.forEach(r => distribution[r.rating]++);
   
-  // Role-specific calculations
   let farmerSpecific = {};
   let transporterSpecific = {};
   let distributorSpecific = {};
   
   if (targetType === 'Farmer') {
-    const productQualitySum = reviews.reduce((sum, r) => sum + (r.criteria.productQuality || 0), 0);
-    const freshnessSum = reviews.reduce((sum, r) => sum + (r.criteria.freshness || 0), 0);
-    const packagingSum = reviews.reduce((sum, r) => sum + (r.criteria.packaging || 0), 0);
+    const productQualitySum = reviews.reduce((sum, r) => sum + (r.criteria?.productQuality || 0), 0);
+    const freshnessSum = reviews.reduce((sum, r) => sum + (r.criteria?.freshness || 0), 0);
+    const packagingSum = reviews.reduce((sum, r) => sum + (r.criteria?.packaging || 0), 0);
+    const count = reviews.length;
     
     farmerSpecific = {
-      averageProductQuality: productQualitySum / reviews.length,
-      averageFreshness: freshnessSum / reviews.length,
-      averagePackaging: packagingSum / reviews.length
+      averageProductQuality: count ? productQualitySum / count : 0,
+      averageFreshness: count ? freshnessSum / count : 0,
+      averagePackaging: count ? packagingSum / count : 0
     };
   }
   
   if (targetType === 'Transporter') {
-    const timelinessSum = reviews.reduce((sum, r) => sum + (r.criteria.timeliness || 0), 0);
-    const vehicleConditionSum = reviews.reduce((sum, r) => sum + (r.criteria.vehicleCondition || 0), 0);
-    const professionalismSum = reviews.reduce((sum, r) => sum + (r.criteria.professionalism || 0), 0);
+    const timelinessSum = reviews.reduce((sum, r) => sum + (r.criteria?.timeliness || 0), 0);
+    const vehicleConditionSum = reviews.reduce((sum, r) => sum + (r.criteria?.vehicleCondition || 0), 0);
+    const professionalismSum = reviews.reduce((sum, r) => sum + (r.criteria?.professionalism || 0), 0);
+    const count = reviews.length;
     
     transporterSpecific = {
-      averageTimeliness: timelinessSum / reviews.length,
-      averageVehicleCondition: vehicleConditionSum / reviews.length,
-      averageProfessionalism: professionalismSum / reviews.length
+      averageTimeliness: count ? timelinessSum / count : 0,
+      averageVehicleCondition: count ? vehicleConditionSum / count : 0,
+      averageProfessionalism: count ? professionalismSum / count : 0
     };
   }
   
   if (targetType === 'Distributor') {
-    const paymentReliabilitySum = reviews.reduce((sum, r) => sum + (r.criteria.paymentReliability || 0), 0);
-    const communicationSum = reviews.reduce((sum, r) => sum + (r.criteria.communication || 0), 0);
-    const wouldWorkAgainCount = reviews.filter(r => r.criteria.wouldWorkAgain === true).length;
+    const paymentReliabilitySum = reviews.reduce((sum, r) => sum + (r.criteria?.paymentReliability || 0), 0);
+    const communicationSum = reviews.reduce((sum, r) => sum + (r.criteria?.communication || 0), 0);
+    const wouldWorkAgainCount = reviews.filter(r => r.criteria?.wouldWorkAgain === true).length;
+    const count = reviews.length;
     
     distributorSpecific = {
-      averagePaymentReliability: paymentReliabilitySum / reviews.length,
-      averageCommunication: communicationSum / reviews.length,
-      wouldWorkAgainPercentage: (wouldWorkAgainCount / reviews.length) * 100
+      averagePaymentReliability: count ? paymentReliabilitySum / count : 0,
+      averageCommunication: count ? communicationSum / count : 0,
+      wouldWorkAgainPercentage: count ? (wouldWorkAgainCount / count) * 100 : 0
     };
   }
   
@@ -111,7 +114,7 @@ export const createReview = async (req, res) => {
       });
     }
     
-    // Verify the order exists and is completed/delivered
+    // Verify the order exists
     const order = await Order.findById(orderId);
     if (!order) {
       return res.status(404).json({
@@ -127,9 +130,8 @@ export const createReview = async (req, res) => {
       isAuthorized = order.distributor.toString() === reviewerId.toString();
       
       if (targetType === 'Farmer') {
-        // Verify the farmer is the one who sold the product
-        const product = await order.populate('product');
-        if (order.product?.farmer?.toString() !== targetId) {
+        await order.populate('product');
+        if (!order.product || order.product.farmer?.toString() !== targetId) {
           return res.status(403).json({
             success: false,
             message: 'You can only review the farmer who sold you this product'
@@ -138,8 +140,7 @@ export const createReview = async (req, res) => {
       }
       
       if (targetType === 'Transporter') {
-        // Verify transporter is assigned to this order
-        if (order.transporter?.toString() !== targetId) {
+        if (!order.transporter || order.transporter.toString() !== targetId) {
           return res.status(403).json({
             success: false,
             message: 'You can only review the transporter who delivered this order'
@@ -149,6 +150,7 @@ export const createReview = async (req, res) => {
     }
     
     if (reviewerRole === 'Farmer') {
+      await order.populate('product');
       isAuthorized = order.product?.farmer?.toString() === reviewerId.toString();
       
       if (targetType === 'Distributor') {
@@ -185,7 +187,7 @@ export const createReview = async (req, res) => {
     if (order.deliveryStatus !== 'Delivered') {
       return res.status(400).json({
         success: false,
-        message: 'You can only review after the order is delivered'
+        message: `You can only review after the order is delivered. Current status: ${order.deliveryStatus}`
       });
     }
     
@@ -204,12 +206,19 @@ export const createReview = async (req, res) => {
       });
     }
     
-    // Verify target exists
+    // Verify target exists and role matches
     const target = await User.findById(targetId);
-    if (!target || target.role !== targetType) {
+    if (!target) {
       return res.status(404).json({
         success: false,
         message: `${targetType} not found`
+      });
+    }
+    
+    if (target.role !== targetType) {
+      return res.status(400).json({
+        success: false,
+        message: `Target user is a ${target.role}, not a ${targetType}`
       });
     }
     
@@ -221,21 +230,20 @@ export const createReview = async (req, res) => {
       targetId,
       order: orderId,
       rating,
-      title,
+      title: title || '',
       comment,
       criteria: criteria || {},
       images: images || [],
-      isVerifiedPurchase: true
+      isVerifiedPurchase: true,
+      moderationStatus: 'Pending',
+      isPublished: false
     });
     
     await review.save();
     
-    // Update aggregated ratings
-    await updateAggregatedRatings(targetType, targetId);
-    
     res.status(201).json({
       success: true,
-      message: 'Review submitted successfully',
+      message: 'Review submitted successfully and pending moderation',
       review
     });
     
@@ -249,13 +257,12 @@ export const createReview = async (req, res) => {
   }
 };
 
-// 2. Get reviews for a target (Farmer/Distributor/Transporter)
+// 2. Get reviews for a target
 export const getReviewsForTarget = async (req, res) => {
   try {
     const { targetType, targetId } = req.params;
     const { page = 1, limit = 10, sort = 'newest', rating } = req.query;
     
-    // Validate target type
     if (!['Farmer', 'Distributor', 'Transporter'].includes(targetType)) {
       return res.status(400).json({
         success: false,
@@ -263,7 +270,6 @@ export const getReviewsForTarget = async (req, res) => {
       });
     }
     
-    // Build filter
     const filter = {
       targetType,
       targetId,
@@ -275,7 +281,6 @@ export const getReviewsForTarget = async (req, res) => {
       filter.rating = parseInt(rating);
     }
     
-    // Sort order
     let sortOption = {};
     if (sort === 'newest') sortOption = { createdAt: -1 };
     if (sort === 'oldest') sortOption = { createdAt: 1 };
@@ -283,11 +288,10 @@ export const getReviewsForTarget = async (req, res) => {
     if (sort === 'lowest') sortOption = { rating: 1 };
     if (sort === 'helpful') sortOption = { helpfulCount: -1 };
     
-    // Pagination
     const skip = (parseInt(page) - 1) * parseInt(limit);
     
     const reviews = await Review.find(filter)
-      .populate('reviewer', 'fullName')
+      .populate('reviewer', 'fullName email')
       .populate('order', 'createdAt totalPrice')
       .sort(sortOption)
       .skip(skip)
@@ -295,7 +299,6 @@ export const getReviewsForTarget = async (req, res) => {
     
     const total = await Review.countDocuments(filter);
     
-    // Get aggregated stats
     const stats = await AggregatedRating.findOne({ targetType, targetId });
     
     res.status(200).json({
@@ -326,11 +329,10 @@ export const getReviewsForTarget = async (req, res) => {
 export const getMyReviews = async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
-    
     const skip = (parseInt(page) - 1) * parseInt(limit);
     
     const reviews = await Review.find({ reviewer: req.user._id })
-      .populate('targetId', 'fullName businessName')
+      .populate('targetId', 'fullName businessName companyName email')
       .populate('order', 'createdAt totalPrice')
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -363,66 +365,75 @@ export const getPendingReviews = async (req, res) => {
     const userId = req.user._id;
     const userRole = req.user.role;
     
-    let filter = {
-      deliveryStatus: 'Delivered'
-    };
+    let filter = { deliveryStatus: 'Delivered' };
     
     if (userRole === 'Distributor') {
       filter.distributor = userId;
     } else if (userRole === 'Farmer') {
-      // For farmer, find orders where they were the product owner
-      const products = await mongoose.model('Product').find({ farmer: userId }).select('_id');
+      const products = await Product.find({ farmer: userId }).select('_id');
       const productIds = products.map(p => p._id);
       filter.product = { $in: productIds };
     } else if (userRole === 'Transporter') {
       filter.transporter = userId;
+    } else {
+      return res.status(403).json({
+        success: false,
+        message: 'Only Distributors, Farmers, and Transporters can access pending reviews'
+      });
     }
     
     const orders = await Order.find(filter)
       .populate('product', 'productName farmer')
-      .populate('distributor', 'fullName')
-      .populate('transporter', 'companyName')
+      .populate('distributor', 'fullName email')
+      .populate('transporter', 'companyName fullName')
       .sort({ createdAt: -1 });
     
-    // For each order, check which reviews are already written
     const ordersWithReviewStatus = await Promise.all(orders.map(async (order) => {
       const reviewableTargets = [];
       
       if (userRole === 'Distributor') {
-        // Can review farmer and transporter
-        const farmerReview = await Review.findOne({
-          reviewer: userId,
-          targetType: 'Farmer',
-          order: order._id
-        });
+        // Can review farmer
+        if (order.product && order.product.farmer) {
+          const farmerId = order.product.farmer._id || order.product.farmer;
+          const farmerName = order.product.farmer.fullName || 'Farmer';
+          
+          const farmerReview = await Review.findOne({
+            reviewer: userId,
+            targetType: 'Farmer',
+            order: order._id
+          });
+          
+          reviewableTargets.push({
+            type: 'Farmer',
+            targetId: farmerId,
+            targetName: farmerName,
+            isReviewed: !!farmerReview,
+            reviewId: farmerReview?._id
+          });
+        }
         
-        const transporterReview = await Review.findOne({
-          reviewer: userId,
-          targetType: 'Transporter',
-          order: order._id
-        });
-        
-        reviewableTargets.push({
-          type: 'Farmer',
-          targetId: order.product?.farmer,
-          targetName: order.product?.farmer?.fullName || 'Farmer',
-          isReviewed: !!farmerReview,
-          reviewId: farmerReview?._id
-        });
-        
+        // Can review transporter
         if (order.transporter) {
+          const transporterId = order.transporter._id || order.transporter;
+          const transporterName = order.transporter.companyName || order.transporter.fullName || 'Transporter';
+          
+          const transporterReview = await Review.findOne({
+            reviewer: userId,
+            targetType: 'Transporter',
+            order: order._id
+          });
+          
           reviewableTargets.push({
             type: 'Transporter',
-            targetId: order.transporter,
-            targetName: order.transporter?.companyName || 'Transporter',
+            targetId: transporterId,
+            targetName: transporterName,
             isReviewed: !!transporterReview,
             reviewId: transporterReview?._id
           });
         }
       }
       
-      if (userRole === 'Farmer') {
-        // Can review distributor
+      if (userRole === 'Farmer' && order.distributor) {
         const distributorReview = await Review.findOne({
           reviewer: userId,
           targetType: 'Distributor',
@@ -431,15 +442,14 @@ export const getPendingReviews = async (req, res) => {
         
         reviewableTargets.push({
           type: 'Distributor',
-          targetId: order.distributor,
-          targetName: order.distributor?.fullName || 'Distributor',
+          targetId: order.distributor._id || order.distributor,
+          targetName: order.distributor.fullName || 'Distributor',
           isReviewed: !!distributorReview,
           reviewId: distributorReview?._id
         });
       }
       
-      if (userRole === 'Transporter') {
-        // Can review distributor
+      if (userRole === 'Transporter' && order.distributor) {
         const distributorReview = await Review.findOne({
           reviewer: userId,
           targetType: 'Distributor',
@@ -448,8 +458,8 @@ export const getPendingReviews = async (req, res) => {
         
         reviewableTargets.push({
           type: 'Distributor',
-          targetId: order.distributor,
-          targetName: order.distributor?.fullName || 'Distributor',
+          targetId: order.distributor._id || order.distributor,
+          targetName: order.distributor.fullName || 'Distributor',
           isReviewed: !!distributorReview,
           reviewId: distributorReview?._id
         });
@@ -459,13 +469,13 @@ export const getPendingReviews = async (req, res) => {
         order: {
           _id: order._id,
           createdAt: order.createdAt,
-          totalPrice: order.totalPrice
+          totalPrice: order.totalPrice,
+          productName: order.product?.productName || 'Product'
         },
         reviewableTargets: reviewableTargets.filter(t => t.targetId)
       };
     }));
     
-    // Filter out orders with no pending reviews
     const pendingOrders = ordersWithReviewStatus.filter(
       order => order.reviewableTargets.some(t => !t.isReviewed)
     );
@@ -486,7 +496,7 @@ export const getPendingReviews = async (req, res) => {
   }
 };
 
-// 5. Update review (only if not responded to)
+// 5. Update review
 export const updateReview = async (req, res) => {
   try {
     const { reviewId } = req.params;
@@ -501,7 +511,6 @@ export const updateReview = async (req, res) => {
       });
     }
     
-    // Check ownership
     if (review.reviewer.toString() !== req.user._id.toString()) {
       return res.status(403).json({
         success: false,
@@ -509,7 +518,6 @@ export const updateReview = async (req, res) => {
       });
     }
     
-    // Check if review is already responded to
     if (review.response && review.response.text) {
       return res.status(400).json({
         success: false,
@@ -517,7 +525,6 @@ export const updateReview = async (req, res) => {
       });
     }
     
-    // Update fields
     if (rating) review.rating = rating;
     if (title) review.title = title;
     if (comment) review.comment = comment;
@@ -525,9 +532,6 @@ export const updateReview = async (req, res) => {
     if (images) review.images = images;
     
     await review.save();
-    
-    // Update aggregated ratings
-    await updateAggregatedRatings(review.targetType, review.targetId);
     
     res.status(200).json({
       success: true,
@@ -560,7 +564,6 @@ export const markHelpful = async (req, res) => {
       });
     }
     
-    // Check if user already marked as helpful
     if (review.helpfulUsers.includes(userId)) {
       return res.status(400).json({
         success: false,
@@ -588,7 +591,7 @@ export const markHelpful = async (req, res) => {
   }
 };
 
-// 7. Respond to review (for the target)
+// 7. Respond to review
 export const respondToReview = async (req, res) => {
   try {
     const { reviewId } = req.params;
@@ -611,7 +614,6 @@ export const respondToReview = async (req, res) => {
       });
     }
     
-    // Check if user is the target of the review
     if (review.targetId.toString() !== userId.toString()) {
       return res.status(403).json({
         success: false,
@@ -619,7 +621,6 @@ export const respondToReview = async (req, res) => {
       });
     }
     
-    // Update response
     review.response = {
       text: responseText.trim(),
       respondedBy: userId,
@@ -683,7 +684,7 @@ export const getReviewsForModeration = async (req, res) => {
   }
 };
 
-// 9. Admin: Moderate review (approve/reject)
+// 9. Admin: Moderate review
 export const moderateReview = async (req, res) => {
   try {
     const { reviewId } = req.params;
@@ -716,11 +717,9 @@ export const moderateReview = async (req, res) => {
     
     await review.save();
     
-    // Update aggregated ratings if approved
     if (status === 'Approved') {
       await updateAggregatedRatings(review.targetType, review.targetId);
     } else if (status === 'Rejected') {
-      // Recalculate ratings excluding this review
       await updateAggregatedRatings(review.targetType, review.targetId);
     }
     
@@ -759,7 +758,6 @@ export const deleteReview = async (req, res) => {
     
     await review.deleteOne();
     
-    // Update aggregated ratings
     await updateAggregatedRatings(targetType, targetId);
     
     res.status(200).json({
@@ -786,71 +784,50 @@ export const getReviewStats = async (req, res) => {
     let stats = {};
     
     if (userRole === 'Farmer') {
-      const reviews = await Review.find({
-        targetType: 'Farmer',
-        targetId: userId,
-        moderationStatus: 'Approved'
-      });
-      
       const aggregated = await AggregatedRating.findOne({
         targetType: 'Farmer',
         targetId: userId
       });
       
       stats = {
-        totalReviews: reviews.length,
+        totalReviews: aggregated?.totalReviews || 0,
         averageRating: aggregated?.averageRating || 0,
         ratingDistribution: aggregated?.ratingDistribution || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
         productQuality: aggregated?.farmerSpecific?.averageProductQuality || 0,
         freshness: aggregated?.farmerSpecific?.averageFreshness || 0,
-        packaging: aggregated?.farmerSpecific?.averagePackaging || 0,
-        recentReviews: reviews.slice(0, 5)
+        packaging: aggregated?.farmerSpecific?.averagePackaging || 0
       };
     }
     
     if (userRole === 'Transporter') {
-      const reviews = await Review.find({
-        targetType: 'Transporter',
-        targetId: userId,
-        moderationStatus: 'Approved'
-      });
-      
       const aggregated = await AggregatedRating.findOne({
         targetType: 'Transporter',
         targetId: userId
       });
       
       stats = {
-        totalReviews: reviews.length,
+        totalReviews: aggregated?.totalReviews || 0,
         averageRating: aggregated?.averageRating || 0,
         ratingDistribution: aggregated?.ratingDistribution || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
         timeliness: aggregated?.transporterSpecific?.averageTimeliness || 0,
         vehicleCondition: aggregated?.transporterSpecific?.averageVehicleCondition || 0,
-        professionalism: aggregated?.transporterSpecific?.averageProfessionalism || 0,
-        recentReviews: reviews.slice(0, 5)
+        professionalism: aggregated?.transporterSpecific?.averageProfessionalism || 0
       };
     }
     
     if (userRole === 'Distributor') {
-      const reviews = await Review.find({
-        targetType: 'Distributor',
-        targetId: userId,
-        moderationStatus: 'Approved'
-      });
-      
       const aggregated = await AggregatedRating.findOne({
         targetType: 'Distributor',
         targetId: userId
       });
       
       stats = {
-        totalReviews: reviews.length,
+        totalReviews: aggregated?.totalReviews || 0,
         averageRating: aggregated?.averageRating || 0,
         ratingDistribution: aggregated?.ratingDistribution || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
         paymentReliability: aggregated?.distributorSpecific?.averagePaymentReliability || 0,
         communication: aggregated?.distributorSpecific?.averageCommunication || 0,
-        wouldWorkAgainPercentage: aggregated?.distributorSpecific?.wouldWorkAgainPercentage || 0,
-        recentReviews: reviews.slice(0, 5)
+        wouldWorkAgainPercentage: aggregated?.distributorSpecific?.wouldWorkAgainPercentage || 0
       };
     }
     

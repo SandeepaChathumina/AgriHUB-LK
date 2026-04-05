@@ -1,3 +1,4 @@
+// controllers/tripController.js
 import Trip from '../models/Trip.js';
 import Order from '../models/Order.js';
 import Vehicle from '../models/Vehicle.js';
@@ -310,11 +311,11 @@ export const getTripById = async (req, res) => {
   }
 };
 
-// @desc    Update trip status
+// @desc    Update trip status - FIXED to set order as Delivered
 // @route   PATCH /api/trips/:id/status
 export const updateTripStatus = async (req, res) => {
   try {
-    const { status } = req.body;
+    const { status, reason } = req.body;
     const validStatuses = ['Accepted', 'In Progress', 'Completed', 'Cancelled'];
 
     if (!status || !validStatuses.includes(status)) {
@@ -367,11 +368,20 @@ export const updateTripStatus = async (req, res) => {
       // Update vehicle status
       await Vehicle.findByIdAndUpdate(trip.vehicle, { status: 'Available' });
       
-      // Update order
-      await Order.findByIdAndUpdate(trip.order, { deliveryStatus: 'Delivered' });
+      // IMPORTANT: Update order to DELIVERED so reviews can be written
+      const updatedOrder = await Order.findByIdAndUpdate(
+        trip.order, 
+        { 
+          deliveryStatus: 'Delivered',
+          status: 'Completed'
+        },
+        { new: true }
+      );
+      
+      console.log(`✅ Order ${trip.order} marked as DELIVERED - Reviews can now be written`);
       
     } else if (status === 'Cancelled') {
-      trip.cancellationReason = req.body.reason || 'No reason provided';
+      trip.cancellationReason = reason || 'No reason provided';
       trip.cancelledAt = new Date();
       
       // Make vehicle available again
@@ -393,6 +403,7 @@ export const updateTripStatus = async (req, res) => {
     });
 
   } catch (error) {
+    console.error('Update trip status error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -596,8 +607,6 @@ export const requestTrip = async (req, res) => {
 
     const distributorId = req.user._id;
 
-    console.log('Request trip received:', { orderId, vehicleId, scheduledPickup, estimatedDelivery, expectedDeliveryFee, distributorId });
-
     // Validation
     if (!orderId || !vehicleId || !scheduledPickup || !estimatedDelivery || !expectedDeliveryFee) {
       return res.status(400).json({
@@ -605,11 +614,6 @@ export const requestTrip = async (req, res) => {
         message: 'Missing required fields'
       });
     }
-
-    // Import models if not already imported at the top
-    const Order = await import('../models/Order.js').then(m => m.default);
-    const Vehicle = await import('../models/Vehicle.js').then(m => m.default);
-    const Trip = await import('../models/Trip.js').then(m => m.default);
 
     // Check order
     const order = await Order.findById(orderId)
@@ -710,7 +714,6 @@ export const requestTrip = async (req, res) => {
 
     const trip = new Trip(tripData);
     
-    // Add timeline event if the method exists
     if (typeof trip.addTimelineEvent === 'function') {
       trip.addTimelineEvent('Created', `Transport request created by distributor with expected fee: LKR ${expectedDeliveryFee}`, distributorId);
     }
