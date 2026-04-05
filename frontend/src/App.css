@@ -1,21 +1,100 @@
+/* App.css - Alternative version if CDN imports don't work */
 @import "tailwindcss";
 
-/* Leaflet CSS - Required for maps */
-@import 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-@import 'https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css';
-
-/* Fix Leaflet marker icons (important!) */
+/* Fix Leaflet marker icons */
 .leaflet-default-icon-path {
   background-image: url(https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png);
 }
 
+/* Leaflet container styling */
 .leaflet-container {
   width: 100%;
   height: 100%;
   z-index: 1;
 }
 
-/* Hide the itinerary panel if you don't want it showing instructions */
+/* Hide the itinerary panel */
 .leaflet-routing-container {
   display: none;
+}
+
+/* Ensure map tiles load properly */
+.leaflet-tile-pane {
+  z-index: 1;
+}
+
+/* Ensure controls are clickable */
+.leaflet-control-container {
+  z-index: 2;
+}
+
+/* Fix marker popup z-index */
+.leaflet-popup {
+  z-index: 3;
+}
+
+/* Custom marker styles */
+.custom-marker {
+  background-color: #10b981;
+  border: 2px solid white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* Loading state for map */
+.leaflet-map-loading {
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}
+
+/* Responsive map container */
+@media (max-width: 768px) {
+  .leaflet-container {
+    min-height: 300px;
+  }
+}
+
+/* Animation for map markers */
+@keyframes markerPulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Custom draggable marker style */
+.leaflet-marker-dragging {
+  cursor: move;
+}
+
+/* Ensure map is visible on all browsers */
+.leaflet-map-pane {
+  z-index: 1;
+}
+
+/* Routing instructions styling */
+.leaflet-routing-alt {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* Map container styling */
+.map-container {
+  border-radius: 0.75rem;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }

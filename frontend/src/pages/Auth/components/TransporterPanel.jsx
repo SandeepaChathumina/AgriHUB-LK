@@ -1,23 +1,21 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
-
-// Navigation links 
-const quickLinks = [
-  { title: 'My Vehicles', path: '/vehicles', icon: '🚛', color: 'emerald' },
-  { title: 'My Trips', path: '/trips', icon: '📋', color: 'blue' },
-  { title: 'Available Orders', path: '/available-orders', icon: '📦', color: 'amber' },
-  { title: 'Add New Vehicle', path: '/vehicles/add', icon: '➕', color: 'purple' }
-];
+// src/pages/Auth/components/TransporterPanel.jsx
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
 
 const TransporterPanel = ({ links = [] }) => {
+  const { user } = useAuth();
+  
   const defaultLinks = [
-    { title: 'Profile', to: '/profile' },
-    { title: 'Trips', to: '/trips' },
-    { title: 'Vehicles', to: '/vehicles' },
-    { title: 'Messages', to: '/chat' },
-  ]
+    { title: '👤 Profile', to: '/profile' },
+    { title: '🚛 My Vehicles', to: '/vehicles' },
+    { title: '📋 My Trips', to: '/trips' },
+    { title: '📦 Available Orders', to: '/available-orders' },
+    { title: '⭐ My Ratings', to: `/reviews/Transporter/${user?.id}` },
+    { title: '💬 Messages', to: '/chat' },
+  ];
 
-  const items = links.length ? links : defaultLinks
+  const items = links.length ? links : defaultLinks;
 
   return (
     <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
@@ -39,11 +37,11 @@ const TransporterPanel = ({ links = [] }) => {
           </Link>
         ))}
       </div>
-      <div className="mt-4 rounded-xl border border-dashed border-emerald-200 bg-emerald-50/40 p-4 text-sm text-emerald-800">
-        Add transporter-specific widgets (trips, vehicles, routes) here.
+      <div className="mt-4 rounded-xl border border-dashed border-blue-200 bg-blue-50/40 p-4 text-sm text-blue-800">
+        🚚 Complete deliveries to receive ratings from distributors. Your ratings affect your reputation!
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default TransporterPanel
+export default TransporterPanel;

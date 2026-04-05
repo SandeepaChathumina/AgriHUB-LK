@@ -1,3 +1,4 @@
+// src/pages/Auth/components/FarmerPanel.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
@@ -6,14 +7,13 @@ const FarmerPanel = ({ links = [] }) => {
   const { user } = useAuth();
   
   const defaultLinks = [
-    { title: 'Profile', to: '/profile' },
-    { title: 'My Products', to: '/my-products' },  // Changed from /products to /my-products
-    { title: 'Add Product', to: '/products/add' },
-    { title: 'Orders', to: '/orders' },
-    { title: 'Messages', to: '/chat' },
-    { title: 'Pending Reviews', to: '/pending-reviews' },
-    { title: 'My Reviews', to: `/reviews/Farmer/${user?.id}` },
-    { title: 'Market Prices', to: '/prices' },
+    { title: '👤 Profile', to: '/profile' },
+    { title: '🌾 My Products', to: '/my-products' },
+    { title: '➕ Add Product', to: '/products/add' },
+    { title: '📦 Orders', to: '/orders' },
+    { title: '⭐ My Ratings', to: `/reviews/Farmer/${user?.id}` },
+    { title: '💬 Messages', to: '/chat' },
+    { title: '📊 Market Prices', to: '/prices' },
   ];
 
   const items = links.length ? links : defaultLinks;
@@ -39,7 +39,7 @@ const FarmerPanel = ({ links = [] }) => {
         ))}
       </div>
       <div className="mt-4 rounded-xl border border-dashed border-emerald-200 bg-emerald-50/40 p-4 text-sm text-emerald-800">
-        🌾 Manage your products and harvest listings. Keep inventory updated for buyers.
+        🌾 Click on the map when adding products to set your pickup location accurately!
       </div>
     </div>
   );
