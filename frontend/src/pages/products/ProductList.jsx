@@ -1,3 +1,4 @@
+// src/pages/products/ProductList.jsx
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
@@ -9,6 +10,8 @@ const ProductList = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [farmerRatings, setFarmerRatings] = useState({});
+  const [loadingRatings, setLoadingRatings] = useState({});
   const [filters, setFilters] = useState({
     category: '',
     minPrice: '',
@@ -60,10 +63,44 @@ const ProductList = () => {
         total: data.total,
         pages: data.pages
       });
+      
+      // Fetch ratings for all farmers
+      fetchAllFarmerRatings(data.products || []);
     } catch (error) {
       toast.error(error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAllFarmerRatings = async (productsList) => {
+    const uniqueFarmerIds = [...new Set(productsList.map(p => p.farmer?._id).filter(Boolean))];
+    
+    for (const farmerId of uniqueFarmerIds) {
+      fetchFarmerRating(farmerId);
+    }
+  };
+
+  const fetchFarmerRating = async (farmerId) => {
+    if (farmerRatings[farmerId]) return;
+    
+    setLoadingRatings(prev => ({ ...prev, [farmerId]: true }));
+    try {
+      const res = await fetch(`http://localhost:3000/api/reviews/target/Farmer/${farmerId}?limit=1`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      const data = await res.json();
+      setFarmerRatings(prev => ({
+        ...prev,
+        [farmerId]: {
+          averageRating: data.stats?.averageRating || 0,
+          totalReviews: data.stats?.totalReviews || 0
+        }
+      }));
+    } catch (error) {
+      console.error('Failed to fetch farmer rating:', error);
+    } finally {
+      setLoadingRatings(prev => ({ ...prev, [farmerId]: false }));
     }
   };
 
@@ -79,8 +116,27 @@ const ProductList = () => {
   };
 
   const handleOrderNow = (product) => {
-    // Navigate to order page
     navigate(`/order/${product._id}`, { state: { product } });
+  };
+
+  const renderStars = (rating) => {
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+    
+    return (
+      <span className="inline-flex items-center gap-0.5">
+        {[...Array(fullStars)].map((_, i) => (
+          <span key={`full-${i}`} className="text-amber-500 text-sm">★</span>
+        ))}
+        {hasHalfStar && (
+          <span className="text-amber-500 text-sm">½</span>
+        )}
+        {[...Array(emptyStars)].map((_, i) => (
+          <span key={`empty-${i}`} className="text-slate-300 text-sm">★</span>
+        ))}
+      </span>
+    );
   };
 
   return (
@@ -159,64 +215,84 @@ const ProductList = () => {
             </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {products.map(product => (
-                <div key={product._id} className="group rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
-                  <div className="relative h-48 overflow-hidden rounded-t-2xl bg-slate-100">
-                    {product.images && product.images.length > 0 ? (
-                      <img
-                        src={product.images[0]}
-                        alt={product.productName}
-                        className="h-full w-full object-cover group-hover:scale-105 transition duration-300"
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-slate-400">
-                        <div className="text-center">
-                          <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          <span className="text-xs">No Image</span>
+              {products.map(product => {
+                const farmerRating = farmerRatings[product.farmer?._id];
+                return (
+                  <div key={product._id} className="group rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
+                    <div className="relative h-48 overflow-hidden rounded-t-2xl bg-slate-100">
+                      {product.images && product.images.length > 0 ? (
+                        <img
+                          src={product.images[0]}
+                          alt={product.productName}
+                          className="h-full w-full object-cover group-hover:scale-105 transition duration-300"
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-slate-400">
+                          <div className="text-center">
+                            <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <span className="text-xs">No Image</span>
+                          </div>
                         </div>
-                      </div>
-                    )}
-                    {product.images && product.images.length > 1 && (
-                      <div className="absolute bottom-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
-                        +{product.images.length - 1}
-                      </div>
-                    )}
-                    <span className={`absolute right-2 top-2 rounded-full px-2 py-1 text-xs font-semibold ${
-                      product.isAvailable ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                    }`}>
-                      {product.isAvailable ? 'Available' : 'Sold Out'}
-                    </span>
-                  </div>
-                  
-                  <div className="p-4">
-                    <h3 className="text-lg font-semibold text-slate-900 line-clamp-1">{product.productName}</h3>
-                    <p className="text-sm text-slate-500">{product.category} • {product.quantity}{product.unit}</p>
-                    <p className="mt-1 text-xs text-slate-400">
-                      <span className="font-medium text-slate-600">Seller:</span> {product.farmer?.fullName || 'Unknown Farmer'}
-                    </p>
-                    <p className="mt-2 text-xl font-bold text-emerald-600">LKR {product.price.toLocaleString()}</p>
-                    <p className="mt-1 text-xs text-slate-400">📍 Pickup: {product.pickupLocation?.district || 'N/A'}</p>
+                      )}
+                      <span className={`absolute right-2 top-2 rounded-full px-2 py-1 text-xs font-semibold ${
+                        product.isAvailable ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                      }`}>
+                        {product.isAvailable ? 'Available' : 'Sold Out'}
+                      </span>
+                    </div>
                     
-                    {/* Only Order Now Button - No Edit/Delete buttons */}
-                    {product.isAvailable ? (
-                      <div className="mt-4">
-                        <button
-                          onClick={() => handleOrderNow(product)}
-                          className="w-full rounded-lg bg-emerald-600 px-4 py-2 text-center text-sm font-semibold text-white transition hover:bg-emerald-700"
+                    <div className="p-4">
+                      <h3 className="text-lg font-semibold text-slate-900 line-clamp-1">{product.productName}</h3>
+                      <p className="text-sm text-slate-500">{product.category} • {product.quantity}{product.unit}</p>
+                      
+                      {/* Farmer Rating Section */}
+                      <div className="mt-2 flex items-center gap-2">
+                        <Link 
+                          to={`/reviews/Farmer/${product.farmer?._id}`}
+                          className="flex items-center gap-1 hover:underline"
+                          onClick={(e) => e.stopPropagation()}
                         >
-                          Order Now
-                        </button>
+                          {loadingRatings[product.farmer?._id] ? (
+                            <span className="text-xs text-slate-400">Loading...</span>
+                          ) : farmerRating && farmerRating.totalReviews > 0 ? (
+                            <>
+                              {renderStars(farmerRating.averageRating)}
+                              <span className="text-xs text-slate-500 ml-1">
+                                ({farmerRating.totalReviews})
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-xs text-slate-400">No ratings yet</span>
+                          )}
+                        </Link>
                       </div>
-                    ) : (
-                      <div className="mt-4 text-center text-sm text-red-500">
-                        Currently Unavailable
-                      </div>
-                    )}
+                      
+                      <p className="mt-1 text-xs text-slate-400">
+                        <span className="font-medium text-slate-600">Seller:</span> {product.farmer?.fullName || 'Unknown Farmer'}
+                      </p>
+                      <p className="mt-2 text-xl font-bold text-emerald-600">LKR {product.price.toLocaleString()}</p>
+                      <p className="mt-1 text-xs text-slate-400">📍 Pickup: {product.pickupLocation?.district || 'N/A'}</p>
+                      
+                      {product.isAvailable ? (
+                        <div className="mt-4">
+                          <button
+                            onClick={() => handleOrderNow(product)}
+                            className="w-full rounded-lg bg-emerald-600 px-4 py-2 text-center text-sm font-semibold text-white transition hover:bg-emerald-700"
+                          >
+                            Order Now
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="mt-4 text-center text-sm text-red-500">
+                          Currently Unavailable
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 

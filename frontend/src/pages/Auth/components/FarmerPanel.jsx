@@ -11,7 +11,7 @@ const FarmerPanel = ({ links = [] }) => {
     { title: '🌾 My Products', to: '/my-products' },
     { title: '➕ Add Product', to: '/products/add' },
     { title: '📦 Orders', to: '/orders' },
-    { title: '⭐ My Ratings', to: `/reviews/Farmer/${user?.id}` },
+    { title: '⭐ My Ratings', to: `/farmer-ratings` },
     { title: '💬 Messages', to: '/chat' },
     { title: '📊 Market Prices', to: '/prices' },
   ];

@@ -15,6 +15,8 @@ import ResetPassword from './pages/Auth/ResetPassword.jsx'
 import ProfilePage from './pages/Auth/ProfilePage.jsx'
 import OurMission from "./pages/OurMission";
 import Contact from "./pages/Contact";
+import FarmerRatings from './pages/reviews/FarmerRatings';
+import TransporterRatings from './pages/reviews/TransporterRatings';
 
 // NEW IMPORTS - Product Management
 import ProductList from './pages/products/ProductList.jsx'
@@ -100,6 +102,8 @@ function App() {
           <Route path="/available-orders" element={<AvailableOrders />} />
           <Route path="/create-trip/:orderId" element={<CreateTripPage />} />
 
+<Route path="/farmer-ratings" element={<FarmerRatings />} />
+<Route path="/transporter-ratings" element={<TransporterRatings />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
