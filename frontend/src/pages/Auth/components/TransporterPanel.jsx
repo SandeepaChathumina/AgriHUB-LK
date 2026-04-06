@@ -7,12 +7,12 @@ const TransporterPanel = ({ links = [] }) => {
   const { user } = useAuth();
   
   const defaultLinks = [
-    { title: '👤 Profile', to: '/profile' },
-    { title: '🚛 My Vehicles', to: '/vehicles' },
-    { title: '📋 My Trips', to: '/trips' },
-    { title: '📦 Available Orders', to: '/available-orders' },
-    { title: '⭐ My Ratings', to: `/transporter-ratings` },
-    { title: '💬 Messages', to: '/chat' },
+    { title: '👤 Profile', to: '/profile', icon: '👤' },
+    { title: '🚛 My Vehicles', to: '/vehicles', icon: '🚛' },
+    { title: '📋 My Trips', to: '/trips', icon: '📋' },
+    { title: '📦 Available Orders', to: '/available-orders', icon: '📦' },
+    { title: '⭐ My Ratings', to: `/transporter-ratings`, icon: '⭐' },
+    { title: '💬 Messages', to: '/chat', icon: '💬' },
   ];
 
   const items = links.length ? links : defaultLinks;
@@ -40,6 +40,12 @@ const TransporterPanel = ({ links = [] }) => {
       <div className="mt-4 rounded-xl border border-dashed border-blue-200 bg-blue-50/40 p-4 text-sm text-blue-800">
         🚚 Complete deliveries to receive ratings from distributors. Your ratings affect your reputation!
       </div>
+      <Link
+        to="/transporter-ratings"
+        className="mt-4 block rounded-xl bg-gradient-to-r from-blue-50 to-blue-100 p-4 text-center text-sm font-semibold text-blue-700 transition hover:from-blue-100 hover:to-blue-200"
+      >
+        ⭐ View your ratings and respond to reviews
+      </Link>
     </div>
   );
 };

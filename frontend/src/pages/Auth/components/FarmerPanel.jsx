@@ -7,13 +7,13 @@ const FarmerPanel = ({ links = [] }) => {
   const { user } = useAuth();
   
   const defaultLinks = [
-    { title: '👤 Profile', to: '/profile' },
-    { title: '🌾 My Products', to: '/my-products' },
-    { title: '➕ Add Product', to: '/products/add' },
-    { title: '📦 Orders', to: '/orders' },
-    { title: '⭐ My Ratings', to: `/farmer-ratings` },
-    { title: '💬 Messages', to: '/chat' },
-    { title: '📊 Market Prices', to: '/prices' },
+    { title: '👤 Profile', to: '/profile', icon: '👤' },
+    { title: '🌾 My Products', to: '/my-products', icon: '🌾' },
+    { title: '➕ Add Product', to: '/products/add', icon: '➕' },
+    { title: '📦 Orders', to: '/orders', icon: '📦' },
+    { title: '⭐ My Ratings', to: `/farmer-ratings`, icon: '⭐' },
+    { title: '💬 Messages', to: '/chat', icon: '💬' },
+    { title: '📊 Market Prices', to: '/prices', icon: '📊' },
   ];
 
   const items = links.length ? links : defaultLinks;
@@ -41,6 +41,12 @@ const FarmerPanel = ({ links = [] }) => {
       <div className="mt-4 rounded-xl border border-dashed border-emerald-200 bg-emerald-50/40 p-4 text-sm text-emerald-800">
         🌾 Click on the map when adding products to set your pickup location accurately!
       </div>
+      <Link
+        to="/farmer-ratings"
+        className="mt-4 block rounded-xl bg-gradient-to-r from-amber-50 to-amber-100 p-4 text-center text-sm font-semibold text-amber-700 transition hover:from-amber-100 hover:to-amber-200"
+      >
+        ⭐ View your ratings and respond to reviews
+      </Link>
     </div>
   );
 };

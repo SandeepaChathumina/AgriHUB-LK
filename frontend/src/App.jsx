@@ -15,34 +15,34 @@ import ResetPassword from './pages/Auth/ResetPassword.jsx'
 import ProfilePage from './pages/Auth/ProfilePage.jsx'
 import OurMission from "./pages/OurMission";
 import Contact from "./pages/Contact";
+import AdminReviewModeration from './pages/Auth/AdminReviewModeration'
+// Review Pages
 import FarmerRatings from './pages/reviews/FarmerRatings';
 import TransporterRatings from './pages/reviews/TransporterRatings';
+import PendingReviews from './pages/reviews/PendingReviews';
+import ProductReviews from './pages/reviews/ProductReviews';
 
-// NEW IMPORTS - Product Management
+// Product Management
 import ProductList from './pages/products/ProductList.jsx'
 import AddProduct from './pages/products/AddProduct.jsx'
 import EditProduct from './pages/products/EditProduct.jsx'
-import MyProducts from './pages/products/MyProducts.jsx'  // Add this import
+import MyProducts from './pages/products/MyProducts.jsx'
 
-// NEW IMPORTS - Order Management
+// Order Management
 import CreateOrder from './pages/orders/CreateOrder.jsx'
 import MyOrders from './pages/orders/MyOrders.jsx'
 import AvailableVehicles from './pages/orders/AvailableVehicles.jsx';
 
-// NEW IMPORTS - Messaging
+// Messaging
 import MessagesPage from './pages/messages/MessagesPage.jsx'
 
-// NEW IMPORTS - Review Management
-import ProductReviews from './pages/reviews/ProductReviews.jsx'
-import PendingReviews from './pages/reviews/PendingReviews.jsx'
-
-// it23831254 - Vehicle Management
+// Vehicle Management
 import Vehicles from './pages/vehicles/Vehicles.jsx';
 import AddVehicle from './pages/vehicles/AddVehicle.jsx';
 import EditVehicle from './pages/vehicles/EditVehicle.jsx';
 import VehicleDetails from './pages/vehicles/VehicleDetails.jsx';
 
-// it23831254 - Trip Management
+// Trip Management
 import MyTrips from './pages/trips/MyTrips.jsx';
 import TripDetails from './pages/trips/TripDetails.jsx';
 import AvailableOrders from './pages/trips/AvailableOrders.jsx';
@@ -55,9 +55,14 @@ function App() {
         <Toaster position="top-right" />
         
         <Routes>
+          {/* Public Routes */}
           <Route path="/" element={<Homepage />} />
           <Route path="/about" element={<OurMission />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/login" element={<AuthPage initialMode="login" />} />
+          <Route path="/register" element={<AuthPage initialMode="register" />} />
+          
+          {/* Auth & User Routes */}
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<AdminUsers />} />
@@ -68,12 +73,9 @@ function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/profile" element={<ProfilePage />} />
           
-          <Route path="/login" element={<AuthPage initialMode="login" />} />
-          <Route path="/register" element={<AuthPage initialMode="register" />} />
-          
           {/* Product Routes */}
           <Route path="/products" element={<ProductList />} />
-          <Route path="/my-products" element={<MyProducts />} />  {/* Add this route */}
+          <Route path="/my-products" element={<MyProducts />} />
           <Route path="/products/add" element={<AddProduct />} />
           <Route path="/products/edit/:id" element={<EditProduct />} />
 
@@ -89,6 +91,8 @@ function App() {
           {/* Review Routes */}
           <Route path="/reviews/:targetType/:targetId" element={<ProductReviews />} />
           <Route path="/pending-reviews" element={<PendingReviews />} />
+          <Route path="/farmer-ratings" element={<FarmerRatings />} />
+          <Route path="/transporter-ratings" element={<TransporterRatings />} />
 
           {/* Vehicle Routes */}
           <Route path="/vehicles" element={<Vehicles />} />
@@ -101,9 +105,7 @@ function App() {
           <Route path="/trips/:id" element={<TripDetails />} />
           <Route path="/available-orders" element={<AvailableOrders />} />
           <Route path="/create-trip/:orderId" element={<CreateTripPage />} />
-
-<Route path="/farmer-ratings" element={<FarmerRatings />} />
-<Route path="/transporter-ratings" element={<TransporterRatings />} />
+          <Route path="/admin/reviews" element={<AdminReviewModeration />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
