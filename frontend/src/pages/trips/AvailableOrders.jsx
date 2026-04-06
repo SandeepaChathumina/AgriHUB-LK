@@ -292,8 +292,8 @@ const AvailableOrders = () => {
                       </div>
                     </div>
                     
-                    {/* Right: Action Button - UPDATED SECTION */}
-                    <div className="min-w-[180px]">
+                    {/* Right: Action Buttons */}
+                    <div className="min-w-[200px] flex flex-col gap-2">
                       <Link
                         to={`/create-trip/${order._id}`}
                         className={`w-full rounded-xl px-4 py-2.5 text-center font-semibold text-white transition ${
@@ -315,8 +315,29 @@ const AvailableOrders = () => {
                       >
                         Create Trip
                       </Link>
-                      <p className="text-xs text-slate-400 text-center mt-2">
-                        {vehicles.length === 0 ? 'Add a vehicle first' : 'Plan route on map'}
+                      <Link
+                        to={`/request-delivery/${order._id}`}
+                        className={`w-full rounded-xl px-4 py-2.5 text-center font-semibold text-slate-700 border border-slate-300 transition hover:bg-slate-50 ${
+                          vehicles.length === 0 
+                            ? 'bg-gray-100 cursor-not-allowed pointer-events-none' 
+                            : 'bg-white'
+                        }`}
+                        onClick={(e) => {
+                          if (vehicles.length === 0) {
+                            e.preventDefault();
+                            Swal.fire({
+                              icon: 'warning',
+                              title: 'No Vehicles Available',
+                              text: 'Please add a vehicle before requesting delivery.',
+                              confirmButtonColor: '#10b981'
+                            });
+                          }
+                        }}
+                      >
+                        Request Delivery
+                      </Link>
+                      <p className="text-xs text-slate-400 text-center">
+                        {vehicles.length === 0 ? 'Add a vehicle first' : 'Direct or request'}
                       </p>
                     </div>
                   </div>

@@ -150,6 +150,7 @@ const MyOrders = () => {
         links={[
           { key: 'orders', label: 'My Orders', to: '/orders' },
           { key: 'products', label: 'All Products', to: '/products' },
+          { key: 'requests', label: 'Incoming Requests', to: '/incoming-requests' }
         ]}
       />
 
@@ -210,7 +211,22 @@ const MyOrders = () => {
                 return (
                   <div key={order._id} className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
                     <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                      <div className="space-y-2">
+                      {/* Product Image */}
+                      <div className="w-full md:w-auto">
+                        {order.product?.images && order.product.images.length > 0 ? (
+                          <img
+                            src={order.product.images[0]}
+                            alt={order.product?.productName || 'Product'}
+                            className="h-32 w-32 rounded-xl object-cover shadow-sm"
+                          />
+                        ) : (
+                          <div className="h-32 w-32 rounded-xl bg-slate-200 flex items-center justify-center">
+                            <span className="text-slate-400 text-sm">No image</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex-1 space-y-2">
                         <h3 className="text-lg font-semibold text-slate-900">{order.product?.productName || 'Product'}</h3>
                         <p className="text-xs text-slate-500">Order ID: {order._id}</p>
                         <p className="text-sm text-slate-700">
@@ -290,12 +306,22 @@ const MyOrders = () => {
                               Cancel Order
                             </button>
                             {order.deliveryStatus === 'Requested' && order.status === 'Confirmed' && (
-                              <Link
-                                to={`/orders/${order._id}/request-transport`}
-                                className="flex-1 rounded-xl border border-emerald-200 px-3 py-2 text-center text-sm font-semibold text-emerald-700 hover:bg-emerald-50"
-                              >
-                                Request Transport
-                              </Link>
+                              <>
+                                <Link
+                                  to={`/orders/${order._id}/request-transport`}
+                                  className="flex-1 rounded-xl border border-emerald-200 px-3 py-2 text-center text-sm font-semibold text-emerald-700 hover:bg-emerald-50"
+                                  title="Select a specific vehicle to request transport"
+                                >
+                                  Request Vehicle
+                                </Link>
+                                <Link
+                                  to={`/orders/${order._id}/request-transporters`}
+                                  className="flex-1 rounded-xl bg-emerald-100 px-3 py-2 text-center text-sm font-semibold text-emerald-700 hover:bg-emerald-200"
+                                  title="Find available transporters by their company"
+                                >
+                                  Request Transporter
+                                </Link>
+                              </>
                             )}
                           </div>
                         )}
