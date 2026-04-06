@@ -11,7 +11,7 @@ const TransporterPanel = ({ links = [] }) => {
     { title: '🚛 My Vehicles', to: '/vehicles' },
     { title: '📋 My Trips', to: '/trips' },
     { title: '📦 Available Orders', to: '/available-orders' },
-    { title: '⭐ My Ratings', to: `/reviews/Transporter/${user?.id}` },
+    { title: '⭐ My Ratings', to: `/transporter-ratings` },
     { title: '💬 Messages', to: '/chat' },
   ];
 
