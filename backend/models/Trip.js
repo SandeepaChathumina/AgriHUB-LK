@@ -10,26 +10,53 @@ const TripSchema = new mongoose.Schema({
   order: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Order',
-    required: [true, 'Order reference is required'],
-    unique: true
+    required: [true, 'Order reference is required']
   },
 
   transporter: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Transporter',
-    required: [true, 'Transporter reference is required']
+    ref: 'Transporter'
   },
 
   vehicle: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Vehicle',
-    required: [true, 'Vehicle assignment is required']
+    ref: 'Vehicle'
   },
 
+  // Request type: who initiated the trip request
+  requestType: {
+    type: String,
+    enum: ['transporter-initiated', 'transporter-initiated-request', 'distributor-initiated'],
+    default: 'transporter-initiated'
+  },
+
+  // Request lifecycle status
+  requestStatus: {
+    type: String,
+    enum: ['pending', 'accepted', 'rejected'],
+    default: 'pending'
+  },
+
+  // Who proposed the request (transporter or distributor)
+  proposedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: [true, 'Proposer reference is required']
+  },
+
+  // Trip execution status (after request acceptance)
   tripStatus: {
     type: String,
     enum: ['Pending', 'Accepted', 'In Progress', 'Completed', 'Cancelled'],
     default: 'Pending'
+  },
+
+  // Rejection details
+  rejectionReason: String,
+  rejectedAt: Date,
+  rejectedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
   },
 
   pickupLocation: {
@@ -121,6 +148,8 @@ const TripSchema = new mongoose.Schema({
 
 // Indexes
 TripSchema.index({ transporter: 1, tripStatus: 1 });
+TripSchema.index({ proposedBy: 1, requestStatus: 1 });
+TripSchema.index({ requestType: 1, requestStatus: 1 });
 TripSchema.index({ vehicle: 1, tripStatus: 1 });
 TripSchema.index({ 'schedule.scheduledPickup': 1 });
 
