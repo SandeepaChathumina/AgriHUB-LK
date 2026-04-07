@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState,useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
 import { useAuth } from '../../context/AuthContext'
@@ -13,6 +13,9 @@ function Dashboard() {
   const [profile, setProfile] = useState(null)
   const [loadingProfile, setLoadingProfile] = useState(false)
   const [requestingOtp, setRequestingOtp] = useState(false)
+  const fileInputRef = useRef(null)
+  const [isUpdatingLogo, setIsUpdatingLogo] = useState(false)
+  const [logoUrl, setLogoUrl] = useState(null)
   const navigate = useNavigate()
 
   const displayName = profile?.fullName || user?.fullName || 'Guest User'
@@ -36,6 +39,8 @@ function Dashboard() {
       navigate('/admin-dashboard')
     }
   }, [token, user?.role, profile?.role, navigate, isAuthReady])
+
+
 
   useEffect(() => {
     if (!token) return
@@ -65,6 +70,108 @@ function Dashboard() {
 
     fetchProfile()
   }, [token])
+
+  useEffect(() => {
+
+    console.log(user);
+    console.log(user?.id);
+
+  }, [user])
+
+  useEffect(() => {
+    // Get the reliable ID from either the user context or the fetched profile
+    const userId = user?.id || profile?._id || profile?.id;
+
+    if (displayRole === 'Distributor' && userId) {
+      const fetchLogo = async () => {
+        try {
+          // As you correctly noted, NO TOKEN is needed for this public route!
+          const res = await fetch(`http://localhost:3000/api/users/${userId}/logo`);
+
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success && data.logoUrl) {
+              setLogoUrl(data.logoUrl);
+            } else {
+              setLogoUrl(null); // Ensure it resets if URL is empty
+            }
+          } else {
+            // If it returns 404 (No logo found), just set it to null silently
+            setLogoUrl(null);
+          }
+        } catch (error) {
+          console.error('Failed to fetch distributor logo:', error);
+          setLogoUrl(null);
+        }
+      }
+      fetchLogo();
+    }
+  }, [displayRole, user?.id, profile?._id]);
+
+  // Trigger hidden file input
+  const handleEditClick = () => {
+    fileInputRef.current?.click();
+  }
+
+  // Handle uploading the new logo
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('logo', file);
+
+    setIsUpdatingLogo(true);
+    try {
+      // ---> HIT THE NEW DEDICATED LOGO ENDPOINT <---
+      const res = await fetch('http://localhost:3000/api/users/profile/logo', {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      if (!res.ok) throw new Error('Failed to update logo');
+      
+      const data = await res.json();
+      
+      // ---> UPDATE STATE WITH THE NEW URL FROM BACKEND <---
+      if (data.logoUrl) {
+        setLogoUrl(data.logoUrl);
+        toast.success('Logo updated successfully');
+      }
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setIsUpdatingLogo(false);
+      if (fileInputRef.current) fileInputRef.current.value = ''; // Reset input
+    }
+  }
+
+  // Handle deleting the logo
+  const handleDeleteLogo = async () => {
+    if (!window.confirm('Are you sure you want to remove your logo?')) return;
+
+    setIsUpdatingLogo(true);
+    try {
+      const res = await fetch('http://localhost:3000/api/users/profile/logo', {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (!res.ok) throw new Error('Failed to delete logo');
+      
+      setLogoUrl(null); // This makes the UI switch back to the green letter
+      toast.success('Logo removed successfully');
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setIsUpdatingLogo(false);
+    }
+  }
 
   const handleLogout = () => {
     const confirmed = window.confirm('Are you sure you want to log out?')
@@ -110,8 +217,54 @@ function Dashboard() {
         {/* Top Header Card */}
         <div className="flex flex-col gap-4 rounded-[28px] bg-white p-6 shadow-sm ring-1 ring-slate-200 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-xl font-bold text-emerald-700">
-              {initial}
+            
+            {/* WRAPPER WITH GROUP FOR HOVER EFFECT */}
+            <div className="relative group flex h-14 w-14 shrink-0 cursor-pointer overflow-hidden rounded-full ring-2 ring-emerald-100">
+              
+              {/* IMAGE OR INITIAL */}
+              {displayRole === 'Distributor' && logoUrl ? (
+                <img
+                  src={logoUrl}
+                  alt="Distributor Logo"
+                  className={`h-full w-full object-cover ${isUpdatingLogo ? 'opacity-50' : ''}`}
+                />
+              ) : (
+                <div className={`flex h-full w-full items-center justify-center bg-emerald-100 text-xl font-bold text-emerald-700 ${isUpdatingLogo ? 'opacity-50' : ''}`}>
+                  {initial}
+                </div>
+              )}
+
+              {/* HIDDEN FILE INPUT */}
+              <input 
+                type="file" 
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept="image/*"
+                className="hidden" 
+              />
+
+              {/* HOVER OVERLAY MENU */}
+              {displayRole === 'Distributor' && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 opacity-0 transition-opacity group-hover:opacity-100">
+                  <button 
+                    onClick={handleEditClick}
+                    disabled={isUpdatingLogo}
+                    className="w-full flex-1 text-[10px] font-semibold tracking-wide text-white transition hover:bg-emerald-500/80"
+                  >
+                    EDIT
+                  </button>
+                  
+                  {logoUrl && (
+                    <button 
+                      onClick={handleDeleteLogo}
+                      disabled={isUpdatingLogo}
+                      className="w-full flex-1 border-t border-white/30 text-[10px] font-semibold tracking-wide text-white transition hover:bg-red-500/80"
+                    >
+                      DEL
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -124,14 +277,12 @@ function Dashboard() {
                   {/* Active / Inactive dot */}
                   <span className="relative flex h-3 w-3">
                     <span
-                      className={`absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                        isActive ? 'bg-green-400' : 'bg-red-400'
-                      } animate-ping`}
+                      className={`absolute inline-flex h-full w-full rounded-full opacity-75 ${isActive ? 'bg-green-400' : 'bg-red-400'
+                        } animate-ping`}
                     ></span>
                     <span
-                      className={`relative inline-flex h-3 w-3 rounded-full ${
-                        isActive ? 'bg-green-500' : 'bg-red-500'
-                      }`}
+                      className={`relative inline-flex h-3 w-3 rounded-full ${isActive ? 'bg-green-500' : 'bg-red-500'
+                        }`}
                     ></span>
                   </span>
                 </div>
@@ -141,11 +292,10 @@ function Dashboard() {
                 </span>
 
                 <span
-                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                    isActive
+                  className={`rounded-full px-3 py-1 text-xs font-semibold ${isActive
                       ? 'bg-emerald-100 text-emerald-700'
                       : 'bg-red-100 text-red-700'
-                  }`}
+                    }`}
                 >
                   {isActive ? 'Active' : 'Inactive'}
                 </span>
@@ -156,8 +306,8 @@ function Dashboard() {
               </p>
 
               <p className="text-xs text-slate-500">
-  Welcome back 👋
-</p>
+                Welcome back 👋
+              </p>
             </div>
           </div>
 
