@@ -257,7 +257,7 @@ const MessagesPage = () => {
         ]}
       />
 
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50 px-4 py-8">
+      <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-emerald-50 px-4 py-8">
         <div className="mx-auto max-w-7xl">
           {/* Top header */}
           <div className="mb-6 flex flex-col gap-4 rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm md:flex-row md:items-center md:justify-between">
