@@ -1,11 +1,24 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+import { MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
 import ProfileNav from '../../components/ProfileNav';
 import { useAuth } from '../../context/AuthContext';
 import { createOrder } from '../../api/orders';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+const DEFAULT_CENTER = [7.8731, 80.7718];
+
+const DestinationPicker = ({ onPick }) => {
+  useMapEvents({
+    click: (event) => {
+      onPick(event.latlng);
+    },
+  });
+
+  return null;
+};
 
 const CreateOrder = () => {
   const { token, user } = useAuth();
@@ -16,6 +29,7 @@ const CreateOrder = () => {
   const [product, setProduct] = useState(location.state?.product || null);
   const [loadingProduct, setLoadingProduct] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [locating, setLocating] = useState(false);
 
   const [quantity, setQuantity] = useState(1);
   const [deliveryAddress, setDeliveryAddress] = useState({
@@ -26,6 +40,19 @@ const CreateOrder = () => {
       lng: '',
     },
   });
+
+  const selectedPosition = useMemo(() => {
+    const lat = Number(deliveryAddress.coordinates.lat);
+    const lng = Number(deliveryAddress.coordinates.lng);
+
+    if (Number.isFinite(lat) && Number.isFinite(lng)) {
+      return [lat, lng];
+    }
+
+    return null;
+  }, [deliveryAddress.coordinates.lat, deliveryAddress.coordinates.lng]);
+
+  const mapCenter = selectedPosition || DEFAULT_CENTER;
 
   useEffect(() => {
     if (!token) {
@@ -85,6 +112,44 @@ const CreateOrder = () => {
         [key]: value,
       },
     }));
+  };
+
+  const setCoordinates = (lat, lng) => {
+    setDeliveryAddress((prev) => ({
+      ...prev,
+      coordinates: {
+        lat: Number(lat).toFixed(6),
+        lng: Number(lng).toFixed(6),
+      },
+    }));
+  };
+
+  const handleMapPick = (latlng) => {
+    setCoordinates(latlng.lat, latlng.lng);
+  };
+
+  const handleUseCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation is not supported by your browser');
+      return;
+    }
+
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setCoordinates(position.coords.latitude, position.coords.longitude);
+        toast.success('Current location selected');
+        setLocating(false);
+      },
+      () => {
+        toast.error('Unable to get your current location');
+        setLocating(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+      },
+    );
   };
 
   const validateForm = () => {
@@ -253,6 +318,41 @@ const CreateOrder = () => {
                         placeholder="79.8612"
                       />
                     </div>
+                  </div>
+
+                  <div>
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <p className="text-sm font-medium text-slate-700">Pick destination on map</p>
+                      <button
+                        type="button"
+                        onClick={handleUseCurrentLocation}
+                        disabled={locating}
+                        className="rounded-lg border border-emerald-300 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50 disabled:opacity-60"
+                      >
+                        {locating ? 'Locating...' : 'Use My Current Location'}
+                      </button>
+                    </div>
+
+                    <p className="mb-2 text-xs text-slate-500">Click anywhere on the map to auto-fill latitude and longitude.</p>
+
+                    <div className="h-64 overflow-hidden rounded-xl border border-emerald-200">
+                      <MapContainer center={mapCenter} zoom={selectedPosition ? 13 : 8} scrollWheelZoom className="h-full w-full">
+                        <TileLayer
+                          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        />
+                        <DestinationPicker onPick={handleMapPick} />
+                        {selectedPosition ? <Marker position={selectedPosition} /> : null}
+                      </MapContainer>
+                    </div>
+
+                    {selectedPosition ? (
+                      <p className="mt-2 text-xs text-emerald-700">
+                        Selected coordinates: {Number(deliveryAddress.coordinates.lat).toFixed(6)}, {Number(deliveryAddress.coordinates.lng).toFixed(6)}
+                      </p>
+                    ) : (
+                      <p className="mt-2 text-xs text-slate-500">No location selected yet.</p>
+                    )}
                   </div>
 
                   <div className="rounded-xl bg-emerald-50 p-4 text-sm text-emerald-900">
