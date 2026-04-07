@@ -3,7 +3,7 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../../context/AuthContext'
 
-const DistributorPanel = ({ links = [] }) => {
+const DistributorPanel = ({ links = [], unreadMessages = 0 }) => {
   const { user } = useAuth()
   
   const defaultLinks = [
@@ -50,7 +50,7 @@ const DistributorPanel = ({ links = [] }) => {
   const stats = [
     { label: 'Active Orders', value: '0' },
     { label: 'Pending Reviews', value: '0' },
-    { label: 'Messages', value: '0' },
+    { label: 'Messages', value: String(unreadMessages) },
   ]
 
   const workflow = [
@@ -144,8 +144,13 @@ const DistributorPanel = ({ links = [] }) => {
                     {item.icon}
                   </div>
 
-                  <h4 className="mt-4 text-lg font-bold text-slate-900">
-                    {item.title}
+                  <h4 className="mt-4 flex items-center gap-2 text-lg font-bold text-slate-900">
+                    <span>{item.title}</span>
+                    {item.to === '/chat' && unreadMessages > 0 && (
+                      <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-red-500 px-2 py-0.5 text-[11px] font-bold text-white">
+                        {unreadMessages > 99 ? '99+' : unreadMessages}
+                      </span>
+                    )}
                   </h4>
                   <p className="mt-1 text-sm text-slate-600">
                     {item.subtitle}

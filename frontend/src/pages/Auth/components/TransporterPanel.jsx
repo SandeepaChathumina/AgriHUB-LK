@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 
-const TransporterPanel = ({ links = [] }) => {
+const TransporterPanel = ({ links = [], unreadMessages = 0 }) => {
   const { user } = useAuth();
   
   const defaultLinks = [
@@ -32,7 +32,14 @@ const TransporterPanel = ({ links = [] }) => {
             to={item.to}
             className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-emerald-200 hover:bg-white"
           >
-            <span>{item.title}</span>
+            <span className="flex items-center gap-2">
+              <span>{item.title}</span>
+              {item.to === '/chat' && unreadMessages > 0 && (
+                <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                  {unreadMessages > 99 ? '99+' : unreadMessages}
+                </span>
+              )}
+            </span>
             <span className="text-slate-400">→</span>
           </Link>
         ))}

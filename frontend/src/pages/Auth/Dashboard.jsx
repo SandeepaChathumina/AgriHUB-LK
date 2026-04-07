@@ -2,10 +2,13 @@ import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
 import { useAuth } from '../../context/AuthContext'
+import { fetchConversationList } from '../../api/messages'
 import FarmerPanel from './components/FarmerPanel'
 import DistributorPanel from './components/DistributorPanel'
 import TransporterPanel from './components/TransporterPanel'
 import MemberPanel from './components/MemberPanel'
+
+const CHAT_ROLES = ['Farmer', 'Distributor', 'Transporter']
 
 function Dashboard() {
   const { user, token, isAuthReady, logout } = useAuth()
@@ -13,6 +16,7 @@ function Dashboard() {
   const [profile, setProfile] = useState(null)
   const [loadingProfile, setLoadingProfile] = useState(false)
   const [requestingOtp, setRequestingOtp] = useState(false)
+  const [unreadMessages, setUnreadMessages] = useState(0)
   const navigate = useNavigate()
 
   const displayName = profile?.fullName || user?.fullName || 'Guest User'
@@ -65,6 +69,34 @@ function Dashboard() {
 
     fetchProfile()
   }, [token])
+
+  useEffect(() => {
+    if (!token) return
+
+    const role = profile?.role || user?.role
+    if (!CHAT_ROLES.includes(role)) return
+
+    const loadUnreadMessages = async ({ silent = false } = {}) => {
+      try {
+        const response = await fetchConversationList(token)
+        const conversations = response?.data || []
+        const totalUnread = conversations.reduce((sum, item) => sum + Number(item?.unreadCount || 0), 0)
+        setUnreadMessages(totalUnread)
+      } catch (error) {
+        if (!silent) {
+          toast.error(error?.message || 'Failed to load unread messages')
+        }
+      }
+    }
+
+    void loadUnreadMessages()
+
+    const intervalId = setInterval(() => {
+      void loadUnreadMessages({ silent: true })
+    }, 8000)
+
+    return () => clearInterval(intervalId)
+  }, [token, profile?.role, user?.role])
 
   const handleLogout = () => {
     const confirmed = window.confirm('Are you sure you want to log out?')
@@ -191,12 +223,12 @@ function Dashboard() {
 
         {/* Full width role panel */}
         <div>
-          {displayRole === 'Farmer' && <FarmerPanel />}
-          {displayRole === 'Distributor' && <DistributorPanel />}
-          {displayRole === 'Transporter' && <TransporterPanel />}
+          {displayRole === 'Farmer' && <FarmerPanel unreadMessages={unreadMessages} />}
+          {displayRole === 'Distributor' && <DistributorPanel unreadMessages={unreadMessages} />}
+          {displayRole === 'Transporter' && <TransporterPanel unreadMessages={unreadMessages} />}
           {displayRole !== 'Farmer' &&
             displayRole !== 'Distributor' &&
-            displayRole !== 'Transporter' && <MemberPanel />}
+            displayRole !== 'Transporter' && <MemberPanel unreadMessages={unreadMessages} />}
         </div>
       </div>
     </div>
