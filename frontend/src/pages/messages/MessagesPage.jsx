@@ -24,6 +24,19 @@ const formatTime = (value) => {
   });
 };
 
+const getRoleBadge = (role) => {
+  if (role === 'Farmer') {
+    return 'bg-green-100 text-green-700';
+  }
+  if (role === 'Distributor') {
+    return 'bg-amber-100 text-amber-700';
+  }
+  if (role === 'Transporter') {
+    return 'bg-sky-100 text-sky-700';
+  }
+  return 'bg-slate-100 text-slate-700';
+};
+
 const MessagesPage = () => {
   const { token, user } = useAuth();
   const navigate = useNavigate();
@@ -140,7 +153,6 @@ const MessagesPage = () => {
       const res = await fetchConversation(token, targetUser._id);
       setMessages(res?.data || []);
 
-      // Opening a conversation marks inbound messages as read in backend.
       if (!silent) {
         void loadSidebarData({ silent: true });
       }
@@ -180,7 +192,7 @@ const MessagesPage = () => {
       }
 
       setMessageDraft('');
-        await loadSidebarData({ silent: true });
+      await loadSidebarData({ silent: true });
     } catch (error) {
       toast.error(error.message || 'Failed to send message');
     } finally {
@@ -218,6 +230,7 @@ const MessagesPage = () => {
       const bTime = new Date(b.lastMessage?.createdAt || 0).getTime();
       return bTime - aTime;
     });
+
     const term = search.trim().toLowerCase();
 
     if (!term) return allUsers;
@@ -231,7 +244,6 @@ const MessagesPage = () => {
   }, [conversationList, chatUsers, search]);
 
   const noRoleAccess = token && user?.role && !CHAT_ROLES.includes(user.role);
-
   if (noRoleAccess) return null;
 
   return (
@@ -245,72 +257,129 @@ const MessagesPage = () => {
         ]}
       />
 
-      <div className="min-h-screen bg-slate-50 px-4 py-8">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50 px-4 py-8">
         <div className="mx-auto max-w-7xl">
-          <div className="mb-6 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          {/* Top header */}
+          <div className="mb-6 flex flex-col gap-4 rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm md:flex-row md:items-center md:justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-slate-900">Messages</h1>
-              <p className="text-slate-600">Direct chat between farmers, distributors, and transporters</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-emerald-600">
+                Messaging Hub
+              </p>
+              <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-900">
+                Messages
+              </h1>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Direct communication between farmers, distributors, and transporters.
+              </p>
             </div>
+
             <Link
               to="/dashboard"
-              className="rounded-xl border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50"
+              className="inline-flex items-center justify-center rounded-2xl border border-emerald-200 bg-white px-5 py-3 text-sm font-semibold text-emerald-700 transition duration-300 hover:-translate-y-0.5 hover:bg-emerald-50"
             >
               Back to Dashboard
             </Link>
           </div>
 
-          <div className="grid min-h-[70vh] gap-4 lg:grid-cols-[340px_1fr]">
-            <aside className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+          {/* Main chat layout */}
+          <div className="grid min-h-[72vh] gap-5 lg:grid-cols-[360px_1fr]">
+            {/* Sidebar */}
+            <aside className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm">
               <div className="mb-4">
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search users or conversations"
-                  className="w-full rounded-xl border border-emerald-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
-                />
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search users, roles, or email"
+                    className="w-full bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400"
+                  />
+                </div>
+              </div>
+
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
+                    Conversations
+                  </p>
+                  <p className="mt-1 text-sm text-slate-600">
+                    {mergedUsers.length} contact{mergedUsers.length === 1 ? '' : 's'}
+                  </p>
+                </div>
               </div>
 
               {loadingSidebar ? (
-                <p className="text-sm text-slate-500">Loading contacts...</p>
+                <div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">
+                  Loading contacts...
+                </div>
               ) : mergedUsers.length === 0 ? (
-                <p className="text-sm text-slate-500">No chat contacts found for your role.</p>
+                <div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">
+                  No chat contacts found for your role.
+                </div>
               ) : (
-                <div className="space-y-2 overflow-y-auto pr-1">
+                <div className="max-h-[68vh] space-y-3 overflow-y-auto pr-1">
                   {mergedUsers.map((item) => {
                     const isActive = activeUser?._id === item._id;
                     const hasUnread = (item.unreadCount || 0) > 0;
+
                     return (
                       <button
                         key={item._id}
                         onClick={() => setActiveUser(item)}
-                        className={`w-full rounded-xl border px-3 py-2 text-left transition ${
+                        className={`w-full rounded-2xl border p-4 text-left transition-all duration-300 ${
                           isActive
-                            ? 'border-emerald-300 bg-emerald-50'
+                            ? 'border-emerald-300 bg-emerald-50 shadow-sm'
                             : hasUnread
-                              ? 'border-amber-300 bg-amber-50/60 hover:border-amber-400'
-                              : 'border-slate-200 bg-white hover:border-emerald-200 hover:bg-emerald-50/40'
+                              ? 'border-amber-200 bg-amber-50/60 hover:-translate-y-0.5 hover:shadow-sm'
+                              : 'border-slate-200 bg-white hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-sm'
                         }`}
                       >
-                        <div className="flex items-start justify-between gap-2">
-                          <p className={`text-sm ${hasUnread ? 'font-bold text-slate-900' : 'font-semibold text-slate-900'}`}>
-                            {item.fullName}
-                          </p>
-                          {hasUnread && (
-                            <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-bold text-white">
-                              {item.unreadCount > 99 ? '99+' : item.unreadCount}
-                            </span>
-                          )}
+                        <div className="flex items-start gap-3">
+                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-700">
+                            {(item.fullName?.[0] || 'U').toUpperCase()}
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-start justify-between gap-2">
+                              <p
+                                className={`truncate text-sm ${
+                                  hasUnread ? 'font-bold text-slate-900' : 'font-semibold text-slate-900'
+                                }`}
+                              >
+                                {item.fullName}
+                              </p>
+
+                              {hasUnread && (
+                                <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-bold text-white">
+                                  {item.unreadCount > 99 ? '99+' : item.unreadCount}
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="mt-1 flex flex-wrap items-center gap-2">
+                              <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${getRoleBadge(item.role)}`}>
+                                {item.role}
+                              </span>
+                              <span className="truncate text-[11px] text-slate-500">
+                                {item.email}
+                              </span>
+                            </div>
+
+                            {item.lastMessage?.content ? (
+                              <p
+                                className={`mt-2 line-clamp-1 text-xs ${
+                                  hasUnread ? 'font-semibold text-slate-800' : 'text-slate-500'
+                                }`}
+                              >
+                                {item.lastMessage.content}
+                              </p>
+                            ) : (
+                              <p className="mt-2 text-xs text-slate-400">
+                                No messages yet
+                              </p>
+                            )}
+                          </div>
                         </div>
-                        <p className="text-xs text-slate-500">{item.role} • {item.email}</p>
-                        {item.lastMessage?.content ? (
-                          <p className={`mt-1 line-clamp-1 text-xs ${hasUnread ? 'font-semibold text-slate-800' : 'text-slate-600'}`}>
-                            {item.lastMessage.content}
-                          </p>
-                        ) : (
-                          <p className="mt-1 text-xs text-slate-400">No messages yet</p>
-                        )}
                       </button>
                     );
                   })}
@@ -318,66 +387,108 @@ const MessagesPage = () => {
               )}
             </aside>
 
-            <section className="flex flex-col rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+            {/* Chat section */}
+            <section className="flex min-h-[72vh] flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
               {!activeUser ? (
-                <div className="flex flex-1 items-center justify-center p-8 text-slate-500">
-                  Select a contact to start messaging.
+                <div className="flex flex-1 flex-col items-center justify-center px-8 text-center">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-2xl">
+                    💬
+                  </div>
+                  <h2 className="mt-4 text-2xl font-bold text-slate-900">
+                    Select a conversation
+                  </h2>
+                  <p className="mt-2 max-w-md text-sm leading-6 text-slate-500">
+                    Choose a contact from the left sidebar to start chatting with farmers,
+                    distributors, or transporters.
+                  </p>
                 </div>
               ) : (
                 <>
-                  <div className="border-b border-slate-200 px-5 py-4">
-                    <h2 className="text-lg font-semibold text-slate-900">{activeUser.fullName}</h2>
-                    <p className="text-xs text-slate-500">{activeUser.role} • {activeUser.email}</p>
+                  {/* Chat header */}
+                  <div className="border-b border-slate-200 bg-slate-50/70 px-5 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-700">
+                        {(activeUser.fullName?.[0] || 'U').toUpperCase()}
+                      </div>
+
+                      <div className="min-w-0">
+                        <h2 className="truncate text-lg font-bold text-slate-900">
+                          {activeUser.fullName}
+                        </h2>
+                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                          <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${getRoleBadge(activeUser.role)}`}>
+                            {activeUser.role}
+                          </span>
+                          <span className="truncate text-xs text-slate-500">
+                            {activeUser.email}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="flex-1 space-y-3 overflow-y-auto p-5">
+                  {/* Messages */}
+                  <div className="flex-1 overflow-y-auto bg-gradient-to-b from-slate-50/60 to-white p-5">
                     {loadingConversation ? (
-                      <p className="text-sm text-slate-500">Loading conversation...</p>
+                      <div className="rounded-2xl bg-white p-4 text-sm text-slate-500 shadow-sm ring-1 ring-slate-200">
+                        Loading conversation...
+                      </div>
                     ) : messages.length === 0 ? (
-                      <p className="text-sm text-slate-500">No messages yet. Say hello.</p>
+                      <div className="rounded-2xl bg-white p-4 text-sm text-slate-500 shadow-sm ring-1 ring-slate-200">
+                        No messages yet. Say hello.
+                      </div>
                     ) : (
-                      messages.map((message) => {
-                        const isOwnMessage = message.sender?._id === user?.id;
-                        return (
-                          <div
-                            key={message._id}
-                            className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
-                          >
+                      <div className="space-y-4">
+                        {messages.map((message) => {
+                          const isOwnMessage = message.sender?._id === user?.id;
+
+                          return (
                             <div
-                              className={`max-w-[75%] rounded-2xl px-4 py-2 ${
-                                isOwnMessage
-                                  ? 'bg-emerald-600 text-white'
-                                  : 'bg-slate-100 text-slate-900'
-                              }`}
+                              key={message._id}
+                              className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
                             >
-                              <p className="whitespace-pre-wrap text-sm">{message.content}</p>
-                              <p
-                                className={`mt-1 text-[11px] ${
-                                  isOwnMessage ? 'text-emerald-100' : 'text-slate-500'
+                              <div
+                                className={`max-w-[78%] rounded-[22px] px-4 py-3 shadow-sm transition-all duration-300 ${
+                                  isOwnMessage
+                                    ? 'bg-emerald-600 text-white'
+                                    : 'border border-slate-200 bg-white text-slate-900'
                                 }`}
                               >
-                                {formatTime(message.createdAt)}
-                              </p>
+                                <p className="whitespace-pre-wrap text-sm leading-6">
+                                  {message.content}
+                                </p>
+                                <p
+                                  className={`mt-2 text-[11px] ${
+                                    isOwnMessage ? 'text-emerald-100' : 'text-slate-500'
+                                  }`}
+                                >
+                                  {formatTime(message.createdAt)}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })
+                          );
+                        })}
+                      </div>
                     )}
                   </div>
 
-                  <form onSubmit={handleSendMessage} className="border-t border-slate-200 p-4">
-                    <div className="flex gap-2">
-                      <textarea
-                        value={messageDraft}
-                        onChange={(e) => setMessageDraft(e.target.value)}
-                        rows={2}
-                        placeholder={`Message ${activeUser.fullName}`}
-                        className="w-full resize-none rounded-xl border border-emerald-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
-                      />
+                  {/* Composer */}
+                  <form onSubmit={handleSendMessage} className="border-t border-slate-200 bg-white p-4">
+                    <div className="flex flex-col gap-3 sm:flex-row">
+                      <div className="flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 focus-within:border-emerald-400">
+                        <textarea
+                          value={messageDraft}
+                          onChange={(e) => setMessageDraft(e.target.value)}
+                          rows={2}
+                          placeholder={`Message ${activeUser.fullName}`}
+                          className="w-full resize-none bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400"
+                        />
+                      </div>
+
                       <button
                         type="submit"
                         disabled={sendingMessage}
-                        className="rounded-xl bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+                        className="rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white transition duration-300 hover:-translate-y-0.5 hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         {sendingMessage ? 'Sending...' : 'Send'}
                       </button>
