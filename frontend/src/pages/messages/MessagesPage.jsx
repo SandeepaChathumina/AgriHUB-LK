@@ -428,7 +428,7 @@ const MessagesPage = () => {
                   </div>
 
                   {/* Messages */}
-                  <div className="flex-1 overflow-y-auto bg-gradient-to-b from-slate-50/60 to-white p-5">
+                  <div className="flex-1 overflow-y-auto bg-linear-to-b from-slate-50/60 to-white p-5">
                     {loadingConversation ? (
                       <div className="rounded-2xl bg-white p-4 text-sm text-slate-500 shadow-sm ring-1 ring-slate-200">
                         Loading conversation...
