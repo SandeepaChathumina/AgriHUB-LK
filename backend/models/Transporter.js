@@ -13,6 +13,11 @@ const TransporterSchema = new mongoose.Schema({
   fleetSize: { 
     type: Number, 
     default: 0
+  },
+
+  logo: {
+    url: { type: String, default: '' },
+    public_id: { type: String, default: '' }
   }
 });
 

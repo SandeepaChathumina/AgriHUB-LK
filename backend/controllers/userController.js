@@ -101,7 +101,6 @@ export const updateUserProfile = async (req, res) => {
   }
 };
 
-
 export const removeLogo = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
@@ -119,6 +118,9 @@ export const removeLogo = async (req, res) => {
 
     // Clear the logo object in the database
     user.logo = { url: '', public_id: '' };
+    
+    // ---> FIX: FORCE MONGOOSE TO SAVE THE DELETION <---
+    user.markModified('logo');
     
     const updatedUser = await user.save();
     updatedUser.password = undefined;
@@ -221,9 +223,12 @@ export const updateLogoOnly = async (req, res) => {
       await cloudinary.uploader.destroy(user.logo.public_id);
     }
 
+    // ---> FIX: Determine the correct folder based on role <---
+    const folderName = user.role === 'Transporter' ? 'agrihub/transporter-logos' : 'agrihub/distributor-logos';
+
     // 2. Upload the new logo to Cloudinary
     const uploadResult = await cloudinary.uploader.upload(req.file.path, {
-      folder: 'agrihub/distributor-logos'
+      folder: folderName
     });
 
     // 3. Save new logo data to user

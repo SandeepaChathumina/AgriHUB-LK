@@ -61,9 +61,23 @@ export const register = async (req, res) => {
         break;
       }
 
-      case 'Transporter':
+      case 'Transporter': {
+        if (req.file) {
+          const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+            folder: 'agrihub/transporter-logos'
+          });
+
+          userData.logo = {
+            url: uploadResult.secure_url,
+            public_id: uploadResult.public_id
+          };
+
+          removeLocalFile(req.file.path);
+        }
+
         newUser = new Transporter(userData);
         break;
+      }
 
       case 'Admin':
         newUser = new Admin(userData);
@@ -154,7 +168,7 @@ export const deleteUser = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    if (user.role === 'Distributor' && user.logo?.public_id) {
+    if ((user.role === 'Distributor' || user.role === 'Transporter') && user.logo?.public_id) {
       await cloudinary.uploader.destroy(user.logo.public_id);
     }
 

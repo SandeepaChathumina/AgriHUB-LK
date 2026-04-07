@@ -82,7 +82,7 @@ function Dashboard() {
     // Get the reliable ID from either the user context or the fetched profile
     const userId = user?.id || profile?._id || profile?.id;
 
-    if (displayRole === 'Distributor' && userId) {
+    if ((displayRole === 'Distributor' || displayRole === 'Transporter') && userId) {
       const fetchLogo = async () => {
         try {
           // As you correctly noted, NO TOKEN is needed for this public route!
@@ -222,7 +222,7 @@ function Dashboard() {
             <div className="relative group flex h-14 w-14 shrink-0 cursor-pointer overflow-hidden rounded-full ring-2 ring-emerald-100">
               
               {/* IMAGE OR INITIAL */}
-              {displayRole === 'Distributor' && logoUrl ? (
+              {(displayRole === 'Distributor' || displayRole === 'Transporter') && logoUrl ? (
                 <img
                   src={logoUrl}
                   alt="Distributor Logo"
@@ -244,7 +244,7 @@ function Dashboard() {
               />
 
               {/* HOVER OVERLAY MENU */}
-              {displayRole === 'Distributor' && (
+              {(displayRole === 'Distributor' || displayRole === 'Transporter') && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 opacity-0 transition-opacity group-hover:opacity-100">
                   <button 
                     onClick={handleEditClick}
