@@ -32,6 +32,7 @@ import MyProducts from './pages/products/MyProducts.jsx'
 import CreateOrder from './pages/orders/CreateOrder.jsx'
 import MyOrders from './pages/orders/MyOrders.jsx'
 import AvailableVehicles from './pages/orders/AvailableVehicles.jsx';
+import AvailableTransporters from './pages/orders/AvailableTransporters.jsx';
 
 // Messaging
 import MessagesPage from './pages/messages/MessagesPage.jsx'
@@ -47,6 +48,8 @@ import MyTrips from './pages/trips/MyTrips.jsx';
 import TripDetails from './pages/trips/TripDetails.jsx';
 import AvailableOrders from './pages/trips/AvailableOrders.jsx';
 import CreateTripPage from './pages/trips/CreateTripPage.jsx';
+import RequestOrderDelivery from './pages/trips/RequestOrderDelivery.jsx';
+import IncomingRequests from './pages/requests/IncomingRequests.jsx';
 
 function App() {
   return (
@@ -83,6 +86,7 @@ function App() {
           <Route path="/order/:productId" element={<CreateOrder />} />
           <Route path="/orders" element={<MyOrders />} />
           <Route path="/orders/:orderId/request-transport" element={<AvailableVehicles />} />
+          <Route path="/orders/:orderId/request-transporters" element={<AvailableTransporters />} />
           
           {/* Messaging Routes */}
           <Route path="/chat" element={<MessagesPage />} />
@@ -106,6 +110,10 @@ function App() {
           <Route path="/available-orders" element={<AvailableOrders />} />
           <Route path="/create-trip/:orderId" element={<CreateTripPage />} />
           <Route path="/admin/reviews" element={<AdminReviewModeration />} />
+          <Route path="/request-delivery/:orderId" element={<RequestOrderDelivery />} />
+          <Route path="/incoming-requests" element={<IncomingRequests />} />
+          <Route path="/farmer-ratings" element={<FarmerRatings />} />
+          <Route path="/transporter-ratings" element={<TransporterRatings />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
