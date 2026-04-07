@@ -1,28 +1,44 @@
+// src/pages/Auth/components/DistributorPanel.jsx
 import React from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../../../context/AuthContext'
 
 const DistributorPanel = ({ links = [] }) => {
+  const { user } = useAuth()
+  
   const defaultLinks = [
     {
-      title: 'Profile',
+      title: '👤 Profile',
       to: '/profile',
       subtitle: 'Manage business details',
       icon: '👤',
     },
     {
-      title: 'Inventory',
-      to: '/inventory',
-      subtitle: 'Track products and stock',
-      icon: '📦',
-    },
-    {
-      title: 'Orders',
+      title: '📦 My Orders',
       to: '/orders',
-      subtitle: 'Monitor active orders',
+      subtitle: 'Track and manage orders',
       icon: '🧾',
     },
     {
-      title: 'Messages',
+      title: '⭐ Pending Reviews',
+      to: '/pending-reviews',
+      subtitle: 'Rate farmers and transporters',
+      icon: '⭐',
+    },
+    {
+      title: '⭐ My Ratings',
+      to: `/reviews/Distributor/${user?.id}`,
+      subtitle: 'See your ratings from partners',
+      icon: '📊',
+    },
+    {
+      title: '🛒 All Products',
+      to: '/products',
+      subtitle: 'Browse and order products',
+      icon: '🌾',
+    },
+    {
+      title: '💬 Messages',
       to: '/chat',
       subtitle: 'Connect with partners',
       icon: '💬',
@@ -32,26 +48,31 @@ const DistributorPanel = ({ links = [] }) => {
   const items = links.length ? links : defaultLinks
 
   const stats = [
-    { label: 'Active Orders', value: '24' },
-    { label: 'Stock Items', value: '128' },
-    { label: 'Messages', value: '12' },
+    { label: 'Active Orders', value: '0' },
+    { label: 'Pending Reviews', value: '0' },
+    { label: 'Messages', value: '0' },
   ]
 
   const workflow = [
     {
       step: '01',
-      title: 'Check inventory',
-      description: 'Review available products and stock updates.',
+      title: 'Browse Products',
+      description: 'Find fresh agricultural products from local farmers.',
     },
     {
       step: '02',
-      title: 'Manage orders',
-      description: 'Track incoming orders and their progress.',
+      title: 'Place Order',
+      description: 'Select quantity and confirm delivery location.',
     },
     {
       step: '03',
-      title: 'Coordinate delivery',
-      description: 'Work with transporters for smooth delivery.',
+      title: 'Request Transport',
+      description: 'Find a transporter to deliver your order.',
+    },
+    {
+      step: '04',
+      title: 'Rate Service',
+      description: 'Review farmers and transporters after delivery.',
     },
   ]
 
@@ -71,7 +92,7 @@ const DistributorPanel = ({ links = [] }) => {
             </h2>
 
             <p className="mt-4 text-sm leading-7 text-slate-600 md:text-base">
-              Access your inventory, orders, and communication tools from one clean
+              Access your orders, reviews, and communication tools from one clean
               and modern dashboard.
             </p>
 
@@ -91,10 +112,10 @@ const DistributorPanel = ({ links = [] }) => {
           </div>
 
           <Link
-            to="/inventory"
+            to="/products"
             className="rounded-2xl bg-green-500 px-6 py-3 text-sm font-bold text-white transition duration-300 hover:-translate-y-1 hover:bg-green-600"
           >
-            Open Inventory
+            Browse Products
           </Link>
         </div>
       </div>
@@ -197,18 +218,20 @@ const DistributorPanel = ({ links = [] }) => {
 
             <div>
               <div className="mb-2 flex justify-between text-sm">
-                <span className="text-slate-600">Inventory Health</span>
-                <span className="font-bold text-green-600">92%</span>
+                <span className="text-slate-600">Reviews Completed</span>
+                <span className="font-bold text-green-600">0%</span>
               </div>
               <div className="h-2 rounded-full bg-slate-200">
-                <div className="h-full w-[92%] rounded-full bg-green-500 transition-all duration-700" />
+                <div className="h-full w-[0%] rounded-full bg-green-500 transition-all duration-700" />
               </div>
             </div>
 
-            <div className="rounded-2xl border border-dashed border-green-300 bg-green-50 p-4 text-sm text-green-700">
-              You can add real analytics here later such as top products,
-              low-stock alerts, and delivery performance.
-            </div>
+            <Link
+              to="/pending-reviews"
+              className="mt-4 block rounded-2xl border border-dashed border-green-300 bg-green-50 p-4 text-center text-sm font-semibold text-green-700 transition hover:bg-green-100"
+            >
+              ✍️ Write pending reviews for completed orders
+            </Link>
           </div>
         </div>
       </div>
