@@ -6,6 +6,14 @@ import Admin from '../models/Admin.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import sendEmail from '../utils/sendEmail.js';
+import cloudinary from '../config/cloudinary.js';
+import fs from 'fs';
+
+const removeLocalFile = (filePath) => {
+  if (filePath && fs.existsSync(filePath)) {
+    fs.unlinkSync(filePath);
+  }
+};
 
 export const register = async (req, res) => {
   try {
@@ -13,6 +21,7 @@ export const register = async (req, res) => {
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
+      if (req.file) removeLocalFile(req.file.path);
       return res.status(400).json({ message: 'User already exists with this email' });
     }
 
@@ -24,36 +33,75 @@ export const register = async (req, res) => {
       email,
       password: hashedPassword,
       phone,
-      ...roleSpecificData 
+      ...roleSpecificData
     };
 
     let newUser;
+
     switch (role) {
       case 'Farmer':
         newUser = new Farmer(userData);
         break;
-      case 'Distributor':
+
+      case 'Distributor': {
+        if (req.file) {
+          const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+            folder: 'agrihub/distributor-logos'
+          });
+
+          userData.logo = {
+            url: uploadResult.secure_url,
+            public_id: uploadResult.public_id
+          };
+
+          removeLocalFile(req.file.path);
+        }
+
         newUser = new Distributor(userData);
         break;
-      case 'Transporter':
+      }
+
+      case 'Transporter': {
+        if (req.file) {
+          const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+            folder: 'agrihub/transporter-logos'
+          });
+
+          userData.logo = {
+            url: uploadResult.secure_url,
+            public_id: uploadResult.public_id
+          };
+
+          removeLocalFile(req.file.path);
+        }
+
         newUser = new Transporter(userData);
         break;
-      case 'Admin':                          
-        newUser = new Admin(userData);       
+      }
+
+      case 'Admin':
+        newUser = new Admin(userData);
         break;
+
       default:
+        if (req.file) removeLocalFile(req.file.path);
         return res.status(400).json({ message: 'Invalid role provided' });
     }
 
-    // Just save the user normally! No OTP generated here anymore.
     await newUser.save();
 
-    res.status(201).json({ 
-      message: `${role} registered successfully! You can verify your account later.`, 
-      user: { id: newUser._id, email: newUser.email, role: newUser.role, isVerified: newUser.isVerified } 
+    res.status(201).json({
+      message: `${role} registered successfully! You can verify your account later.`,
+      user: {
+        id: newUser._id,
+        email: newUser.email,
+        role: newUser.role,
+        isVerified: newUser.isVerified,
+        logo: newUser.logo || null
+      }
     });
-
   } catch (error) {
+    if (req.file) removeLocalFile(req.file.path);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
@@ -73,17 +121,21 @@ export const login = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user._id, role: user.role }, 
-      process.env.JWT_SECRET || 'super_secret_agri_key', 
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET || 'super_secret_agri_key',
       { expiresIn: '1d' }
     );
 
     res.status(200).json({
       message: 'Login successful',
       token,
-      user: { id: user._id, fullName: user.fullName, role: user.role }
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        role: user.role,
+        logo: user.logo || null
+      }
     });
-
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -92,13 +144,12 @@ export const login = async (req, res) => {
 export const getAllUsers = async (req, res) => {
   try {
     const users = await User.find({}).select('-password');
-    
+
     res.status(200).json({
       success: true,
       count: users.length,
       users
     });
-
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -117,6 +168,10 @@ export const deleteUser = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
+    if ((user.role === 'Distributor' || user.role === 'Transporter') && user.logo?.public_id) {
+      await cloudinary.uploader.destroy(user.logo.public_id);
+    }
+
     await User.findByIdAndDelete(id);
 
     res.status(200).json({ message: 'User removed successfully' });
@@ -129,7 +184,7 @@ export const deleteUser = async (req, res) => {
 export const testEmail = async (req, res) => {
   try {
     await sendEmail({
-      email: req.body.email, 
+      email: req.body.email,
       subject: 'AgriHUB-LK Test Email',
       message: 'Hello! If you are reading this, your Nodemailer is working perfectly!',
     });
@@ -146,27 +201,23 @@ export const requestVerificationOTP = async (req, res) => {
   try {
     const { email } = req.body;
 
-    // 1. Find the user
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // 2. Check if they are already verified
     if (user.isVerified) {
       return res.status(400).json({ message: 'Account is already verified' });
     }
 
-    // 3. Generate new OTP and expiration (10 minutes)
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
     user.otp = otpCode;
-    user.otpExpires = Date.now() + 10 * 60 * 1000; 
+    user.otpExpires = Date.now() + 10 * 60 * 1000;
 
     await user.save();
 
-    // 4. Send the Email
     const emailMessage = `Hello ${user.fullName},\n\nYou requested an account verification code. Your OTP is: ${otpCode}\n\nThis code will expire in 10 minutes.`;
-    
+
     await sendEmail({
       email: user.email,
       subject: 'AgriHUB-LK - Your Verification Code',
@@ -174,7 +225,6 @@ export const requestVerificationOTP = async (req, res) => {
     });
 
     res.status(200).json({ message: 'OTP sent successfully to your email!' });
-
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -185,35 +235,29 @@ export const verifyEmail = async (req, res) => {
   try {
     const { email, otp } = req.body;
 
-    // 1. Find the user by email
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // 2. Check if they are already verified
     if (user.isVerified) {
       return res.status(400).json({ message: 'User is already verified' });
     }
 
-    // 3. Check if the OTP matches
     if (user.otp !== otp) {
       return res.status(400).json({ message: 'Invalid OTP code' });
     }
 
-    // 4. Check if the OTP has expired
     if (user.otpExpires < Date.now()) {
       return res.status(400).json({ message: 'OTP has expired. Please request a new one.' });
     }
 
-    // 5. Success! Mark as verified and clear the OTP fields for security
     user.isVerified = true;
     user.otp = undefined;
     user.otpExpires = undefined;
     await user.save();
 
     res.status(200).json({ message: 'Email verified successfully! You can now log in.' });
-
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -229,17 +273,14 @@ export const forgotPassword = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Generate a 6-digit OTP for password reset
     const resetOtp = Math.floor(100000 + Math.random() * 900000).toString();
-    
-    // Save it to the database (expires in 15 minutes)
+
     user.resetPasswordOtp = resetOtp;
     user.resetPasswordExpires = Date.now() + 15 * 60 * 1000;
     await user.save();
 
-    // Send the email
     const emailMessage = `Hello ${user.fullName},\n\nYou requested a password reset. Your OTP is: ${resetOtp}\n\nThis code will expire in 15 minutes. If you did not request this, please ignore this email.`;
-    
+
     await sendEmail({
       email: user.email,
       subject: 'AgriHUB-LK - Password Reset Code',
@@ -247,7 +288,6 @@ export const forgotPassword = async (req, res) => {
     });
 
     res.status(200).json({ message: 'Password reset OTP sent to your email' });
-
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -263,28 +303,23 @@ export const resetPassword = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // 1. Check if the OTP is valid
     if (user.resetPasswordOtp !== otp) {
       return res.status(400).json({ message: 'Invalid OTP' });
     }
 
-    // 2. Check if the OTP has expired
     if (user.resetPasswordExpires < Date.now()) {
       return res.status(400).json({ message: 'OTP has expired. Please request a new one.' });
     }
 
-    // 3. Hash the new password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-    // 4. Update the user's password and clear the reset fields
     user.password = hashedPassword;
     user.resetPasswordOtp = undefined;
     user.resetPasswordExpires = undefined;
     await user.save();
 
     res.status(200).json({ message: 'Password reset successfully! You can now log in with your new password.' });
-
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }

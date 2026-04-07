@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
 // ===== IMPORT YOUR ROLE CARD IMAGES FROM src/assets =====
@@ -10,19 +10,38 @@ import distributorImg from "../assets/distributor.png";
 // <source src="/assets/farm-bg.mp4" type="video/mp4" />
 
 const Homepage = () => {
-  const distributors = [
-  { name: "Cargills", logo: "/assets/partners/cargills.png" },
-  { name: "Keells", logo: "/assets/partners/keells.png" },
-  { name: "Pettah Foods", logo: "/assets/partners/pettah-foods.webp" },
-  { name: "Fresh Harvest", logo: "/assets/partners/fresh-harvest.jpg" },
-];
+  // --- ADDED: State for dynamic logos ---
+  const [distributors, setDistributors] = useState([]);
+  const [transporters, setTransporters] = useState([]);
 
-  const transporters = [
-    { name: "Lanka Transport", logo: "/assets/partners/lanka-transport.png" },
-    { name: "Agro Movers", logo: "/assets/partners/agro-movers.png" },
-    { name: "Green Wheels", logo: "/assets/partners/green-wheels.png" },
-    { name: "Fast Cargo", logo: "/assets/partners/fast-cargo.png" },
-  ];
+  // --- ADDED: Fetch logos from API on component mount ---
+  useEffect(() => {
+    const fetchLogos = async () => {
+      try {
+        // Fetch Distributors
+        const distRes = await fetch("http://localhost:3000/api/users/distributors/logos");
+        if (distRes.ok) {
+          const distData = await distRes.json();
+          if (distData.success) {
+            setDistributors(distData.data);
+          }
+        }
+
+        // Fetch Transporters
+        const transRes = await fetch("http://localhost:3000/api/users/transporters/logos");
+        if (transRes.ok) {
+          const transData = await transRes.json();
+          if (transData.success) {
+            setTransporters(transData.data);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch partner logos:", error);
+      }
+    };
+
+    fetchLogos();
+  }, []);
 
   const roleCards = [
     {
@@ -267,46 +286,71 @@ const Homepage = () => {
           </div>
 
           {/* Distributors */}
-          <div className="mb-10">
-            <h3 className="text-xl font-bold text-green-400 mb-5 text-center md:text-left">
-              Distributors
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-              {distributors.map((item, index) => (
-                <div
-                  key={index}
-                  className="bg-white/10 border border-white/10 rounded-2xl p-5 flex items-center justify-center hover:bg-white/15 hover:-translate-y-1 transition-all duration-300"
-                >
-                  <img
-                    src={item.logo}
-                    alt={item.name}
-                    className="max-h-14 object-contain grayscale hover:grayscale-0 transition duration-300"
-                  />
-                </div>
-              ))}
+          {distributors.length > 0 && (
+            <div className="mb-10">
+              <h3 className="text-xl font-bold text-green-400 mb-5 text-center md:text-left">
+                Distributors
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+                {distributors.map((item) => (
+                  <div
+                    key={item.id}
+                    className="group relative bg-white/10 border border-white/10 rounded-2xl p-5 flex flex-col items-center justify-center hover:bg-white/15 hover:-translate-y-1 transition-all duration-300 overflow-hidden h-28"
+                  >
+                    <img
+                      src={item.logoUrl}
+                      alt={item.name}
+                      /* Removed the basic 'title' attribute for a custom tooltip */
+                      className="max-h-14 object-contain grayscale group-hover:grayscale-0 group-hover:-translate-y-3 transition-all duration-300"
+                    />
+
+                    {/* Professional Hover Name Reveal */}
+                    <div className="absolute bottom-3 left-0 right-0 opacity-0 group-hover:opacity-100 transition-all duration-300 flex justify-center translate-y-2 group-hover:translate-y-0">
+                      <span className="text-xs font-bold text-green-400 tracking-wider uppercase text-center px-2 truncate drop-shadow-md">
+                        {item.name}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Transporters */}
-          <div>
-            <h3 className="text-xl font-bold text-green-400 mb-5 text-center md:text-left">
-              Transporters
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-              {transporters.map((item, index) => (
-                <div
-                  key={index}
-                  className="bg-white/10 border border-white/10 rounded-2xl p-5 flex items-center justify-center hover:bg-white/15 hover:-translate-y-1 transition-all duration-300"
-                >
-                  <img
-                    src={item.logo}
-                    alt={item.name}
-                    className="max-h-14 object-contain grayscale hover:grayscale-0 transition duration-300"
-                  />
-                </div>
-              ))}
+          {transporters.length > 0 && (
+            <div>
+              <h3 className="text-xl font-bold text-green-400 mb-5 text-center md:text-left">
+                Transporters
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+                {transporters.map((item) => (
+                  <div
+                    key={item.id}
+                    className="group relative bg-white/10 border border-white/10 rounded-2xl p-5 flex flex-col items-center justify-center hover:bg-white/15 hover:-translate-y-1 transition-all duration-300 overflow-hidden h-28"
+                  >
+                    <img
+                      src={item.logoUrl}
+                      alt={item.name}
+                      /* Removed the basic 'title' attribute */
+                      className="max-h-14 object-contain grayscale group-hover:grayscale-0 group-hover:-translate-y-3 transition-all duration-300"
+                    />
+
+                    {/* Professional Hover Name Reveal */}
+                    <div className="absolute bottom-3 left-0 right-0 opacity-0 group-hover:opacity-100 transition-all duration-300 flex justify-center translate-y-2 group-hover:translate-y-0">
+                      <span className="text-xs font-bold text-green-400 tracking-wider uppercase text-center px-2 truncate drop-shadow-md">
+                        {item.name}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
+
+          {distributors.length === 0 && transporters.length === 0 && (
+            <p className="text-center text-gray-400 italic">No partners registered with logos yet.</p>
+          )}
+
         </div>
       </section>
 
