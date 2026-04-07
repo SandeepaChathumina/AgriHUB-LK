@@ -255,3 +255,44 @@ export const updateLogoOnly = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+// --- GET ALL DISTRIBUTOR LOGOS & NAMES (Public) ---
+export const getAllDistributorLogos = async (req, res) => {
+  try {
+    // Select only the businessName and logo fields for Distributors
+    const distributors = await User.find({ role: 'Distributor' }).select('businessName logo.url');
+    
+    // Filter out users with empty logos, THEN map them to the clean format
+    const formattedData = distributors
+      .filter(dist => dist.logo && dist.logo.url && dist.logo.url.trim() !== '') // <--- THIS IS THE NEW FILTER
+      .map(dist => ({
+        id: dist._id,
+        name: dist.businessName,
+        logoUrl: dist.logo.url
+      }));
+
+    res.status(200).json({ success: true, count: formattedData.length, data: formattedData });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// --- GET ALL TRANSPORTER LOGOS & NAMES (Public) ---
+export const getAllTransporterLogos = async (req, res) => {
+  try {
+    // Select only the companyName and logo fields for Transporters
+    const transporters = await User.find({ role: 'Transporter' }).select('companyName logo.url');
+    
+    // Filter out users with empty logos, THEN map them to the clean format
+    const formattedData = transporters
+      .filter(trans => trans.logo && trans.logo.url && trans.logo.url.trim() !== '') // <--- THIS IS THE NEW FILTER
+      .map(trans => ({
+        id: trans._id,
+        name: trans.companyName, 
+        logoUrl: trans.logo.url
+      }));
+
+    res.status(200).json({ success: true, count: formattedData.length, data: formattedData });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};

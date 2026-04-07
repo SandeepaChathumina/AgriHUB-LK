@@ -6,7 +6,9 @@ import {
   deleteUserAdmin,
   removeLogo,
   getUserLogo,
-  updateLogoOnly
+  updateLogoOnly,
+  getAllDistributorLogos, 
+  getAllTransporterLogos
 } from '../controllers/userController.js';
 import { protect, authorizeRoles } from '../middleware/authMiddleware.js';
 import upload from '../middleware/upload.js';
@@ -23,7 +25,9 @@ router.get('/:id/logo', getUserLogo);
 
 router.delete('/:id', protect, authorizeRoles('Admin'), deleteUserAdmin);
 
-
+// Get lists of all users in specific roles (Place these BEFORE the /:id routes)
+router.get('/distributors/logos', getAllDistributorLogos);
+router.get('/transporters/logos', getAllTransporterLogos);
 
 
 export default router;
