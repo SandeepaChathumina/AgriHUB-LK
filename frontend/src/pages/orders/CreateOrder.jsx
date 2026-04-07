@@ -8,7 +8,11 @@ import { useAuth } from '../../context/AuthContext';
 import { createOrder } from '../../api/orders';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
-const DEFAULT_CENTER = [7.8731, 80.7718];
+const SRI_LANKA_CENTER = [7.8731, 80.7718];
+const SRI_LANKA_BOUNDS = [
+  [5.7, 79.4],
+  [10.1, 82.1],
+];
 
 const DestinationPicker = ({ onPick }) => {
   useMapEvents({
@@ -51,8 +55,6 @@ const CreateOrder = () => {
 
     return null;
   }, [deliveryAddress.coordinates.lat, deliveryAddress.coordinates.lng]);
-
-  const mapCenter = selectedPosition || DEFAULT_CENTER;
 
   useEffect(() => {
     if (!token) {
@@ -101,16 +103,6 @@ const CreateOrder = () => {
     setDeliveryAddress((prev) => ({
       ...prev,
       [key]: value,
-    }));
-  };
-
-  const updateCoordinate = (key, value) => {
-    setDeliveryAddress((prev) => ({
-      ...prev,
-      coordinates: {
-        ...prev.coordinates,
-        [key]: value,
-      },
     }));
   };
 
@@ -163,7 +155,7 @@ const CreateOrder = () => {
     const lng = Number(deliveryAddress.coordinates.lng);
 
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-      return 'Latitude and longitude are required';
+      return 'Please select destination on the map';
     }
 
     if (lat < -90 || lat > 90) return 'Latitude must be between -90 and 90';
@@ -295,31 +287,6 @@ const CreateOrder = () => {
                     />
                   </div>
 
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <div>
-                      <label className="mb-1 block text-sm font-medium text-slate-700">Latitude</label>
-                      <input
-                        type="number"
-                        step="any"
-                        value={deliveryAddress.coordinates.lat}
-                        onChange={(e) => updateCoordinate('lat', e.target.value)}
-                        className="w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
-                        placeholder="6.9271"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-sm font-medium text-slate-700">Longitude</label>
-                      <input
-                        type="number"
-                        step="any"
-                        value={deliveryAddress.coordinates.lng}
-                        onChange={(e) => updateCoordinate('lng', e.target.value)}
-                        className="w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
-                        placeholder="79.8612"
-                      />
-                    </div>
-                  </div>
-
                   <div>
                     <div className="mb-2 flex items-center justify-between gap-3">
                       <p className="text-sm font-medium text-slate-700">Pick destination on map</p>
@@ -336,7 +303,16 @@ const CreateOrder = () => {
                     <p className="mb-2 text-xs text-slate-500">Click anywhere on the map to auto-fill latitude and longitude.</p>
 
                     <div className="h-64 overflow-hidden rounded-xl border border-emerald-200">
-                      <MapContainer center={mapCenter} zoom={selectedPosition ? 13 : 8} scrollWheelZoom className="h-full w-full">
+                      <MapContainer
+                        center={SRI_LANKA_CENTER}
+                        zoom={8}
+                        minZoom={7}
+                        maxZoom={18}
+                        maxBounds={SRI_LANKA_BOUNDS}
+                        maxBoundsViscosity={1.0}
+                        scrollWheelZoom
+                        className="h-full w-full"
+                      >
                         <TileLayer
                           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
