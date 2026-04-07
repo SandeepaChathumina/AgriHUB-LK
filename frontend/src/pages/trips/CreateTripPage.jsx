@@ -433,7 +433,7 @@ const CreateTripPage = () => {
                 {/* Location Info */}
                 <div className="mb-6 space-y-3">
                   <div className="flex gap-3">
-                    <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
                       <span className="text-emerald-600 text-sm font-bold">P</span>
                     </div>
                     <div className="flex-1">
@@ -443,7 +443,7 @@ const CreateTripPage = () => {
                     </div>
                   </div>
                   <div className="flex gap-3">
-                    <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center shrink-0">
                       <span className="text-red-600 text-sm font-bold">D</span>
                     </div>
                     <div className="flex-1">
