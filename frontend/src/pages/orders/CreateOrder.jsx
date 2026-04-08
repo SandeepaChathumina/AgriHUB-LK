@@ -34,6 +34,7 @@ const CreateOrder = () => {
   const [loadingProduct, setLoadingProduct] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [locating, setLocating] = useState(false);
+  const [resolvingAddress, setResolvingAddress] = useState(false);
 
   const [quantity, setQuantity] = useState(1);
   const [deliveryAddress, setDeliveryAddress] = useState({
@@ -116,8 +117,48 @@ const CreateOrder = () => {
     }));
   };
 
-  const handleMapPick = (latlng) => {
+  const fillAddressFromCoordinates = async (lat, lng) => {
+    setResolvingAddress(true);
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+      );
+
+      if (!response.ok) {
+        throw new Error('Unable to find address for selected location');
+      }
+
+      const data = await response.json();
+      const address = data?.address || {};
+
+      const city =
+        address.city ||
+        address.town ||
+        address.village ||
+        address.hamlet ||
+        address.suburb ||
+        address.county ||
+        '';
+
+      const addressLineParts = [address.house_number, address.road].filter(Boolean);
+      const fallbackLine = data?.display_name ? String(data.display_name).split(',').slice(0, 2).join(', ').trim() : '';
+      const addressLine = addressLineParts.length > 0 ? addressLineParts.join(' ') : fallbackLine;
+
+      setDeliveryAddress((prev) => ({
+        ...prev,
+        addressLine: addressLine || prev.addressLine,
+        city: city || prev.city,
+      }));
+    } catch {
+      toast.error('Could not auto-fill address details for this location');
+    } finally {
+      setResolvingAddress(false);
+    }
+  };
+
+  const handleMapPick = async (latlng) => {
     setCoordinates(latlng.lat, latlng.lng);
+    await fillAddressFromCoordinates(latlng.lat, latlng.lng);
   };
 
   const handleUseCurrentLocation = () => {
@@ -128,8 +169,11 @@ const CreateOrder = () => {
 
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setCoordinates(position.coords.latitude, position.coords.longitude);
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        setCoordinates(lat, lng);
+        await fillAddressFromCoordinates(lat, lng);
         toast.success('Current location selected');
         setLocating(false);
       },
@@ -266,28 +310,6 @@ const CreateOrder = () => {
                   </div>
 
                   <div>
-                    <label className="mb-1 block text-sm font-medium text-slate-700">Address Line</label>
-                    <input
-                      type="text"
-                      value={deliveryAddress.addressLine}
-                      onChange={(e) => updateAddressField('addressLine', e.target.value)}
-                      className="w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
-                      placeholder="House no, street, area"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-slate-700">City</label>
-                    <input
-                      type="text"
-                      value={deliveryAddress.city}
-                      onChange={(e) => updateAddressField('city', e.target.value)}
-                      className="w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
-                      placeholder="City"
-                    />
-                  </div>
-
-                  <div>
                     <div className="mb-2 flex items-center justify-between gap-3">
                       <p className="text-sm font-medium text-slate-700">Pick destination on map</p>
                       <button
@@ -329,6 +351,32 @@ const CreateOrder = () => {
                     ) : (
                       <p className="mt-2 text-xs text-slate-500">No location selected yet.</p>
                     )}
+
+                    {resolvingAddress ? (
+                      <p className="mt-1 text-xs text-emerald-700">Finding address details...</p>
+                    ) : null}
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-slate-700">Address Line</label>
+                    <input
+                      type="text"
+                      value={deliveryAddress.addressLine}
+                      onChange={(e) => updateAddressField('addressLine', e.target.value)}
+                      className="w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
+                      placeholder="House no, street, area"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-slate-700">City</label>
+                    <input
+                      type="text"
+                      value={deliveryAddress.city}
+                      onChange={(e) => updateAddressField('city', e.target.value)}
+                      className="w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
+                      placeholder="City"
+                    />
                   </div>
 
                   <div className="rounded-xl bg-emerald-50 p-4 text-sm text-emerald-900">
