@@ -253,9 +253,24 @@ const AvailableOrders = () => {
                   <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                     {/* Left: Order Info */}
                     <div className="flex-1 space-y-3">
-                      <div>
-                        <h3 className="text-lg font-bold text-slate-900">{order.product?.productName || 'Product'}</h3>
-                        <p className="text-sm text-slate-500">Order ID: {order._id.slice(-8)}</p>
+                      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                        <div className="h-28 w-full max-w-[180px] overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+                          {order.product?.images?.[0] ? (
+                            <img
+                              src={order.product.images[0]}
+                              alt={order.product?.productName || 'Product Image'}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full items-center justify-center text-sm text-slate-500">
+                              No image
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-lg font-bold text-slate-900">{order.product?.productName || 'Product'}</h3>
+                          <p className="text-sm text-slate-500">Order ID: {order._id.slice(-8)}</p>
+                        </div>
                       </div>
                       
                       <div className="grid gap-3 text-sm md:grid-cols-3">

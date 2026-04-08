@@ -412,6 +412,12 @@ const CreateTripPage = () => {
                   <p className="font-semibold text-slate-900">{order?.product?.productName}</p>
                   <p className="text-sm text-slate-600">Quantity: {order?.quantity} {order?.product?.unit}</p>
                   <p className="text-sm text-slate-600">Order Value: LKR {order?.totalPrice?.toLocaleString()}</p>
+                  {order?.product?.pickupLocation?.instructions && (
+                    <div className="mt-3 rounded-lg bg-blue-100 p-3">
+                      <p className="text-xs font-semibold text-blue-700 uppercase mb-1">📋 Pickup Instructions</p>
+                      <p className="text-sm text-blue-800">{order.product.pickupLocation.instructions}</p>
+                    </div>
+                  )}
                 </div>
                 
                 {/* Route Info */}
