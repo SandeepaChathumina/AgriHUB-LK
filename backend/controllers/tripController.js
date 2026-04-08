@@ -41,10 +41,11 @@ export const getAvailableOrders = async (req, res) => {
     const orders = await Order.find(filter)
       .populate({
         path: 'product',
+        select: 'productName category quantity unit price images pickupLocation',
         populate: { path: 'farmer', select: 'fullName phone location' }
       })
       .populate('distributor', 'fullName phone')
-      .sort({ createdAt: 1 })
+      .sort({ createdAt: -1 })
       .skip((parseInt(page) - 1) * parseInt(limit))
       .limit(parseInt(limit));
 
@@ -264,7 +265,7 @@ export const getMyTrips = async (req, res) => {
       .populate({
         path: 'order',
         populate: [
-          { path: 'product', select: 'productName category' },
+          { path: 'product', select: 'productName category images unit pickupLocation' },
           { path: 'distributor', select: 'fullName' }
         ]
       })
@@ -301,7 +302,7 @@ export const getTripById = async (req, res) => {
       .populate({
         path: 'order',
         populate: [
-          { path: 'product', populate: { path: 'farmer' } },
+          { path: 'product', select: 'productName category images unit pickupLocation quantity', populate: { path: 'farmer' } },
           { path: 'distributor' }
         ]
       })

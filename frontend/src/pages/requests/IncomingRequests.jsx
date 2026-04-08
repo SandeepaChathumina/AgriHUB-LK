@@ -274,6 +274,12 @@ const IncomingRequests = () => {
                             ? request.proposedBy?.businessName || request.proposedBy?.fullName
                             : request.transporter?.businessName || 'N/A'}
                         </p>
+                        {request.order?.product?.pickupLocation?.instructions && (
+                          <div className="mt-2 rounded-lg bg-blue-100 p-2">
+                            <p className="text-xs font-semibold text-blue-700 uppercase mb-1">📋 Pickup Instructions</p>
+                            <p className="text-xs text-blue-800">{request.order.product.pickupLocation.instructions}</p>
+                          </div>
+                        )}
                       </div>
                     </div>
 

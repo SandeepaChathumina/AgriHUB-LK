@@ -1,20 +1,37 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { useAuth } from '../../context/AuthContext';
 import ProfileNav from '../../components/ProfileNav';
-import { 
-  fetchTripById, 
-  updateTripStatus, 
-  changeTripVehicle, 
+import {
+  fetchTripById,
+  updateTripStatus,
+  changeTripVehicle,
   cancelTrip,
-  fetchMyVehicles 
+  fetchMyVehicles
 } from '../../api/trips';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import 'leaflet-routing-machine';
+import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
+
+// Fix Leaflet marker icon issue
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+});
 
 const TripDetails = () => {
   const { id } = useParams();
   const { token, user } = useAuth();
   const navigate = useNavigate();
+  
+  // Refs for map
+  const mapRef = useRef(null);
+  const mapContainerRef = useRef(null);
+  const routingControlRef = useRef(null);
   
   const [trip, setTrip] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -22,6 +39,10 @@ const TripDetails = () => {
   const [showChangeVehicle, setShowChangeVehicle] = useState(false);
   const [availableVehicles, setAvailableVehicles] = useState([]);
   const [selectedVehicle, setSelectedVehicle] = useState('');
+  const [pickupLocation, setPickupLocation] = useState(null);
+  const [dropoffLocation, setDropoffLocation] = useState(null);
+  const [distance, setDistance] = useState(null);
+  const [duration, setDuration] = useState(null);
 
   useEffect(() => {
     if (!token) {
@@ -41,11 +62,115 @@ const TripDetails = () => {
     loadTripDetails();
   }, [token, user, id]);
 
+  // Initialize map after locations are loaded
+  useEffect(() => {
+    if (pickupLocation && dropoffLocation && mapContainerRef.current && !mapRef.current) {
+      initMap();
+    }
+  }, [pickupLocation, dropoffLocation]);
+
+  const initMap = () => {
+    // Create map centered between pickup and dropoff
+    const centerLat = (pickupLocation.lat + dropoffLocation.lat) / 2;
+    const centerLng = (pickupLocation.lng + dropoffLocation.lng) / 2;
+    
+    const map = L.map(mapContainerRef.current).setView([centerLat, centerLng], 9);
+    mapRef.current = map;
+    
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+    
+    // Add custom markers
+    const pickupIcon = L.divIcon({
+      className: 'custom-div-icon',
+      html: '<div style="background-color: #10b981; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 0 2px #10b981;"></div>',
+      iconSize: [12, 12],
+      popupAnchor: [0, -6]
+    });
+    
+    const dropoffIcon = L.divIcon({
+      className: 'custom-div-icon',
+      html: '<div style="background-color: #ef4444; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 0 2px #ef4444;"></div>',
+      iconSize: [12, 12],
+      popupAnchor: [0, -6]
+    });
+    
+    // Add pickup marker
+    L.marker([pickupLocation.lat, pickupLocation.lng], { icon: pickupIcon })
+      .addTo(map)
+      .bindPopup(`<b>Pickup Location</b><br/>${pickupLocation.address}<br/><i>${pickupLocation.name}</i>`)
+      .openPopup();
+    
+    // Add dropoff marker
+    L.marker([dropoffLocation.lat, dropoffLocation.lng], { icon: dropoffIcon })
+      .addTo(map)
+      .bindPopup(`<b>Delivery Location</b><br/>${dropoffLocation.address}<br/><i>${dropoffLocation.name}</i>`);
+    
+    // Add routing control to show the route
+    routingControlRef.current = L.Routing.control({
+      waypoints: [
+        L.latLng(pickupLocation.lat, pickupLocation.lng),
+        L.latLng(dropoffLocation.lat, dropoffLocation.lng)
+      ],
+      routeWhileDragging: false,
+      showAlternatives: false,
+      fitSelectedRoutes: true,
+      show: false, // Hide the default itinerary panel
+      lineOptions: {
+        styles: [{ color: '#10b981', weight: 4, opacity: 0.7 }]
+      },
+      // Use OpenStreetMap's routing service (free)
+      router: L.Routing.osrmv1({
+        serviceUrl: 'https://router.project-osrm.org/route/v1',
+        profile: 'driving'
+      })
+    }).addTo(map);
+    
+    // Listen for route calculation to get distance and duration
+    routingControlRef.current.on('routesfound', (e) => {
+      const route = e.routes[0];
+      if (route) {
+        // Distance in meters, convert to km
+        const distanceKm = (route.summary.totalDistance / 1000).toFixed(1);
+        // Duration in seconds, convert to hours/minutes
+        const durationMin = Math.round(route.summary.totalTime / 60);
+        const durationHours = Math.floor(durationMin / 60);
+        const durationRemainingMin = durationMin % 60;
+        
+        setDistance(distanceKm);
+        setDuration(durationHours > 0 
+          ? `${durationHours}h ${durationRemainingMin}min` 
+          : `${durationMin} min`);
+      }
+    });
+  };
+
   const loadTripDetails = async () => {
     setLoading(true);
     try {
       const data = await fetchTripById(token, id);
-      setTrip(data.trip);
+      const tripData = data.trip;
+      setTrip(tripData);
+      
+      // Extract pickup and dropoff locations for map
+      const pickup = {
+        lat: tripData.pickupLocation?.coordinates?.lat,
+        lng: tripData.pickupLocation?.coordinates?.lng,
+        address: tripData.pickupLocation?.address,
+        name: tripData.order?.product?.farmer?.fullName ? `${tripData.order.product.farmer.fullName}'s Farm` : 'Pickup Location'
+      };
+      
+      const dropoff = {
+        lat: tripData.dropoffLocation?.coordinates?.lat,
+        lng: tripData.dropoffLocation?.coordinates?.lng,
+        address: tripData.dropoffLocation?.address,
+        name: tripData.order?.distributor?.fullName || 'Delivery Location'
+      };
+      
+      setPickupLocation(pickup);
+      setDropoffLocation(dropoff);
     } catch (error) {
       Swal.fire({
         icon: 'error',
@@ -291,6 +416,12 @@ const TripDetails = () => {
                   <span className="text-slate-500">Contact</span>
                   <span className="font-semibold text-slate-900">{trip.order?.distributor?.phone || 'N/A'}</span>
                 </div>
+                {trip.order?.product?.pickupLocation?.instructions && (
+                  <div className="rounded-lg bg-blue-50 p-3 mt-4">
+                    <p className="text-xs font-semibold text-blue-700 uppercase mb-1">📋 Pickup Instructions</p>
+                    <p className="text-slate-700">{trip.order.product.pickupLocation.instructions}</p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -412,19 +543,37 @@ const TripDetails = () => {
               </div>
             </div>
 
-            {/* Locations */}
+            {/* Map and Route Details */}
             <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 md:col-span-2">
-              <h2 className="mb-4 text-lg font-semibold text-slate-900">Locations</h2>
-              <div className="grid gap-4 md:grid-cols-2">
+              <h2 className="mb-4 text-lg font-semibold text-slate-900">Route Map & Details</h2>
+              
+              {/* Map Container */}
+              <div className="mb-4 h-80 w-full overflow-hidden rounded-xl border border-slate-200">
+                <div ref={mapContainerRef} className="h-full w-full"></div>
+              </div>
+              
+              {/* Route Information */}
+              <div className="grid gap-4 md:grid-cols-3">
                 <div className="rounded-xl bg-blue-50 p-4">
                   <p className="text-sm font-semibold text-blue-800 mb-2">📍 Pickup Location</p>
-                  <p className="text-slate-700">{trip.pickupLocation?.address}</p>
-                  <p className="text-sm text-slate-500 mt-1">{trip.pickupLocation?.city}, {trip.pickupLocation?.district}</p>
+                  <p className="text-slate-700 text-sm">{trip.pickupLocation?.address}</p>
+                  <p className="text-xs text-slate-500 mt-1">{trip.pickupLocation?.city}, {trip.pickupLocation?.district}</p>
                 </div>
                 <div className="rounded-xl bg-emerald-50 p-4">
                   <p className="text-sm font-semibold text-emerald-800 mb-2">🏁 Dropoff Location</p>
-                  <p className="text-slate-700">{trip.dropoffLocation?.address}</p>
-                  <p className="text-sm text-slate-500 mt-1">{trip.dropoffLocation?.city}</p>
+                  <p className="text-slate-700 text-sm">{trip.dropoffLocation?.address}</p>
+                  <p className="text-xs text-slate-500 mt-1">{trip.dropoffLocation?.city}</p>
+                </div>
+                <div className="rounded-xl bg-purple-50 p-4">
+                  <p className="text-sm font-semibold text-purple-800 mb-2">📊 Route Info</p>
+                  {distance && duration ? (
+                    <div className="text-sm">
+                      <p className="text-slate-700">Distance: <span className="font-semibold">{distance} km</span></p>
+                      <p className="text-slate-700">Duration: <span className="font-semibold">{duration}</span></p>
+                    </div>
+                  ) : (
+                    <p className="text-slate-500 text-sm">Calculating route...</p>
+                  )}
                 </div>
               </div>
             </div>
