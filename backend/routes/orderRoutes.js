@@ -1,30 +1,28 @@
-import express from 'express';
-
-import { 
-  placeOrder, 
-  getMyOrders, 
-  updateOrder, 
+import express from "express";
+import {
+  placeOrder,
+  getMyOrders,
+  updateOrder,
   deleteOrder,
   verifyPayment,
   cancelPayment,
-  getOrderById
-} from '../controllers/orderController.js'; 
-
-import { protect, authorizeRoles } from '../middleware/authMiddleware.js';
+  getOrderById,
+} from "../controllers/orderController.js";
+import { protect, authorizeRoles } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// 1. Public Routes (No 'protect' middleware)
-router.get('/success', verifyPayment);
-router.get('/cancel', cancelPayment);
+// Public routes
+router.get("/success", verifyPayment);
+router.get("/cancel", cancelPayment);
 
-// 2. Protected Routes
+// Protected routes
 router.use(protect);
 
-router.get('/my-orders', authorizeRoles('Distributor'), getMyOrders);
-router.post('/', authorizeRoles('Distributor'), placeOrder);
-router.get('/:id', getOrderById);
-router.put('/:id', updateOrder);
-router.delete('/:id', deleteOrder);
+router.get("/my-orders", authorizeRoles("Distributor"), getMyOrders);
+router.post("/", authorizeRoles("Distributor"), placeOrder);
+router.get("/:id", authorizeRoles("Distributor", "Admin"), getOrderById);
+router.put("/:id", authorizeRoles("Distributor"), updateOrder);
+router.delete("/:id", authorizeRoles("Distributor"), deleteOrder);
 
 export default router;
