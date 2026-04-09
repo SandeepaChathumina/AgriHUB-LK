@@ -3,70 +3,101 @@ import Product from "../models/Product.js";
 import { getUSDPrice } from "../utils/currencyConverter.js";
 import * as paymentController from "./paymentController.js";
 
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
-//Place a new order with Stripe Integration
-//POST /api/orders
-
+// Place a new order with Stripe Integration
+// POST /api/orders
 export const placeOrder = async (req, res) => {
   try {
-    const { productId, quantity, deliveryAddress} = req.body;
+    const { productId, quantity, deliveryAddress } = req.body;
 
-    // 1. Validate Product and Stock
-    const product = await Product.findById(productId);
-    if (!product) return res.status(404).json({ message: "Product not found" });
-
-    if (product.quantity < quantity) {
-      return res.status(400).json({ message: "Insufficient stock" });
+    if (!productId) {
+      return res.status(400).json({
+        success: false,
+        message: "Product ID is required",
+      });
     }
 
-    const totalPriceLKR = product.price * quantity;
+    const parsedQuantity = Number(quantity);
 
-    // 2. Fetch Third-party Currency Conversion
+    if (!Number.isInteger(parsedQuantity) || parsedQuantity < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Quantity must be a whole number greater than 0",
+      });
+    }
+
+    if (
+      !deliveryAddress ||
+      !deliveryAddress.addressLine ||
+      !deliveryAddress.city
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Delivery address is required",
+      });
+    }
+
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    if (product.quantity < parsedQuantity) {
+      return res.status(400).json({
+        success: false,
+        message: "Insufficient stock",
+      });
+    }
+
+    const totalPriceLKR = product.price * parsedQuantity;
     const totalPriceUSD = await getUSDPrice(totalPriceLKR);
 
-    // 3. Initialize Order with Payment Status
     const newOrder = new Order({
-      distributor: req.user._id, // Verified via Teshan's protect middleware
+      distributor: req.user._id,
       product: productId,
-      quantity,
+      quantity: parsedQuantity,
       totalPrice: totalPriceLKR,
       totalPriceUSD: totalPriceUSD || 0,
       deliveryAddress,
-      paymentStatus: 'unpaid', // Default status for new orders
-      deliveryStatus: 'Pending',
-      status: 'Pending',
-      
+      paymentStatus: "unpaid",
+      deliveryStatus: "Pending",
+      status: "Pending",
     });
 
-    // 4. Generate Stripe Checkout Session using the Service Layer
     const session = await paymentController.createStripeSession(newOrder, product);
-    
+
     newOrder.stripeSessionId = session.id;
     await newOrder.save();
 
-    // 5. Update Product Inventory (Atomic update)
-    product.quantity -= quantity;
-    await product.save();
+    // IMPORTANT:
+    // Do NOT reduce product stock here.
+    // Reduce stock only after successful payment verification.
 
-    res.status(201).json({ 
-      success: true, 
+    return res.status(201).json({
+      success: true,
       message: "Order initiated. Please complete payment.",
-      checkoutUrl: session.url, // URL for Postman/Browser testing
-      order: newOrder 
+      checkoutUrl: session.url,
+      order: newOrder,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Place order error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to place order",
+    });
   }
 };
 
-//Get logged-in distributor's orders (with Pagination)
-//GET /api/orders/my-orders
-
+// Get logged-in distributor's orders (with Pagination)
+// GET /api/orders/my-orders
 export const getMyOrders = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const limit = Math.max(parseInt(req.query.limit) || 10, 1);
     const skip = (page - 1) * limit;
 
     const orders = await Order.find({ distributor: req.user._id })
@@ -77,7 +108,7 @@ export const getMyOrders = async (req, res) => {
 
     const total = await Order.countDocuments({ distributor: req.user._id });
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       count: orders.length,
       total,
@@ -86,56 +117,120 @@ export const getMyOrders = async (req, res) => {
       orders,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Get my orders error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to fetch orders",
+    });
   }
 };
 
-//Update order quantity or status with stock re-sync
-//PUT /api/orders/:id
-
+// Update order quantity or status with safer business rules
+// PUT /api/orders/:id
 export const updateOrder = async (req, res) => {
   try {
-    const { quantity, status } = req.body;
+    const { quantity, status, deliveryAddress } = req.body;
     const orderId = req.params.id;
 
     const order = await Order.findById(orderId).populate("product");
-    if (!order) return res.status(404).json({ message: "Order not found" });
-
-    // Security: Ownership verification
-    if (order.distributor.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: "Not authorized to update this order" });
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
     }
 
-    if (quantity && quantity !== order.quantity) {
-      const product = await Product.findById(order.product._id);
-      const quantityDiff = quantity - order.quantity;
+    if (order.distributor.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to update this order",
+      });
+    }
 
-      if (quantityDiff > 0) {
-        if (product.quantity < quantityDiff) {
-          return res.status(400).json({ message: "Insufficient stock for increase" });
-        }
-        product.quantity -= quantityDiff;
-      } else {
-        product.quantity += Math.abs(quantityDiff);
+    if (order.status === "Cancelled") {
+      return res.status(400).json({
+        success: false,
+        message: "Cancelled orders cannot be updated",
+      });
+    }
+
+    if (order.paymentStatus === "paid") {
+      return res.status(400).json({
+        success: false,
+        message: "Paid orders cannot be modified",
+      });
+    }
+
+    if (quantity !== undefined) {
+      const parsedQuantity = Number(quantity);
+
+      if (!Number.isInteger(parsedQuantity) || parsedQuantity < 1) {
+        return res.status(400).json({
+          success: false,
+          message: "Quantity must be a whole number greater than 0",
+        });
       }
 
-      await product.save();
+      const product = await Product.findById(order.product._id);
+      if (!product) {
+        return res.status(404).json({
+          success: false,
+          message: "Related product not found",
+        });
+      }
 
-      order.quantity = quantity;
-      order.totalPrice = product.price * quantity;
+      if (product.quantity < parsedQuantity) {
+        return res.status(400).json({
+          success: false,
+          message: "Insufficient stock for updated quantity",
+        });
+      }
+
+      order.quantity = parsedQuantity;
+      order.totalPrice = product.price * parsedQuantity;
       order.totalPriceUSD = await getUSDPrice(order.totalPrice);
     }
 
-    if (status) order.status = status;
+    if (deliveryAddress) {
+      order.deliveryAddress = {
+        ...order.deliveryAddress,
+        ...deliveryAddress,
+      };
+    }
+
+    // Only allow cancellation by distributor before payment
+    if (status) {
+      const allowedStatuses = ["Pending", "Cancelled"];
+      if (!allowedStatuses.includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: "Only Pending or Cancelled status can be set by distributor",
+        });
+      }
+
+      if (status === "Cancelled") {
+        order.status = "Cancelled";
+        order.deliveryStatus = "Cancelled";
+        order.paymentStatus =
+          order.paymentStatus === "paid" ? "paid" : "cancelled";
+      } else {
+        order.status = status;
+      }
+    }
+
     const updatedOrder = await order.save();
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Order updated successfully",
       order: updatedOrder,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error("Update order error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to update order",
+    });
   }
 };
 
@@ -144,80 +239,162 @@ export const updateOrder = async (req, res) => {
 export const getOrderById = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id)
-      .populate('product')
-      .populate('distributor', 'fullName email phone');
+      .populate("product")
+      .populate("distributor", "fullName email phone");
 
     if (!order) {
-      return res.status(404).json({ success: false, message: 'Order not found' });
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
     }
 
-    // Check if user is authorized (distributor who placed order or admin)
-    if (order.distributor._id.toString() !== req.user._id.toString() && req.user.role !== 'Admin') {
-      return res.status(403).json({ success: false, message: 'Not authorized' });
+    if (
+      order.distributor._id.toString() !== req.user._id.toString() &&
+      req.user.role !== "Admin"
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized",
+      });
     }
 
-    res.status(200).json({ success: true, order });
+    return res.status(200).json({
+      success: true,
+      order,
+    });
   } catch (error) {
-    console.error('Get order by ID error:', error);
-    res.status(500).json({ success: false, message: error.message });
+    console.error("Get order by ID error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to fetch order",
+    });
   }
 };
 
-//Cancel Order and restore stock
-//DELETE /api/orders/:id
-
+// Cancel/delete unpaid order
+// DELETE /api/orders/:id
 export const deleteOrder = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
 
-    if (!order) return res.status(404).json({ message: "Order not found" });
-
-    if (order.distributor.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: "Unauthorized" });
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
     }
 
-    const product = await Product.findById(order.product);
-    if (product) {
-      product.quantity += order.quantity;
-      await product.save();
+    if (order.distributor.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    if (order.paymentStatus === "paid") {
+      return res.status(400).json({
+        success: false,
+        message: "Paid orders cannot be deleted",
+      });
     }
 
     await order.deleteOne();
-    res.status(200).json({ success: true, message: "Order cancelled and stock restored" });
+
+    return res.status(200).json({
+      success: true,
+      message: "Unpaid order cancelled successfully",
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Delete order error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to delete order",
+    });
   }
 };
 
-// In orderController.js
+// Verify Stripe payment
+// GET /api/orders/success?session_id=...
 export const verifyPayment = async (req, res) => {
   try {
     const { session_id } = req.query;
 
     if (!session_id) {
-      return res.redirect(`${FRONTEND_URL}/orders?payment=error&reason=missing_session`);
+      return res.redirect(
+        `${FRONTEND_URL}/orders?payment=error&reason=missing_session`
+      );
     }
 
-    // Use the named import 'paymentController' you defined at the top
     const session = await paymentController.verifyStripeSession(session_id);
 
-    if (session.payment_status === 'paid') {
-      await Order.findByIdAndUpdate(session.metadata.orderId, {
-        paymentStatus: 'paid',
-        status: 'Confirmed',
-        deliveryStatus: 'Requested'
-      });
-
-      return res.redirect(`${FRONTEND_URL}/orders?payment=success&orderId=${session.metadata.orderId}`);
+    if (!session || !session.metadata?.orderId) {
+      return res.redirect(
+        `${FRONTEND_URL}/orders?payment=error&reason=invalid_session`
+      );
     }
 
-    return res.redirect(`${FRONTEND_URL}/orders?payment=failed`);
+    const order = await Order.findById(session.metadata.orderId).populate("product");
+
+    if (!order) {
+      return res.redirect(
+        `${FRONTEND_URL}/orders?payment=error&reason=order_not_found`
+      );
+    }
+
+    if (order.paymentStatus === "paid") {
+      return res.redirect(
+        `${FRONTEND_URL}/orders?payment=success&orderId=${order._id}`
+      );
+    }
+
+    if (session.payment_status !== "paid") {
+      await Order.findByIdAndUpdate(order._id, {
+        paymentStatus: "failed",
+      });
+
+      return res.redirect(`${FRONTEND_URL}/orders?payment=failed`);
+    }
+
+    const product = await Product.findById(order.product._id);
+
+    if (!product) {
+      return res.redirect(
+        `${FRONTEND_URL}/orders?payment=error&reason=product_not_found`
+      );
+    }
+
+    if (product.quantity < order.quantity) {
+      await Order.findByIdAndUpdate(order._id, {
+        paymentStatus: "failed",
+      });
+
+      return res.redirect(
+        `${FRONTEND_URL}/orders?payment=error&reason=insufficient_stock`
+      );
+    }
+
+    product.quantity -= order.quantity;
+    await product.save();
+
+    await Order.findByIdAndUpdate(order._id, {
+      paymentStatus: "paid",
+      status: "Confirmed",
+      deliveryStatus: "Requested",
+      paymentConfirmedAt: new Date(),
+    });
+
+    return res.redirect(
+      `${FRONTEND_URL}/orders?payment=success&orderId=${order._id}`
+    );
   } catch (error) {
     console.error("Verification Error:", error.message);
     return res.redirect(`${FRONTEND_URL}/orders?payment=error`);
   }
 };
 
+// Cancel Stripe payment
+// GET /api/orders/cancel
 export const cancelPayment = async (req, res) => {
   return res.redirect(`${FRONTEND_URL}/orders?payment=cancelled`);
 };

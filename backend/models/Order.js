@@ -2,61 +2,92 @@ import mongoose from "mongoose";
 
 const orderSchema = new mongoose.Schema(
   {
-    // Reference to User model (The Distributor)
     distributor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-    // Reference to the Product model
+
     product: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Product",
       required: true,
     },
+
     transporter: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       default: null,
     },
+
     quantity: {
       type: Number,
       required: [true, "Quantity is required"],
       min: [1, "Quantity cannot be less than 1"],
     },
+
     totalPrice: {
       type: Number,
       required: true,
+      min: [0, "Total price cannot be negative"],
     },
+
     totalPriceUSD: {
       type: Number,
       default: 0,
+      min: [0, "USD total price cannot be negative"],
     },
+
     status: {
       type: String,
-      enum: ["Pending", "Confirmed", "Shipped", "Cancelled"],
+      enum: ["Pending", "Confirmed", "Shipped", "Delivered", "Cancelled"],
       default: "Pending",
     },
+
+    paymentStatus: {
+      type: String,
+      enum: ["unpaid", "paid", "failed", "cancelled"],
+      default: "unpaid",
+    },
+
+    stripeSessionId: {
+      type: String,
+      default: null,
+    },
+
+    paymentConfirmedAt: {
+      type: Date,
+      default: null,
+    },
+
     deliveryStatus: {
       type: String,
-      enum: ["Pending", "Requested", "Transport Requested", "In Transit", "Delivered"],
+      enum: [
+        "Pending",
+        "Requested",
+        "Transport Requested",
+        "In Transit",
+        "Delivered",
+        "Cancelled",
+      ],
       default: "Pending",
     },
+
     deliveryAddress: {
-      addressLine: { type: String, required: true },
-      city: { type: String, required: true },
+      addressLine: { type: String, required: true, trim: true },
+      city: { type: String, required: true, trim: true },
       coordinates: {
         lat: { type: Number },
         lng: { type: Number },
       },
     },
-    // Logic for "Zero Hunger": Tracking when the order was placed to ensure speed
+
     placedAt: {
       type: Date,
       default: Date.now,
     },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 export default mongoose.model("Order", orderSchema);
