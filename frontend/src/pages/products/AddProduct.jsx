@@ -509,12 +509,21 @@ const AddProduct = () => {
 
   const validateForm = () => {
     if (!formData.productName.trim()) return 'Product name is required';
-    if (!formData.quantity || formData.quantity <= 0) return 'Valid quantity is required';
-    if (!formData.price || formData.price <= 0) return 'Valid price is required';
+    if (!formData.quantity || formData.quantity <= 0) return 'Quantity must be greater than zero';
+    if (!formData.price || formData.price < 0) return 'Price cannot be negative';
     if (!formData.pickupLocation.address.trim()) return 'Pickup address is required';
     if (!formData.pickupLocation.district) return 'Please select a district';
     if (!formData.pickupLocation.coordinates.lat || !formData.pickupLocation.coordinates.lng) {
       return 'Pickup location coordinates are required. Click on the map to select location.';
+    }
+    if (formData.harvestDate && formData.expiryDate) {
+      if (new Date(formData.harvestDate).setHours(0,0,0,0) >= new Date(formData.expiryDate).setHours(0,0,0,0)) {
+        return 'Harvest date must be before expiry date';
+      }
+    }
+    // Validation for price decimal
+    if (!/^\d+(\.\d{1,2})?$/.test(formData.price)) {
+      return 'Price must be a valid number with up to 2 decimal places';
     }
     return null;
   };
@@ -739,6 +748,7 @@ const AddProduct = () => {
                     value={formData.price}
                     onChange={handleChange}
                     step="0.01"
+                    min="0"
                     className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
                     required
                   />
@@ -899,6 +909,7 @@ const AddProduct = () => {
                       name="harvestDate"
                       value={formData.harvestDate}
                       onChange={handleChange}
+                      max={formData.expiryDate || undefined}
                       className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
                     />
                   </div>
@@ -909,6 +920,7 @@ const AddProduct = () => {
                       name="expiryDate"
                       value={formData.expiryDate}
                       onChange={handleChange}
+                      min={formData.harvestDate || new Date().toISOString().split('T')[0]}
                       className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
                     />
                   </div>

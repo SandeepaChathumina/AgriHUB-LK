@@ -34,7 +34,8 @@ const ProductSchema = new mongoose.Schema({
   price: {
     type: Number,
     required: [true, 'Price is required'],
-    min: [0, 'Price cannot be negative']
+    min: [0, 'Price cannot be negative'],
+    set: v => Math.round(v * 100) / 100
   },
   currency: {
     type: String,
@@ -54,7 +55,15 @@ const ProductSchema = new mongoose.Schema({
     type: Date
   },
   expiryDate: {
-    type: Date
+    type: Date,
+    validate: {
+      validator: function(v) {
+        if (!this.harvestDate || !v) return true;
+        // Compare dates by timestamp to ignore time portion differences if any
+        return new Date(v).setHours(0,0,0,0) >= new Date(this.harvestDate).setHours(0,0,0,0);
+      },
+      message: 'Expiry date cannot be before the harvest date'
+    }
   },
   images: [{
     type: String
