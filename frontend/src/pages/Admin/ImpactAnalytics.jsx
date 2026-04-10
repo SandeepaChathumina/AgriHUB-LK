@@ -101,7 +101,7 @@ const ImpactAnalytics = () => {
           </Link>
         </div>
 
-        <div className="mb-8 rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 p-6 text-white shadow-sm">
+        <div className="mb-8 rounded-2xl bg-linear-to-r from-emerald-500 to-emerald-600 p-6 text-white shadow-sm">
           <p className="text-sm font-semibold uppercase tracking-wide opacity-80">
             🌾 Zero Hunger Impact (SDG 2)
           </p>
@@ -217,7 +217,7 @@ const ImpactAnalytics = () => {
                   Order Status Overview
                 </h2>
 
-                <div className="h-[320px]">
+                <div className="h-80">
                   {hasOrderChartData ? (
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={orderStatusData}>
@@ -255,7 +255,7 @@ const ImpactAnalytics = () => {
                   Delivery Distribution
                 </h2>
 
-                <div className="h-[320px]">
+                <div className="h-80">
                   {hasDeliveryChartData ? (
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
