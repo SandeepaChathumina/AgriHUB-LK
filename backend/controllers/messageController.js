@@ -5,6 +5,9 @@ import { encryptMessage, decryptMessage } from '../utils/messageCrypto.js';
 const allowedRoles = ['Farmer', 'Distributor', 'Transporter'];
 
 const canChatWithEachOther = (role1, role2) => {
+  const r1 = String(role1).trim();
+  const r2 = String(role2).trim();
+  
   const allowedPairs = [
     ['Farmer', 'Distributor'],
     ['Farmer', 'Transporter'],
@@ -13,7 +16,7 @@ const canChatWithEachOther = (role1, role2) => {
 
   return allowedPairs.some(
     ([a, b]) =>
-      (role1 === a && role2 === b) || (role1 === b && role2 === a)
+      (r1 === a && r2 === b) || (r1 === b && r2 === a)
   );
 };
 
@@ -26,6 +29,14 @@ const formatMessage = (message) => ({
   createdAt: message.createdAt,
   updatedAt: message.updatedAt,
 });
+
+const safeFormatMessage = (message) => {
+  try {
+    return formatMessage(message);
+  } catch {
+    return null;
+  }
+};
 
 export const sendMessage = async (req, res) => {
   try {
@@ -82,8 +93,8 @@ export const sendMessage = async (req, res) => {
     });
 
     const populatedMessage = await Message.findById(savedMessage._id)
-      .populate('sender', 'fullName email role')
-      .populate('receiver', 'fullName email role');
+      .populate('sender', 'fullName businessName companyName email role')
+      .populate('receiver', 'fullName businessName companyName email role');
 
     const safeMessage = formatMessage(populatedMessage);
 
@@ -125,8 +136,8 @@ export const getConversation = async (req, res) => {
       ],
     })
       .sort({ createdAt: 1 })
-      .populate('sender', 'fullName email role')
-      .populate('receiver', 'fullName email role');
+      .populate('sender', 'fullName businessName companyName email role')
+      .populate('receiver', 'fullName businessName companyName email role');
 
     await Message.updateMany(
       {
@@ -139,7 +150,9 @@ export const getConversation = async (req, res) => {
       }
     );
 
-    const decryptedMessages = messages.map(formatMessage);
+    const decryptedMessages = messages
+      .map(safeFormatMessage)
+      .filter(Boolean);
 
     return res.status(200).json({
       success: true,
@@ -157,7 +170,7 @@ export const getConversation = async (req, res) => {
 export const getChatUsers = async (req, res) => {
   try {
     const currentUserId = req.user._id;
-    const currentUserRole = req.user.role;
+    const currentUserRole = String(req.user.role).trim();
 
     let allowedPartnerRoles = [];
 
@@ -196,21 +209,35 @@ export const getConversationList = async (req, res) => {
       $or: [{ sender: currentUserId }, { receiver: currentUserId }],
     })
       .sort({ createdAt: -1 })
-      .populate('sender', 'fullName email role')
-      .populate('receiver', 'fullName email role');
+      .populate('sender', 'fullName businessName companyName email role')
+      .populate('receiver', 'fullName businessName companyName email role');
 
     const conversationMap = new Map();
 
     for (const message of messages) {
+      if (!message.sender || !message.receiver) {
+        continue;
+      }
+
       const otherUser =
         message.sender._id.toString() === currentUserId.toString()
           ? message.receiver
           : message.sender;
 
+      if (!otherUser?._id) {
+        continue;
+      }
+
+      const lastMessage = safeFormatMessage(message);
+
+      if (!lastMessage) {
+        continue;
+      }
+
       if (!conversationMap.has(otherUser._id.toString())) {
         conversationMap.set(otherUser._id.toString(), {
           user: otherUser,
-          lastMessage: formatMessage(message),
+          lastMessage,
         });
       }
     }
