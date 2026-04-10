@@ -15,19 +15,20 @@ import upload from '../middleware/upload.js';
 
 const router = express.Router();
 
+// Specific routes first (before generic :id route)
+router.get('/distributors/logos', getAllDistributorLogos);
+router.get('/transporters/logos', getAllTransporterLogos);
+
+// Profile routes
 router.get('/profile', protect, getUserProfile);
 router.put('/profile', protect, upload.single('logo'), updateUserProfile);
 router.delete('/profile', protect, deleteUserProfile);
 
 router.delete('/profile/logo', protect, removeLogo);
 router.put('/profile/logo', protect, upload.single('logo'), updateLogoOnly);
+
+// Generic routes (after specific routes)
 router.get('/:id/logo', getUserLogo);
-
 router.delete('/:id', protect, authorizeRoles('Admin'), deleteUserAdmin);
-
-// Get lists of all users in specific roles (Place these BEFORE the /:id routes)
-router.get('/distributors/logos', getAllDistributorLogos);
-router.get('/transporters/logos', getAllTransporterLogos);
-
 
 export default router;

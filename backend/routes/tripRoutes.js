@@ -22,23 +22,23 @@ const router = express.Router();
 // All routes require authentication
 router.use(protect);
 
-// TRANSPORTER ROUTES
+// Specific routes first (before generic :id route)
 router.get('/available-orders', authorizeRoles('Transporter', 'Admin'), getAvailableOrders);
 router.get('/order/:orderId', authorizeRoles('Transporter', 'Admin'), getOrderForTrip);
-router.post('/', authorizeRoles('Transporter', 'Admin'), createTrip);
-router.post('/request-order', authorizeRoles('Transporter', 'Admin'), requestOrderDelivery);
 router.get('/my-trips', authorizeRoles('Transporter', 'Admin'), getMyTrips);
 router.get('/stats', authorizeRoles('Transporter', 'Admin'), getTripStats);
-
-// DISTRIBUTOR ROUTES
-router.post('/request', authorizeRoles('Distributor', 'Admin'), requestTrip);
-
-// SHARED ROUTES (Both Transporter and Distributor)
 router.get('/incoming-requests', authorizeRoles('Transporter', 'Distributor', 'Admin'), getIncomingRequests);
+
+// Request routes
+router.post('/request', authorizeRoles('Distributor', 'Admin'), requestTrip);
+router.post('/request-order', authorizeRoles('Transporter', 'Admin'), requestOrderDelivery);
 router.patch('/requests/:id/accept', authorizeRoles('Transporter', 'Distributor', 'Admin'), acceptRequest);
 router.patch('/requests/:id/reject', authorizeRoles('Transporter', 'Distributor', 'Admin'), rejectRequest);
 
-// GENERAL TRIP ROUTES (Both roles)
+// Trip creation
+router.post('/', authorizeRoles('Transporter', 'Admin'), createTrip);
+
+// General trip routes (most generic - last)
 router.get('/:id', authorizeRoles('Transporter', 'Distributor', 'Admin'), getTripById);
 router.patch('/:id/status', authorizeRoles('Transporter', 'Admin'), updateTripStatus);
 router.patch('/:id/vehicle', authorizeRoles('Transporter', 'Admin'), changeVehicle);
