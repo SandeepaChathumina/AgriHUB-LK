@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import ProfileNav from "../../components/ProfileNav";
@@ -9,8 +9,6 @@ import {
   updateMyOrder,
   retryPayment,
 } from "../../api/orders";
-
-const EDITABLE_STATUSES = ["Pending", "Confirmed", "Shipped", "Cancelled"];
 
 const MyOrders = () => {
   const { token, user } = useAuth();
@@ -27,7 +25,8 @@ const MyOrders = () => {
   });
 
   const [editingOrderId, setEditingOrderId] = useState(null);
-  const [editForm, setEditForm] = useState({ quantity: "", status: "" });
+  const [editForm, setEditForm] = useState({ quantity: "" });
+  const toastShownRef = useRef(false);
 
   useEffect(() => {
     if (!token) {
@@ -46,7 +45,7 @@ const MyOrders = () => {
 
   useEffect(() => {
     const payment = searchParams.get("payment");
-    if (!payment) return;
+    if (!payment || toastShownRef.current) return;
 
     const orderId = searchParams.get("orderId");
 
@@ -64,8 +63,13 @@ const MyOrders = () => {
       toast.error("Payment verification failed");
     }
 
-    setSearchParams({}, { replace: true });
-  }, [searchParams, setSearchParams]);
+    toastShownRef.current = true;
+
+    // Remove query params AFTER showing toast
+    setTimeout(() => {
+      setSearchParams({}, { replace: true });
+    }, 0);
+  }, [searchParams]);
 
   const loadOrders = async () => {
     setLoading(true);
@@ -92,13 +96,12 @@ const MyOrders = () => {
     setEditingOrderId(order._id);
     setEditForm({
       quantity: String(order.quantity || ""),
-      status: order.status || "Pending",
     });
   };
 
   const stopEdit = () => {
     setEditingOrderId(null);
-    setEditForm({ quantity: "", status: "" });
+    setEditForm({ quantity: "" });
   };
 
   const submitEdit = async (orderId) => {
@@ -112,7 +115,6 @@ const MyOrders = () => {
     try {
       const payload = {
         quantity,
-        status: editForm.status,
       };
 
       const data = await updateMyOrder(token, orderId, payload);
@@ -286,9 +288,6 @@ const MyOrders = () => {
                         <h3 className="text-lg font-semibold text-slate-900">
                           {order.product?.productName || "Product"}
                         </h3>
-                        <p className="text-xs text-slate-500">
-                          Order ID: {order._id}
-                        </p>
                         <p className="text-sm text-slate-700">
                           Qty:{" "}
                           <span className="font-semibold">
@@ -339,27 +338,6 @@ const MyOrders = () => {
                                 }
                                 className="w-full rounded-xl border border-emerald-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
                               />
-                            </div>
-                            <div>
-                              <label className="mb-1 block text-xs font-semibold uppercase text-slate-500">
-                                Status
-                              </label>
-                              <select
-                                value={editForm.status}
-                                onChange={(e) =>
-                                  setEditForm((prev) => ({
-                                    ...prev,
-                                    status: e.target.value,
-                                  }))
-                                }
-                                className="w-full rounded-xl border border-emerald-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
-                              >
-                                {EDITABLE_STATUSES.map((status) => (
-                                  <option key={status} value={status}>
-                                    {status}
-                                  </option>
-                                ))}
-                              </select>
                             </div>
                             <div className="flex gap-2">
                               <button
