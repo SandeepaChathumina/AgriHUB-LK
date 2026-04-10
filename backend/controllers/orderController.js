@@ -73,11 +73,6 @@ export const placeOrder = async (req, res) => {
     newOrder.stripeSessionId = session.id;
     await newOrder.save();
 
-    // Reduce stock and increment total sold immediately as per request
-    product.quantity -= parsedQuantity;
-    product.totalSold = (product.totalSold || 0) + parsedQuantity;
-    await product.save();
-
     return res.status(201).json({
       success: true,
       message: "Order initiated. Please complete payment.",
@@ -375,7 +370,10 @@ export const verifyPayment = async (req, res) => {
       );
     }
 
-    // Quantity was already deducted when the order was placed
+    // Deduct stock only after successful payment
+    product.quantity -= order.quantity;
+    product.totalSold = (product.totalSold || 0) + order.quantity;
+    await product.save();
 
     await Order.findByIdAndUpdate(order._id, {
       paymentStatus: "paid",
