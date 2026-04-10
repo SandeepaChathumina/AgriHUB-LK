@@ -7,6 +7,7 @@ import {
   verifyPayment,
   cancelPayment,
   getOrderById,
+  retryPayment,
 } from "../controllers/orderController.js";
 import { protect, authorizeRoles } from "../middleware/authMiddleware.js";
 
@@ -24,5 +25,6 @@ router.post("/", authorizeRoles("Distributor"), placeOrder);
 router.get("/:id", authorizeRoles("Distributor", "Admin"), getOrderById);
 router.put("/:id", authorizeRoles("Distributor"), updateOrder);
 router.delete("/:id", authorizeRoles("Distributor"), deleteOrder);
+router.post("/:id/retry-payment", authorizeRoles("Distributor"), retryPayment);
 
 export default router;

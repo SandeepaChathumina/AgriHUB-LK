@@ -396,3 +396,70 @@ export const verifyPayment = async (req, res) => {
 export const cancelPayment = async (req, res) => {
   return res.redirect(`${FRONTEND_URL}/orders?payment=cancelled`);
 };
+
+// Retry payment for unpaid/failed order
+// POST /api/orders/:id/retry-payment
+export const retryPayment = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id).populate("product");
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    // Only owner can retry
+    if (order.distributor.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized",
+      });
+    }
+
+    // Prevent retry if already paid
+    if (order.paymentStatus === "paid") {
+      return res.status(400).json({
+        success: false,
+        message: "Order already paid",
+      });
+    }
+
+    const product = await Product.findById(order.product._id);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    // Check stock again
+    if (product.quantity < order.quantity) {
+      return res.status(400).json({
+        success: false,
+        message: "Insufficient stock for retry",
+      });
+    }
+
+    // Create NEW Stripe session
+    const session = await paymentController.createStripeSession(order, product);
+
+    // Update session ID
+    order.stripeSessionId = session.id;
+    await order.save();
+
+    return res.status(200).json({
+      success: true,
+      checkoutUrl: session.url,
+    });
+
+  } catch (error) {
+    console.error("Retry payment error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Retry payment failed",
+    });
+  }
+};

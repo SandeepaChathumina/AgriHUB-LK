@@ -57,3 +57,14 @@ export const cancelMyOrder = async (token, orderId) => {
 
   return parseResponse(res);
 };
+
+export const retryPayment = async (token, orderId) => {
+  const res = await fetch(`${API_BASE_URL}/api/orders/${orderId}/retry-payment`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return parseResponse(res);
+};
