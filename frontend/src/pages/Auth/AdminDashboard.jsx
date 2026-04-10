@@ -154,7 +154,7 @@ function AdminDashboard() {
 
         <div className="grid gap-4 md:grid-cols-2">
           {/* Stats Card */}
-          <div className="rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 p-6 text-white shadow-sm">
+          <div className="rounded-2xl bg-linear-to-r from-emerald-500 to-emerald-600 p-6 text-white shadow-sm">
             <p className="text-sm font-semibold uppercase tracking-wide opacity-80">Admin Stats</p>
             <p className="mt-2 text-3xl font-bold">Welcome, {displayName}</p>
             <p className="mt-1 text-sm opacity-80">You have full control over the platform</p>
