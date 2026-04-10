@@ -21,6 +21,7 @@ import FarmerRatings from './pages/reviews/FarmerRatings';
 import TransporterRatings from './pages/reviews/TransporterRatings';
 import PendingReviews from './pages/reviews/PendingReviews';
 import ProductReviews from './pages/reviews/ProductReviews';
+import ImpactAnalytics from "./pages/Admin/ImpactAnalytics";
 
 // Product Management
 import ProductList from './pages/products/ProductList.jsx'
@@ -64,6 +65,7 @@ function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<AuthPage initialMode="login" />} />
           <Route path="/register" element={<AuthPage initialMode="register" />} />
+          <Route path="/admin/impact" element={<ImpactAnalytics />} />
           
           {/* Auth & User Routes */}
           <Route path="/dashboard" element={<Dashboard />} />
