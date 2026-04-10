@@ -73,9 +73,10 @@ export const placeOrder = async (req, res) => {
     newOrder.stripeSessionId = session.id;
     await newOrder.save();
 
-    // IMPORTANT:
-    // Do NOT reduce product stock here.
-    // Reduce stock only after successful payment verification.
+    // Reduce stock and increment total sold immediately as per request
+    product.quantity -= parsedQuantity;
+    product.totalSold = (product.totalSold || 0) + parsedQuantity;
+    await product.save();
 
     return res.status(201).json({
       success: true,
@@ -374,8 +375,7 @@ export const verifyPayment = async (req, res) => {
       );
     }
 
-    product.quantity -= order.quantity;
-    await product.save();
+    // Quantity was already deducted when the order was placed
 
     await Order.findByIdAndUpdate(order._id, {
       paymentStatus: "paid",
