@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 
 // ===== IMPORT YOUR ROLE CARD IMAGES FROM src/assets =====
@@ -10,15 +10,27 @@ import distributorImg from "../assets/distributor.png";
 // <source src="/assets/farm-bg.mp4" type="video/mp4" />
 
 const Homepage = () => {
-  // --- ADDED: State for dynamic logos ---
+  // --- State for dynamic logos ---
   const [distributors, setDistributors] = useState([]);
   const [transporters, setTransporters] = useState([]);
 
-  // --- ADDED: Fetch logos from API on component mount ---
+  // --- Chatbot states ---
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [messages, setMessages] = useState([
+    {
+      type: "bot",
+      text: "Hello! I'm the AgriHUB-LK assistant. How can I help you today?",
+    },
+  ]);
+  const [inputValue, setInputValue] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
+
+  // --- Fetch logos on mount ---
   useEffect(() => {
     const fetchLogos = async () => {
       try {
-        // Fetch Distributors
         const distRes = await fetch("http://localhost:3000/api/users/distributors/logos");
         if (distRes.ok) {
           const distData = await distRes.json();
@@ -27,7 +39,6 @@ const Homepage = () => {
           }
         }
 
-        // Fetch Transporters
         const transRes = await fetch("http://localhost:3000/api/users/transporters/logos");
         if (transRes.ok) {
           const transData = await transRes.json();
@@ -42,6 +53,18 @@ const Homepage = () => {
 
     fetchLogos();
   }, []);
+
+  // --- Auto-scroll chat to bottom ---
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // --- Focus input when chat opens ---
+  useEffect(() => {
+    if (isChatOpen && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isChatOpen]);
 
   const roleCards = [
     {
@@ -75,6 +98,44 @@ const Homepage = () => {
         "Source products efficiently with better supply visibility, secure transactions, and smoother coordination across the supply chain.",
     },
   ];
+
+  // --- Chatbot: Send message handler ---
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    const question = inputValue.trim();
+    if (!question) return;
+
+    // Add user message
+    setMessages((prev) => [...prev, { type: "user", text: question }]);
+    setInputValue("");
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("http://localhost:3000/api/chat/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setMessages((prev) => [...prev, { type: "bot", text: data.answer }]);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          { type: "bot", text: "Sorry, I couldn't process that. Please try again." },
+        ]);
+      }
+    } catch (error) {
+      console.error("Chat API error:", error);
+      setMessages((prev) => [
+        ...prev,
+        { type: "bot", text: "Network error. Please check your connection and try again." },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="w-full font-sans bg-[#07140d] text-white">
@@ -143,13 +204,6 @@ const Homepage = () => {
         {/* Hero Content */}
         <main className="relative z-10 flex flex-col items-center justify-center text-center px-6 min-h-[78vh]">
           <div className="animate-fade-in-up max-w-5xl">
-            {/* <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/15 backdrop-blur-md mb-6">
-              <span className="w-2 h-2 rounded-full bg-green-400" />
-              <span className="text-sm text-green-200 font-medium">
-                Supporting SDG Goal 2 - Zero Hunger
-              </span>
-            </div> */}
-
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white mb-6 leading-[1.1] drop-shadow-2xl">
               Empowering Sri Lankan <br />
               <span className="text-green-400 underline decoration-green-500/30">
@@ -300,11 +354,8 @@ const Homepage = () => {
                     <img
                       src={item.logoUrl}
                       alt={item.name}
-                      /* Removed the basic 'title' attribute for a custom tooltip */
                       className="max-h-14 object-contain grayscale group-hover:grayscale-0 group-hover:-translate-y-3 transition-all duration-300"
                     />
-
-                    {/* Professional Hover Name Reveal */}
                     <div className="absolute bottom-3 left-0 right-0 opacity-0 group-hover:opacity-100 transition-all duration-300 flex justify-center translate-y-2 group-hover:translate-y-0">
                       <span className="text-xs font-bold text-green-400 tracking-wider uppercase text-center px-2 truncate drop-shadow-md">
                         {item.name}
@@ -331,11 +382,8 @@ const Homepage = () => {
                     <img
                       src={item.logoUrl}
                       alt={item.name}
-                      /* Removed the basic 'title' attribute */
                       className="max-h-14 object-contain grayscale group-hover:grayscale-0 group-hover:-translate-y-3 transition-all duration-300"
                     />
-
-                    {/* Professional Hover Name Reveal */}
                     <div className="absolute bottom-3 left-0 right-0 opacity-0 group-hover:opacity-100 transition-all duration-300 flex justify-center translate-y-2 group-hover:translate-y-0">
                       <span className="text-xs font-bold text-green-400 tracking-wider uppercase text-center px-2 truncate drop-shadow-md">
                         {item.name}
@@ -350,9 +398,133 @@ const Homepage = () => {
           {distributors.length === 0 && transporters.length === 0 && (
             <p className="text-center text-gray-400 italic">No partners registered with logos yet.</p>
           )}
-
         </div>
       </section>
+
+      {/* ================= CHATBOT WIDGET ================= */}
+      {/* Floating Button */}
+      <button
+        onClick={() => setIsChatOpen(!isChatOpen)}
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-green-500 hover:bg-green-600 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-green-500/30"
+        aria-label="Chat with support"
+      >
+        {isChatOpen ? (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6 text-white"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        ) : (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6 text-white"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+            />
+          </svg>
+        )}
+      </button>
+
+      {/* Chat Panel */}
+      <div
+        className={`fixed bottom-24 right-6 z-50 w-96 max-w-[calc(100vw-3rem)] bg-[#0a1a12] border border-green-500/30 rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 origin-bottom-right ${
+          isChatOpen
+            ? "scale-100 opacity-100 translate-y-0"
+            : "scale-95 opacity-0 translate-y-4 pointer-events-none"
+        }`}
+      >
+        {/* Header */}
+        <div className="bg-green-600/90 backdrop-blur-sm px-5 py-4 flex items-center gap-3">
+          <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-green-700 font-bold text-lg">
+            A
+          </div>
+          <div>
+            <h3 className="font-bold text-white">AgriHUB Assistant</h3>
+            <p className="text-xs text-green-100">Online • Ask me anything</p>
+          </div>
+        </div>
+
+        {/* Messages Area */}
+        <div className="h-96 overflow-y-auto p-4 space-y-4 bg-[#07140d]">
+          {messages.map((msg, index) => (
+            <div
+              key={index}
+              className={`flex ${msg.type === "user" ? "justify-end" : "justify-start"}`}
+            >
+              <div
+                className={`max-w-[80%] px-4 py-3 rounded-2xl ${
+                  msg.type === "user"
+                    ? "bg-green-600 text-white rounded-br-none"
+                    : "bg-gray-800 text-gray-100 rounded-bl-none"
+                }`}
+              >
+                <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
+              </div>
+            </div>
+          ))}
+          {isLoading && (
+            <div className="flex justify-start">
+              <div className="bg-gray-800 px-4 py-3 rounded-2xl rounded-bl-none">
+                <div className="flex space-x-1">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                </div>
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input Area */}
+        <form onSubmit={handleSendMessage} className="p-4 bg-[#0a1a12] border-t border-green-500/20">
+          <div className="flex gap-2">
+            <input
+              ref={inputRef}
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder="Type your question..."
+              className="flex-1 bg-black/30 border border-green-500/30 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+              disabled={isLoading}
+            />
+            <button
+              type="submit"
+              disabled={isLoading || !inputValue.trim()}
+              className="bg-green-600 hover:bg-green-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white p-2 rounded-xl transition-colors"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
+          </div>
+        </form>
+      </div>
 
       {/* ================= CUSTOM ANIMATION ================= */}
       <style>
