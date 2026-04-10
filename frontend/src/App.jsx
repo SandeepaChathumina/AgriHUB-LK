@@ -33,6 +33,7 @@ import CreateOrder from './pages/orders/CreateOrder.jsx'
 import MyOrders from './pages/orders/MyOrders.jsx'
 import AvailableVehicles from './pages/orders/AvailableVehicles.jsx';
 import AvailableTransporters from './pages/orders/AvailableTransporters.jsx';
+import FarmerOrders from "./pages/Orders/FarmerOrders";
 
 // Messaging
 import MessagesPage from './pages/messages/MessagesPage.jsx'
@@ -87,6 +88,7 @@ function App() {
           <Route path="/orders" element={<MyOrders />} />
           <Route path="/orders/:orderId/request-transport" element={<AvailableVehicles />} />
           <Route path="/orders/:orderId/request-transporters" element={<AvailableTransporters />} />
+          <Route path="/farmer-orders" element={<FarmerOrders />} />
           
           {/* Messaging Routes */}
           <Route path="/chat" element={<MessagesPage />} />

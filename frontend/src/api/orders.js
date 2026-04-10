@@ -68,3 +68,36 @@ export const retryPayment = async (token, orderId) => {
 
   return parseResponse(res);
 };
+
+export const fetchFarmerOrders = async (token, page = 1, limit = 10) => {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  const res = await fetch(`${API_BASE_URL}/api/orders/farmer-orders?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return parseResponse(res);
+};
+
+export const acceptFarmerOrder = async (token, orderId) => {
+  const res = await fetch(`${API_BASE_URL}/api/orders/${orderId}/farmer-accept`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return parseResponse(res);
+};
+
+export const rejectFarmerOrder = async (token, orderId) => {
+  const res = await fetch(`${API_BASE_URL}/api/orders/${orderId}/farmer-reject`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return parseResponse(res);
+};

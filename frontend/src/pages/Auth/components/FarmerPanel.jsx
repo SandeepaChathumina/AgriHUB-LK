@@ -10,7 +10,7 @@ const FarmerPanel = ({ links = [], unreadMessages = 0 }) => {
     { title: '👤 Profile', to: '/profile', subtitle: 'Manage personal details', icon: '👤' },
     { title: '🌾 My Products', to: '/my-products', subtitle: 'Manage your listings', icon: '🌾' },
     { title: '➕ Add Product', to: '/products/add', subtitle: 'List a new product', icon: '➕' },
-    { title: '📦 Orders', to: '/orders', subtitle: 'Manage incoming orders', icon: '📦' },
+    { title: '📦 Orders', to: '/farmer-orders', subtitle: 'Manage incoming orders', icon: '📦' },
     { title: '⭐ My Ratings', to: '/farmer-ratings', subtitle: 'View your ratings', icon: '⭐' },
     { title: '💬 Messages', to: '/chat', subtitle: 'Connect with partners', icon: '💬' },
     { title: '📊 Market Prices', to: '/prices', subtitle: 'Check current rates', icon: '📊' },

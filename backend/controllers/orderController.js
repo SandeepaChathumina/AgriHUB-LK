@@ -377,8 +377,8 @@ export const verifyPayment = async (req, res) => {
 
     await Order.findByIdAndUpdate(order._id, {
       paymentStatus: "paid",
-      status: "Confirmed",
-      deliveryStatus: "Requested",
+      status: "Awaiting Farmer Approval",
+      deliveryStatus: "Pending",
       paymentConfirmedAt: new Date(),
     });
 
@@ -460,6 +460,160 @@ export const retryPayment = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: error.message || "Retry payment failed",
+    });
+  }
+};
+
+// Get farmer incoming paid orders awaiting approval
+// GET /api/orders/farmer-orders
+export const getFarmerOrders = async (req, res) => {
+  try {
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const limit = Math.max(parseInt(req.query.limit) || 10, 1);
+    const skip = (page - 1) * limit;
+
+    const products = await Product.find({ farmer: req.user._id }).select("_id");
+    const productIds = products.map((p) => p._id);
+
+    const filter = {
+      product: { $in: productIds },
+      paymentStatus: "paid",
+    };
+
+    const orders = await Order.find(filter)
+      .populate("product")
+      .populate("distributor", "fullName email phone")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await Order.countDocuments(filter);
+
+    return res.status(200).json({
+      success: true,
+      count: orders.length,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+      orders,
+    });
+  } catch (error) {
+    console.error("Get farmer orders error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to fetch farmer orders",
+    });
+  }
+};
+
+// Farmer accepts a paid order
+// PATCH /api/orders/:id/farmer-accept
+export const acceptOrderByFarmer = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id).populate("product");
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    if (!order.product || order.product.farmer?.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to accept this order",
+      });
+    }
+
+    if (order.paymentStatus !== "paid") {
+      return res.status(400).json({
+        success: false,
+        message: "Only paid orders can be accepted",
+      });
+    }
+
+    if (order.status !== "Awaiting Farmer Approval") {
+      return res.status(400).json({
+        success: false,
+        message: "Order is not awaiting farmer approval",
+      });
+    }
+
+    order.status = "Confirmed";
+    order.deliveryStatus = "Requested";
+    await order.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Order accepted successfully",
+      order,
+    });
+  } catch (error) {
+    console.error("Accept farmer order error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to accept order",
+    });
+  }
+};
+
+// Farmer rejects a paid order
+// PATCH /api/orders/:id/farmer-reject
+export const rejectOrderByFarmer = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id).populate("product");
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    if (!order.product || order.product.farmer?.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to reject this order",
+      });
+    }
+
+    if (order.paymentStatus !== "paid") {
+      return res.status(400).json({
+        success: false,
+        message: "Only paid orders can be rejected",
+      });
+    }
+
+    if (order.status !== "Awaiting Farmer Approval") {
+      return res.status(400).json({
+        success: false,
+        message: "Order is not awaiting farmer approval",
+      });
+    }
+
+    // restore stock because paid order is being rejected
+    const product = await Product.findById(order.product._id);
+    if (product) {
+      product.quantity += order.quantity;
+      product.totalSold = Math.max((product.totalSold || 0) - order.quantity, 0);
+      await product.save();
+    }
+
+    order.status = "Cancelled";
+    order.deliveryStatus = "Cancelled";
+    await order.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Order rejected successfully",
+      order,
+    });
+  } catch (error) {
+    console.error("Reject farmer order error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to reject order",
     });
   }
 };
