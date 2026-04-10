@@ -233,7 +233,7 @@ export const createTrip = async (req, res) => {
 
     // Update order and vehicle
     order.transporter = transporterId;
-    order.deliveryStatus = 'In Transit';
+    order.deliveryStatus = 'Accepted';
     await order.save();
 
     vehicle.status = 'On Delivery';
@@ -378,9 +378,18 @@ export const updateTripStatus = async (req, res) => {
     trip.tripStatus = status;
     trip.addTimelineEvent(status, `Status updated to ${status}`, req.user._id);
 
-    // Update actual times
-    if (status === 'In Progress') {
+    // Update actual times and sync order delivery status
+    if (status === 'Accepted') {
+      // Trip accepted - awaiting pickup
+      await Order.findByIdAndUpdate(trip.order, { 
+        deliveryStatus: 'Accepted'
+      });
+    } else if (status === 'In Progress') {
+      // Trip in progress - started delivery
       trip.schedule.actualPickup = new Date();
+      await Order.findByIdAndUpdate(trip.order, { 
+        deliveryStatus: 'In Transit'
+      });
     } else if (status === 'Completed') {
       trip.schedule.actualDelivery = new Date();
       
@@ -409,7 +418,7 @@ export const updateTripStatus = async (req, res) => {
       // Free up the order
       await Order.findByIdAndUpdate(trip.order, { 
         transporter: null,
-        deliveryStatus: 'Requested' 
+        deliveryStatus: 'Cancelled' 
       });
     }
 
@@ -673,9 +682,16 @@ export const requestTrip = async (req, res) => {
     }
 
     // Check vehicle
-    const vehicle = await Vehicle.findById(vehicleId);
+    const vehicle = await Vehicle.findById(vehicleId).populate('transporter');
     if (!vehicle) {
       return res.status(404).json({ success: false, message: 'Vehicle not found' });
+    }
+
+    if (!vehicle.transporter) {
+      return res.status(400).json({
+        success: false,
+        message: 'Vehicle does not have an assigned transporter'
+      });
     }
 
     if (vehicle.status !== 'Available') {
@@ -1124,7 +1140,7 @@ export const acceptRequest = async (req, res) => {
 
     // Update order
     order.transporter = trip.transporter._id;
-    order.deliveryStatus = 'In Transit';
+    order.deliveryStatus = 'Accepted';
     await order.save();
 
     // Update vehicle
@@ -1193,6 +1209,15 @@ export const rejectRequest = async (req, res) => {
     trip.rejectedBy = userId;
     trip.addTimelineEvent('Rejected', `Request rejected by ${userRole}: ${trip.rejectionReason}`, userId);
     await trip.save();
+
+    // Revert order status - back to Requested for other transporters to see
+    await Order.findByIdAndUpdate(trip.order, { 
+      transporter: null,
+      deliveryStatus: 'Requested' 
+    });
+
+    // Make vehicle available again
+    await Vehicle.findByIdAndUpdate(trip.vehicle, { status: 'Available' });
 
     res.status(200).json({
       success: true,
