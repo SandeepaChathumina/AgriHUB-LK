@@ -353,6 +353,32 @@ export const getVehiclesByTransporter = async (req, res) => {
   }
 };
 
+// @desc    Get current user's (transporter's) vehicles
+// @route   GET /api/vehicles/my-vehicles
+export const getMyVehicles = async (req, res) => {
+  try {
+    const transporterId = req.user._id;
+
+    const vehicles = await Vehicle.find({ transporter: transporterId })
+      .select('_id category vehicleType registrationNumber status loadCapacity images')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: vehicles.length,
+      vehicles
+    });
+
+  } catch (error) {
+    console.error('Error fetching my vehicles:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching vehicles',
+      error: error.message 
+    });
+  }
+};
+
 // @desc    Get single vehicle
 // @route   GET /api/vehicles/:id
 export const getVehicleById = async (req, res) => {

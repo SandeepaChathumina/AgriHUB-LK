@@ -220,11 +220,10 @@ const IncomingRequests = () => {
                   setFilter(status);
                   setPage(1);
                 }}
-                className={`rounded-lg px-4 py-2 font-semibold capitalize transition-all ${
-                  filter === status
+                className={`rounded-lg px-4 py-2 font-semibold capitalize transition-all ${filter === status
                     ? 'bg-emerald-600 text-white'
                     : 'bg-white text-slate-700 hover:bg-slate-100'
-                }`}
+                  }`}
               >
                 {status}
               </button>

@@ -246,7 +246,7 @@ const CreateTripPage = () => {
     };
   }, []);
 
-  const handleCreateTrip = async () => {
+  const handleSendRequest = async () => {
     if (!tripForm.vehicleId) {
       Swal.fire({
         icon: 'warning',
@@ -271,28 +271,29 @@ const CreateTripPage = () => {
       Swal.fire({
         icon: 'warning',
         title: 'Invalid Fare',
-        text: 'Please enter a valid base fare',
+        text: 'Please enter a valid proposed fare',
         confirmButtonColor: '#10b981'
       });
       return;
     }
     
     const result = await Swal.fire({
-      title: 'Create Trip',
+      title: 'Send Delivery Request',
       html: `
         <div style="text-align: left;">
           <p><strong>Order:</strong> ${order?.product?.productName}</p>
           <p><strong>Vehicle:</strong> ${vehicles.find(v => v._id === tripForm.vehicleId)?.brand} ${vehicles.find(v => v._id === tripForm.vehicleId)?.model}</p>
           <p><strong>Distance:</strong> ${distance} km</p>
           <p><strong>Est. Travel Time:</strong> ${duration}</p>
-          <p><strong>Total Fare:</strong> LKR ${(parseFloat(tripForm.baseFare) + parseFloat(tripForm.distanceCharge || 0)).toLocaleString()}</p>
+          <p><strong>Proposed Fare:</strong> LKR ${(parseFloat(tripForm.baseFare) + parseFloat(tripForm.distanceCharge || 0)).toLocaleString()}</p>
+          <p style="margin-top: 10px; color: #666; font-size: 12px;">⏳ Waiting for distributor approval...</p>
         </div>
       `,
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#10b981',
       cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Create Trip',
+      confirmButtonText: 'Send Request',
       cancelButtonText: 'Cancel'
     });
     
@@ -301,30 +302,43 @@ const CreateTripPage = () => {
     setCreating(true);
     try {
       const payload = {
-        orderId: order._id,
+        orderId,
         vehicleId: tripForm.vehicleId,
+        proposedFare: parseFloat(tripForm.baseFare),
         scheduledPickup: tripForm.scheduledPickup,
-        estimatedDelivery: tripForm.estimatedDelivery,
-        baseFare: parseFloat(tripForm.baseFare),
-        distanceCharge: parseFloat(tripForm.distanceCharge || 0),
-        additionalCharges: []
+        estimatedDelivery: tripForm.estimatedDelivery
       };
-      
-      await createTrip(token, payload);
-      
+
+      const res = await fetch(`${API_BASE_URL}/api/trips/request-order`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || 'Failed to send request');
+      }
+
+      const data = await res.json();
+
       Swal.fire({
         icon: 'success',
-        title: 'Trip Created!',
-        text: 'Trip has been created successfully',
-        confirmButtonColor: '#10b981'
+        title: 'Request Sent!',
+        text: 'Delivery request has been sent to the distributor. Please wait for their approval.',
+        confirmButtonColor: '#10b981',
+        timer: 3000
       });
-      
+
       navigate('/trips');
     } catch (error) {
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: error.message,
+        text: error.message || 'Failed to send delivery request',
         confirmButtonColor: '#10b981'
       });
     } finally {
@@ -446,6 +460,9 @@ const CreateTripPage = () => {
                       <p className="text-xs text-slate-500">Pickup Location (Farmer)</p>
                       <p className="text-sm font-semibold text-slate-900">{pickupLocation.name}</p>
                       <p className="text-xs text-slate-500">{pickupLocation.address}</p>
+                      {order?.product?.farmer?.phone && (
+                        <p className="text-xs text-emerald-600 font-medium mt-1">📞 {order.product.farmer.phone}</p>
+                      )}
                     </div>
                   </div>
                   <div className="flex gap-3">
@@ -456,6 +473,9 @@ const CreateTripPage = () => {
                       <p className="text-xs text-slate-500">Delivery Location (Distributor)</p>
                       <p className="text-sm font-semibold text-slate-900">{dropoffLocation.name}</p>
                       <p className="text-xs text-slate-500">{dropoffLocation.address}</p>
+                      {order?.distributor?.phone && (
+                        <p className="text-xs text-emerald-600 font-medium mt-1">📞 {order.distributor.phone}</p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -544,11 +564,11 @@ const CreateTripPage = () => {
                   {/* Action Buttons */}
                   <div className="flex gap-3 pt-4">
                     <button
-                      onClick={handleCreateTrip}
+                      onClick={handleSendRequest}
                       disabled={creating || !tripForm.vehicleId || !distance}
                       className="flex-1 rounded-xl bg-emerald-600 px-6 py-3 font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {creating ? 'Creating Trip...' : 'Create Trip'}
+                      {creating ? 'Sending Request...' : 'Send Request'}
                     </button>
                     <button
                       onClick={() => navigate('/available-orders')}

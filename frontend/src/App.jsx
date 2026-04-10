@@ -49,7 +49,6 @@ import MyTrips from './pages/trips/MyTrips.jsx';
 import TripDetails from './pages/trips/TripDetails.jsx';
 import AvailableOrders from './pages/trips/AvailableOrders.jsx';
 import CreateTripPage from './pages/trips/CreateTripPage.jsx';
-import RequestOrderDelivery from './pages/trips/RequestOrderDelivery.jsx';
 import IncomingRequests from './pages/requests/IncomingRequests.jsx';
 
 function App() {
@@ -112,7 +111,6 @@ function App() {
           <Route path="/available-orders" element={<AvailableOrders />} />
           <Route path="/create-trip/:orderId" element={<CreateTripPage />} />
           <Route path="/admin/reviews" element={<AdminReviewModeration />} />
-          <Route path="/request-delivery/:orderId" element={<RequestOrderDelivery />} />
           <Route path="/incoming-requests" element={<IncomingRequests />} />
           <Route path="/farmer-ratings" element={<FarmerRatings />} />
           <Route path="/transporter-ratings" element={<TransporterRatings />} />

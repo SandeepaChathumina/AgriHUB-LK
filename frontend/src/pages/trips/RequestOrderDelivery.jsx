@@ -1,8 +1,20 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import ProfileNav from '../../components/ProfileNav';
 import { useAuth } from '../../context/AuthContext';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import 'leaflet-routing-machine';
+import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
+
+// Fix Leaflet marker icon issue
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+});
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
@@ -11,11 +23,18 @@ const RequestOrderDelivery = () => {
   const { token, user } = useAuth();
   const navigate = useNavigate();
   
+  // Map refs
+  const mapRef = useRef(null);
+  const mapContainerRef = useRef(null);
+  const routingControlRef = useRef(null);
+  
   const [order, setOrder] = useState(null);
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [requesting, setRequesting] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const [pickupLocation, setPickupLocation] = useState(null);
+  const [dropoffLocation, setDropoffLocation] = useState(null);
 
   const [formData, setFormData] = useState({
     vehicleId: '',
@@ -43,6 +62,68 @@ const RequestOrderDelivery = () => {
     fetchMyVehicles();
   }, [token, user, orderId]);
 
+  // Initialize map after locations are loaded
+  useEffect(() => {
+    if (pickupLocation && dropoffLocation && mapContainerRef.current && !mapRef.current) {
+      initMap();
+    }
+    // Stop loading once we have order and vehicles
+    if (order && vehicles.length > 0) {
+      setLoading(false);
+    } else if (order && vehicles.length === 0) {
+      // Even if no vehicles, stop loading
+      setLoading(false);
+    }
+  }, [pickupLocation, dropoffLocation, order, vehicles]);
+
+  const initMap = () => {
+    try {
+      const centerLat = (pickupLocation.lat + dropoffLocation.lat) / 2;
+      const centerLng = (pickupLocation.lng + dropoffLocation.lng) / 2;
+      
+      const map = L.map(mapContainerRef.current).setView([centerLat, centerLng], 10);
+      mapRef.current = map;
+      
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19,
+      }).addTo(map);
+
+      // Add markers
+      L.marker([pickupLocation.lat, pickupLocation.lng], {
+        title: pickupLocation.name
+      })
+        .bindPopup(`<strong>📍 Pickup</strong><br/>${pickupLocation.address}`)
+        .addTo(map)
+        .openPopup();
+
+      L.marker([dropoffLocation.lat, dropoffLocation.lng], {
+        title: dropoffLocation.name
+      })
+        .bindPopup(`<strong>📦 Delivery</strong><br/>${dropoffLocation.address}`)
+        .addTo(map);
+
+      // Add routing
+      if (routingControlRef.current) {
+        map.removeControl(routingControlRef.current);
+      }
+
+      routingControlRef.current = L.Routing.control({
+        waypoints: [
+          L.latLng(pickupLocation.lat, pickupLocation.lng),
+          L.latLng(dropoffLocation.lat, dropoffLocation.lng)
+        ],
+        routeWhileDragging: false,
+        show: false,
+        lineOptions: {
+          styles: [{ color: '#10b981', opacity: 0.7, weight: 4 }]
+        }
+      }).addTo(map);
+    } catch (error) {
+      console.error('Map initialization error:', error);
+    }
+  };
+
   const fetchOrderDetails = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/api/trips/order/${orderId}`, {
@@ -50,7 +131,27 @@ const RequestOrderDelivery = () => {
       });
       if (!res.ok) throw new Error('Failed to fetch order details');
       const data = await res.json();
-      setOrder(data.order);
+      const orderData = data.order || data;
+      setOrder(orderData);
+
+      // Set pickup location from farmer's location
+      const pickup = {
+        lat: orderData?.product?.pickupLocation?.coordinates?.lat || 6.9271,
+        lng: orderData?.product?.pickupLocation?.coordinates?.lng || 80.7789,
+        address: orderData?.product?.pickupLocation?.address || 'Pickup Location',
+        name: `${orderData?.product?.farmer?.fullName}'s Farm`
+      };
+
+      // Set dropoff location from delivery address
+      const dropoff = {
+        lat: orderData?.deliveryAddress?.coordinates?.lat || 6.9271,
+        lng: orderData?.deliveryAddress?.coordinates?.lng || 80.7789,
+        address: orderData?.deliveryAddress?.addressLine || 'Delivery Location',
+        name: orderData?.distributor?.fullName
+      };
+
+      setPickupLocation(pickup);
+      setDropoffLocation(dropoff);
 
       // Set default times
       const tomorrow = new Date();
@@ -67,33 +168,30 @@ const RequestOrderDelivery = () => {
         estimatedDelivery: deliveryDate.toISOString().slice(0, 16)
       }));
     } catch (error) {
+      console.error('Error fetching order details:', error);
+      setLoading(false);
       Swal.fire({
         icon: 'error',
-        title: 'Error',
-        text: error.message,
+        title: 'Error Loading Order',
+        text: error.message || 'Could not load order details. Please try again.',
         confirmButtonColor: '#10b981'
-      });
+      }).then(() => navigate('/trips'));
     }
   };
 
   const fetchMyVehicles = async () => {
-    setLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/vehicles?status=Available`, {
+      const res = await fetch(`${API_BASE_URL}/api/vehicles/my-vehicles`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (!res.ok) throw new Error('Failed to fetch vehicles');
+      if (!res.ok) {
+        console.warn(`Vehicles fetch returned status ${res.status}`);
+      }
       const data = await res.json();
-      setVehicles(data.vehicles || []);
+      setVehicles(data.vehicles || data || []);
     } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: error.message,
-        confirmButtonColor: '#10b981'
-      });
-    } finally {
-      setLoading(false);
+      console.error('Failed to load vehicles:', error);
+      setVehicles([]);
     }
   };
 
@@ -134,7 +232,7 @@ const RequestOrderDelivery = () => {
     }
 
     const result = await Swal.fire({
-      title: 'Submit Delivery Request',
+      title: 'Send Delivery Request',
       html: `
         <div style="text-align: left;">
           <p><strong>Order:</strong> ${order?.product?.productName || 'Order'}</p>
@@ -149,7 +247,7 @@ const RequestOrderDelivery = () => {
       showCancelButton: true,
       confirmButtonColor: '#10b981',
       cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Yes, Submit Request',
+      confirmButtonText: 'Yes, Send Request',
       cancelButtonText: 'Cancel'
     });
 
@@ -181,8 +279,8 @@ const RequestOrderDelivery = () => {
 
       Swal.fire({
         icon: 'success',
-        title: 'Request Submitted!',
-        text: 'Your delivery request has been submitted. Waiting for distributor acceptance.',
+        title: 'Request Sent!',
+        text: 'Your delivery request has been sent to the distributor. Waiting for acceptance...',
         confirmButtonColor: '#10b981',
         timer: 3000
       });
@@ -215,8 +313,10 @@ const RequestOrderDelivery = () => {
       <>
         <ProfileNav active="trips" />
         <div className="min-h-screen bg-slate-50 px-4 py-8">
-          <div className="mx-auto max-w-7xl text-center py-12">
-            <div className="text-slate-500">Loading...</div>
+          <div className="mx-auto max-w-7xl">
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-200 border-t-emerald-600"></div>
+            </div>
           </div>
         </div>
       </>
@@ -250,6 +350,9 @@ const RequestOrderDelivery = () => {
                   <div className="border-b border-slate-200 pb-3">
                     <p className="text-slate-600">Farmer</p>
                     <p className="font-semibold text-slate-900">{order?.product?.farmer?.fullName}</p>
+                    {order?.product?.farmer?.phone && (
+                      <p className="text-xs text-emerald-600 font-medium mt-1">📞 {order?.product?.farmer?.phone}</p>
+                    )}
                   </div>
 
                   <div className="border-b border-slate-200 pb-3">
@@ -262,9 +365,17 @@ const RequestOrderDelivery = () => {
                     <p className="font-semibold text-slate-900">{order?.product?.pickupLocation?.address}</p>
                   </div>
 
-                  <div>
+                  <div className="border-b border-slate-200 pb-3">
                     <p className="text-slate-600">Delivery Location</p>
                     <p className="font-semibold text-slate-900">{order?.deliveryAddress?.addressLine}</p>
+                  </div>
+
+                  <div className="border-t border-slate-200 pt-3 mt-3">
+                    <p className="text-slate-600">Distributor</p>
+                    <p className="font-semibold text-slate-900">{order?.distributor?.fullName}</p>
+                    {order?.distributor?.phone && (
+                      <p className="text-xs text-emerald-600 font-medium mt-1">📞 {order?.distributor?.phone}</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -273,6 +384,18 @@ const RequestOrderDelivery = () => {
             {/* Form */}
             <div className="lg:col-span-2">
               <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Map Section */}
+                {pickupLocation && dropoffLocation && (
+                  <div className="rounded-xl bg-white p-6 shadow-sm overflow-hidden">
+                    <h3 className="mb-4 text-lg font-semibold text-slate-900">Delivery Route</h3>
+                    <div 
+                      ref={mapContainerRef}
+                      className="w-full rounded-lg border border-slate-200"
+                      style={{ height: '400px' }}
+                    />
+                  </div>
+                )}
+
                 {/* Vehicle Selection */}
                 <div className="rounded-xl bg-white p-6 shadow-sm">
                   <h3 className="mb-4 text-lg font-semibold text-slate-900">Select Vehicle</h3>
@@ -302,7 +425,7 @@ const RequestOrderDelivery = () => {
                           </div>
                           <div className="space-y-1 text-sm text-slate-600">
                             <p>📦 {vehicle.category}</p>
-                            <p>⚖️ {vehicle.loadCapacity?.weight?.value} {vehicle.loadCapacity?.weight?.unit}</p>
+                            <p>⚖️ {vehicle.capacity || vehicle.loadCapacity?.weight?.value} {vehicle.loadCapacity?.weight?.unit || 'kg'}</p>
                           </div>
                         </div>
                       ))}
@@ -366,7 +489,7 @@ const RequestOrderDelivery = () => {
                 <div className="flex gap-3">
                   <button
                     type="button"
-                    onClick={() => navigate('/trips/available-orders')}
+                    onClick={() => navigate('/available-orders')}
                     className="flex-1 rounded-lg border border-slate-300 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-50"
                   >
                     Cancel
@@ -376,7 +499,7 @@ const RequestOrderDelivery = () => {
                     disabled={requesting || !selectedVehicle}
                     className="flex-1 rounded-lg bg-emerald-600 px-4 py-2 font-semibold text-white hover:bg-emerald-700 disabled:bg-slate-300"
                   >
-                    {requesting ? 'Submitting...' : 'Submit Request'}
+                    {requesting ? 'Sending Request...' : 'Send Request'}
                   </button>
                 </div>
               </form>

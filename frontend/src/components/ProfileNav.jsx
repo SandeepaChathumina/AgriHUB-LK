@@ -10,9 +10,9 @@ const ProfileNav = ({ active, links }) => {
   const navLinks = links && links.length > 0
     ? links
     : [
-        // { key: 'notifications', label: 'Notifications', to: '/notifications' },
-        // { key: 'profile', label: 'Profile', to: '/profile' },
-      ]
+      // { key: 'notifications', label: 'Notifications', to: '/notifications' },
+      // { key: 'profile', label: 'Profile', to: '/profile' },
+    ]
 
   const handleLogout = () => {
     logout()

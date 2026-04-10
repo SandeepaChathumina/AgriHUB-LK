@@ -8,7 +8,7 @@ import { fetchMyTrips, updateTripStatus, cancelTrip, fetchTripStats } from '../.
 const MyTrips = () => {
   const { token, user } = useAuth();
   const navigate = useNavigate();
-  
+
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -19,6 +19,7 @@ const MyTrips = () => {
     byStatus: []
   });
   const [activeStatus, setActiveStatus] = useState('All');
+  const [loadingTripId, setLoadingTripId] = useState(null);
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
@@ -85,36 +86,44 @@ const MyTrips = () => {
 
   const handleStatusUpdate = async (tripId, currentStatus, newStatus) => {
     const statusMessages = {
-      Accepted: 'accept this trip',
-      'In Progress': 'mark this trip as In Progress',
-      Completed: 'complete this trip',
-      Cancel: 'cancel this trip',
-      Cancelled: 'cancel this trip'
+      'Confirm Trip': 'confirm and prepare this trip',
+      'Start Trip': 'start this trip (mark vehicle as On Delivery)',
+      'Completed': 'complete this trip (mark vehicle as Available)',
+      'Cancel': 'cancel this trip',
+      'Cancelled': 'cancel this trip'
     };
     
-    const statusValue = newStatus === 'Cancel' ? 'Cancelled' : newStatus;
+    // Map action labels to actual API status values
+    const statusMap = {
+      'Confirm Trip': 'Confirmed',
+      'Start Trip': 'In Progress',
+      'In Progress': 'In Progress',
+      'Completed': 'Completed'
+    };
+
+    const displayStatus = newStatus === 'In Progress' ? 'Start Trip' : newStatus;
+    const apiStatus = statusMap[newStatus] || newStatus;
 
     const result = await Swal.fire({
-      title: `Confirm ${newStatus}`,
-      text: `Are you sure you want to ${statusMessages[newStatus] || 'update this trip'}?`,
+      title: `Confirm ${displayStatus}`,
+      text: `Are you sure you want to ${statusMessages[displayStatus] || 'update this trip'}?`,
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#10b981',
       cancelButtonColor: '#6b7280',
-      confirmButtonText: `Yes, ${newStatus}`,
+      confirmButtonText: `Yes, ${displayStatus}`,
       cancelButtonText: 'Cancel'
     });
-    
+
     if (!result.isConfirmed) return;
-    
+
+    setLoadingTripId(tripId);
     try {
-      await updateTripStatus(token, tripId, statusValue);
+      await updateTripStatus(token, tripId, apiStatus);
       Swal.fire({
         icon: 'success',
         title: 'Updated!',
-        text: `Trip ${statusValue.toLowerCase()} successfully`,
-        confirmButtonColor: '#10b981',
-        timer: 2000
+        text: `Trip ${displayStatus.toLowerCase()} successfully`,
       });
       loadTrips();
       loadStats();
@@ -125,6 +134,8 @@ const MyTrips = () => {
         text: error.message,
         confirmButtonColor: '#10b981'
       });
+    } finally {
+      setLoadingTripId(null);
     }
   };
 
@@ -140,9 +151,10 @@ const MyTrips = () => {
       confirmButtonText: 'Cancel Trip',
       cancelButtonText: 'Back'
     });
-    
+
     if (reason === undefined) return;
-    
+
+    setLoadingTripId(tripId);
     try {
       await cancelTrip(token, tripId, reason);
       Swal.fire({
@@ -160,6 +172,8 @@ const MyTrips = () => {
         text: error.message,
         confirmButtonColor: '#10b981'
       });
+    } finally {
+      setLoadingTripId(null);
     }
   };
 
@@ -188,11 +202,13 @@ const MyTrips = () => {
   const getAvailableActions = (status) => {
     switch (status) {
       case 'Pending':
-        return ['Accept', 'Cancel'];
+        return []; // Waiting for distributor approval, no actions
       case 'Accepted':
-        return ['In Progress', 'Cancel'];
+        return ['Confirm Trip']; // Distributor accepted, transporter can confirm
+      case 'Confirmed':
+        return ['In Progress']; // Start the trip
       case 'In Progress':
-        return ['Completed'];
+        return ['Completed']; // Complete the delivery
       default:
         return [];
     }
@@ -203,7 +219,7 @@ const MyTrips = () => {
     return new Date(dateString).toLocaleString();
   };
 
-  const statusTabs = ['All', 'Pending', 'Accepted', 'In Progress', 'Completed', 'Cancelled'];
+  const statusTabs = ['All', 'Pending', 'Accepted', 'Confirmed', 'In Progress', 'Completed', 'Cancelled'];
 
   return (
     <>
@@ -259,11 +275,10 @@ const MyTrips = () => {
                   setActiveStatus(status);
                   setPagination(prev => ({ ...prev, page: 1 }));
                 }}
-                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                  activeStatus === status
-                    ? 'bg-emerald-600 text-white'
-                    : 'text-slate-600 hover:bg-slate-100'
-                }`}
+                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${activeStatus === status
+                  ? 'bg-emerald-600 text-white'
+                  : 'text-slate-600 hover:bg-slate-100'
+                  }`}
               >
                 {status}
               </button>
@@ -290,8 +305,7 @@ const MyTrips = () => {
             <div className="space-y-4">
               {trips.map(trip => {
                 const actions = getAvailableActions(trip.tripStatus);
-                const isCancellable = trip.tripStatus === 'Pending' || trip.tripStatus === 'Accepted';
-                
+
                 return (
                   <div
                     key={trip._id}
@@ -299,41 +313,41 @@ const MyTrips = () => {
                   >
                     <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                       {/* Left: Trip Info (Clickable) */}
-                      <div 
+                      <div
                         className="flex-1 space-y-3 cursor-pointer"
                         onClick={() => navigate(`/trips/${trip._id}`)}
                       >
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                        <div className="h-28 w-full max-w-[180px] overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
-                          {trip.order?.product?.images?.[0] ? (
-                            <img
-                              src={trip.order.product.images[0]}
-                              alt={trip.order?.product?.productName || 'Product Image'}
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <div className="flex h-full items-center justify-center text-sm text-slate-500">
-                              No image
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1 space-y-3">
-                          <div className="flex items-center gap-3">
-                            <span className="text-2xl">{getStatusIcon(trip.tripStatus)}</span>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <h3 className="text-lg font-bold text-slate-900">Trip #{trip.tripId || trip._id.slice(-6)}</h3>
-                                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusColor(trip.tripStatus)}`}>
-                                  {trip.tripStatus}
-                                </span>
+                          <div className="h-28 w-full max-w-[180px] overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+                            {trip.order?.product?.images?.[0] ? (
+                              <img
+                                src={trip.order.product.images[0]}
+                                alt={trip.order?.product?.productName || 'Product Image'}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <div className="flex h-full items-center justify-center text-sm text-slate-500">
+                                No image
                               </div>
-                              <p className="text-sm text-slate-500">
-                                Created: {formatDate(trip.createdAt)}
-                              </p>
+                            )}
+                          </div>
+                          <div className="flex-1 space-y-3" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center gap-3">
+                              <span className="text-2xl">{getStatusIcon(trip.tripStatus)}</span>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <h3 className="text-lg font-bold text-slate-900">Trip #{trip.tripId || trip._id.slice(-6)}</h3>
+                                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusColor(trip.tripStatus)}`}>
+                                    {trip.tripStatus}
+                                  </span>
+                                </div>
+                                <p className="text-sm text-slate-500">
+                                  Created: {formatDate(trip.createdAt)}
+                                </p>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
 
                         <div className="grid gap-3 text-sm md:grid-cols-2">
                           <div>
@@ -384,33 +398,53 @@ const MyTrips = () => {
                       </div>
 
                       {/* Right: Actions */}
-                      <div className="flex flex-col gap-2 min-w-[140px]">
+                      <div className="flex flex-col gap-2 min-w-[140px]" onClick={(e) => e.stopPropagation()}>
+                        {trip.tripStatus === 'Pending' && (
+                          <div className="rounded-lg bg-amber-50 border border-amber-200 px-4 py-2 text-sm text-amber-700 font-medium">
+                            ⏳ Waiting for distributor approval...
+                          </div>
+                        )}
+                        
                         {actions.map(action => (
                           <button
                             key={action}
                             onClick={() => handleStatusUpdate(trip._id, trip.tripStatus, action)}
+                            disabled={loadingTripId === trip._id}
                             className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
-                              action === 'Cancel'
-                                ? 'border border-red-200 text-red-700 hover:bg-red-50'
+                              loadingTripId === trip._id 
+                                ? 'opacity-50 cursor-not-allowed bg-gray-400 text-white'
+                                : action === 'In Progress' 
+                                ? 'bg-blue-600 text-white hover:bg-blue-700'
                                 : action === 'Completed'
                                 ? 'bg-green-600 text-white hover:bg-green-700'
                                 : 'bg-emerald-600 text-white hover:bg-emerald-700'
                             }`}
                           >
-                            {action === 'In Progress' ? 'Start Trip' : action}
+                            {loadingTripId === trip._id ? '⏳ Updating...' : (action === 'In Progress' ? 'Start Trip' : action)}
                           </button>
                         ))}
-                        {isCancellable && !actions.includes('Cancel') && (
+                        
+                        {(trip.tripStatus === 'Pending' || trip.tripStatus === 'Accepted') && (
                           <button
                             onClick={() => handleCancelTrip(trip._id)}
-                            className="rounded-lg border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-50"
+                            disabled={loadingTripId === trip._id}
+                            className={`rounded-lg border border-red-200 px-4 py-2 text-sm font-semibold transition ${
+                              loadingTripId === trip._id 
+                                ? 'opacity-50 cursor-not-allowed text-gray-400 border-gray-300'
+                                : 'text-red-700 hover:bg-red-50'
+                            }`}
                           >
-                            Cancel Trip
+                            {loadingTripId === trip._id ? '⏳ Processing...' : 'Cancel Trip'}
                           </button>
                         )}
                         <button
                           onClick={() => navigate(`/trips/${trip._id}`)}
-                          className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                          disabled={loadingTripId === trip._id}
+                          className={`rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold transition ${
+                            loadingTripId === trip._id 
+                              ? 'opacity-50 cursor-not-allowed text-gray-400 border-gray-300'
+                              : 'text-slate-700 hover:bg-slate-50'
+                          }`}
                         >
                           View Details
                         </button>
