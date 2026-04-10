@@ -5,6 +5,9 @@ import { encryptMessage, decryptMessage } from '../utils/messageCrypto.js';
 const allowedRoles = ['Farmer', 'Distributor', 'Transporter'];
 
 const canChatWithEachOther = (role1, role2) => {
+  const r1 = String(role1).trim();
+  const r2 = String(role2).trim();
+  
   const allowedPairs = [
     ['Farmer', 'Distributor'],
     ['Farmer', 'Transporter'],
@@ -13,7 +16,7 @@ const canChatWithEachOther = (role1, role2) => {
 
   return allowedPairs.some(
     ([a, b]) =>
-      (role1 === a && role2 === b) || (role1 === b && role2 === a)
+      (r1 === a && r2 === b) || (r1 === b && r2 === a)
   );
 };
 
@@ -90,8 +93,8 @@ export const sendMessage = async (req, res) => {
     });
 
     const populatedMessage = await Message.findById(savedMessage._id)
-      .populate('sender', 'fullName email role')
-      .populate('receiver', 'fullName email role');
+      .populate('sender', 'fullName businessName companyName email role')
+      .populate('receiver', 'fullName businessName companyName email role');
 
     const safeMessage = formatMessage(populatedMessage);
 
@@ -133,8 +136,8 @@ export const getConversation = async (req, res) => {
       ],
     })
       .sort({ createdAt: 1 })
-      .populate('sender', 'fullName email role')
-      .populate('receiver', 'fullName email role');
+      .populate('sender', 'fullName businessName companyName email role')
+      .populate('receiver', 'fullName businessName companyName email role');
 
     await Message.updateMany(
       {
@@ -167,7 +170,7 @@ export const getConversation = async (req, res) => {
 export const getChatUsers = async (req, res) => {
   try {
     const currentUserId = req.user._id;
-    const currentUserRole = req.user.role;
+    const currentUserRole = String(req.user.role).trim();
 
     let allowedPartnerRoles = [];
 
@@ -206,8 +209,8 @@ export const getConversationList = async (req, res) => {
       $or: [{ sender: currentUserId }, { receiver: currentUserId }],
     })
       .sort({ createdAt: -1 })
-      .populate('sender', 'fullName email role')
-      .populate('receiver', 'fullName email role');
+      .populate('sender', 'fullName businessName companyName email role')
+      .populate('receiver', 'fullName businessName companyName email role');
 
     const conversationMap = new Map();
 

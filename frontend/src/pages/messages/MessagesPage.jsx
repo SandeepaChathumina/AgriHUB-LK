@@ -37,6 +37,8 @@ const getRoleBadge = (role) => {
   return 'bg-slate-100 text-slate-700';
 };
 
+const getDisplayName = (user) => user?.businessName || user?.companyName || user?.fullName || user?.email || 'Unknown user';
+
 const MessagesPage = () => {
   const { token, user } = useAuth();
   const navigate = useNavigate();
@@ -236,10 +238,18 @@ const MessagesPage = () => {
     if (!term) return allUsers;
 
     return allUsers.filter((item) => {
-      const name = item.fullName?.toLowerCase() || '';
+      const name = getDisplayName(item).toLowerCase();
       const role = item.role?.toLowerCase() || '';
       const email = item.email?.toLowerCase() || '';
-      return name.includes(term) || role.includes(term) || email.includes(term);
+      const companyName = item.companyName?.toLowerCase() || '';
+      const businessName = item.businessName?.toLowerCase() || '';
+      return (
+        name.includes(term) ||
+        role.includes(term) ||
+        email.includes(term) ||
+        companyName.includes(term) ||
+        businessName.includes(term)
+      );
     });
   }, [conversationList, chatUsers, search]);
 
@@ -336,7 +346,7 @@ const MessagesPage = () => {
                       >
                         <div className="flex items-start gap-3">
                           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-700">
-                            {(item.fullName?.[0] || 'U').toUpperCase()}
+                            {getDisplayName(item)[0]?.toUpperCase() || 'U'}
                           </div>
 
                           <div className="min-w-0 flex-1">
@@ -346,7 +356,7 @@ const MessagesPage = () => {
                                   hasUnread ? 'font-bold text-slate-900' : 'font-semibold text-slate-900'
                                 }`}
                               >
-                                {item.fullName}
+                                {getDisplayName(item)}
                               </p>
 
                               {hasUnread && (
@@ -408,12 +418,12 @@ const MessagesPage = () => {
                   <div className="border-b border-slate-200 bg-slate-50/70 px-5 py-4">
                     <div className="flex items-center gap-3">
                       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-700">
-                        {(activeUser.fullName?.[0] || 'U').toUpperCase()}
+                        {getDisplayName(activeUser)[0]?.toUpperCase() || 'U'}
                       </div>
 
                       <div className="min-w-0">
                         <h2 className="truncate text-lg font-bold text-slate-900">
-                          {activeUser.fullName}
+                          {getDisplayName(activeUser)}
                         </h2>
                         <div className="mt-1 flex flex-wrap items-center gap-2">
                           <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${getRoleBadge(activeUser.role)}`}>
@@ -480,7 +490,7 @@ const MessagesPage = () => {
                           value={messageDraft}
                           onChange={(e) => setMessageDraft(e.target.value)}
                           rows={2}
-                          placeholder={`Message ${activeUser.fullName}`}
+                          placeholder={`Message ${getDisplayName(activeUser)}`}
                           className="w-full resize-none bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400"
                         />
                       </div>
