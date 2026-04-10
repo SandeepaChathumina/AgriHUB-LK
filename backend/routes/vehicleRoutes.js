@@ -3,12 +3,13 @@ import {
   createVehicle,
   getAllVehicles,
   getVehiclesByTransporter,
+  getMyVehicles,
   getVehicleById,
   updateVehicle,
   deleteVehicle,
   updateVehicleStatus,
   uploadVehicleImages,
-  getAvailableVehicles    // <-- ADD THIS IMPORT
+  getAvailableVehicles
 } from '../controllers/vehicleController.js';
 import { protect, authorizeRoles } from '../middleware/authMiddleware.js';
 import upload from '../middleware/upload.js';
@@ -30,6 +31,9 @@ router.patch('/:id/status', authorizeRoles('Transporter'), updateVehicleStatus);
 // READ routes
 // Available vehicles endpoint 
 router.get('/available', authorizeRoles('Distributor', 'Transporter', 'Admin'), getAvailableVehicles);
+
+// My vehicles endpoint (current user's vehicles)
+router.get('/my-vehicles', authorizeRoles('Transporter'), getMyVehicles);
 
 // General vehicles endpoint
 router.get('/', authorizeRoles('Transporter', 'Distributor', 'Admin'), getAllVehicles);

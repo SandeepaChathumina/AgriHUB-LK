@@ -8,7 +8,7 @@ import { fetchAvailableOrders, createTrip, fetchMyVehicles } from '../../api/tri
 const AvailableOrders = () => {
   const { token, user } = useAuth();
   const navigate = useNavigate();
-  
+
   const [orders, setOrders] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,7 +21,7 @@ const AvailableOrders = () => {
     total: 0,
     pages: 0
   });
-  
+
   const [tripForm, setTripForm] = useState({
     vehicleId: '',
     scheduledPickup: '',
@@ -82,16 +82,16 @@ const AvailableOrders = () => {
 
   const openCreateForm = (order) => {
     setSelectedOrder(order);
-    
+
     // Set default dates
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     tomorrow.setHours(9, 0, 0, 0);
-    
+
     const deliveryDate = new Date(tomorrow);
     deliveryDate.setDate(deliveryDate.getDate() + 1);
     deliveryDate.setHours(17, 0, 0, 0);
-    
+
     setTripForm({
       vehicleId: vehicles.length === 1 ? vehicles[0]._id : '',
       scheduledPickup: tomorrow.toISOString().slice(0, 16),
@@ -99,7 +99,7 @@ const AvailableOrders = () => {
       baseFare: '',
       distanceCharge: '0'
     });
-    
+
     setShowCreateForm(true);
   };
 
@@ -113,7 +113,7 @@ const AvailableOrders = () => {
       });
       return;
     }
-    
+
     if (!tripForm.scheduledPickup || !tripForm.estimatedDelivery) {
       Swal.fire({
         icon: 'warning',
@@ -123,7 +123,7 @@ const AvailableOrders = () => {
       });
       return;
     }
-    
+
     if (!tripForm.baseFare || parseFloat(tripForm.baseFare) <= 0) {
       Swal.fire({
         icon: 'warning',
@@ -133,7 +133,7 @@ const AvailableOrders = () => {
       });
       return;
     }
-    
+
     const result = await Swal.fire({
       title: 'Create Trip',
       html: `
@@ -150,9 +150,9 @@ const AvailableOrders = () => {
       confirmButtonText: 'Create Trip',
       cancelButtonText: 'Cancel'
     });
-    
+
     if (!result.isConfirmed) return;
-    
+
     setCreating(true);
     try {
       const payload = {
@@ -164,16 +164,16 @@ const AvailableOrders = () => {
         distanceCharge: parseFloat(tripForm.distanceCharge || 0),
         additionalCharges: []
       };
-      
+
       await createTrip(token, payload);
-      
+
       Swal.fire({
         icon: 'success',
         title: 'Trip Created!',
         text: 'Trip has been created successfully. The distributor will be notified.',
         confirmButtonColor: '#10b981'
       });
-      
+
       setShowCreateForm(false);
       setSelectedOrder(null);
       loadOrders();
@@ -272,7 +272,7 @@ const AvailableOrders = () => {
                           <p className="text-sm text-slate-500">Order ID: {order._id.slice(-8)}</p>
                         </div>
                       </div>
-                      
+
                       <div className="grid gap-3 text-sm md:grid-cols-3">
                         <div>
                           <p className="text-slate-500">Quantity</p>
@@ -287,7 +287,7 @@ const AvailableOrders = () => {
                           <p className="font-semibold text-slate-900">{new Date(order.createdAt).toLocaleDateString()}</p>
                         </div>
                       </div>
-                      
+
                       <div className="grid gap-3 text-sm md:grid-cols-2">
                         <div className="rounded-lg bg-blue-50 p-3">
                           <p className="text-xs font-semibold text-blue-700 uppercase">Pickup Location (Farmer)</p>
@@ -300,43 +300,21 @@ const AvailableOrders = () => {
                           <p className="text-xs text-slate-500">{order.deliveryAddress?.addressLine?.slice(0, 60)}...</p>
                         </div>
                       </div>
-                      
+
                       <div className="text-sm">
                         <p className="text-slate-500">Distributor</p>
                         <p className="font-semibold text-slate-900">{order.distributor?.fullName || 'N/A'} - {order.distributor?.phone || 'N/A'}</p>
                       </div>
                     </div>
-                    
-                    {/* Right: Action Buttons */}
+
+                    {/* Right: Action Button */}
                     <div className="min-w-[200px] flex flex-col gap-2">
                       <Link
                         to={`/create-trip/${order._id}`}
-                        className={`w-full rounded-xl px-4 py-2.5 text-center font-semibold text-white transition ${
-                          vehicles.length === 0 
-                            ? 'bg-gray-400 cursor-not-allowed pointer-events-none' 
+                        className={`w-full rounded-xl px-4 py-2.5 text-center font-semibold text-white transition ${vehicles.length === 0
+                            ? 'bg-gray-400 cursor-not-allowed pointer-events-none'
                             : 'bg-emerald-600 hover:bg-emerald-700'
-                        }`}
-                        onClick={(e) => {
-                          if (vehicles.length === 0) {
-                            e.preventDefault();
-                            Swal.fire({
-                              icon: 'warning',
-                              title: 'No Vehicles Available',
-                              text: 'Please add a vehicle before creating a trip.',
-                              confirmButtonColor: '#10b981'
-                            });
-                          }
-                        }}
-                      >
-                        Create Trip
-                      </Link>
-                      <Link
-                        to={`/request-delivery/${order._id}`}
-                        className={`w-full rounded-xl px-4 py-2.5 text-center font-semibold text-slate-700 border border-slate-300 transition hover:bg-slate-50 ${
-                          vehicles.length === 0 
-                            ? 'bg-gray-100 cursor-not-allowed pointer-events-none' 
-                            : 'bg-white'
-                        }`}
+                          }`}
                         onClick={(e) => {
                           if (vehicles.length === 0) {
                             e.preventDefault();
@@ -352,7 +330,7 @@ const AvailableOrders = () => {
                         Request Delivery
                       </Link>
                       <p className="text-xs text-slate-400 text-center">
-                        {vehicles.length === 0 ? 'Add a vehicle first' : 'Direct or request'}
+                        {vehicles.length === 0 ? 'Add a vehicle first' : 'Submit request to distributor'}
                       </p>
                     </div>
                   </div>
@@ -401,7 +379,7 @@ const AvailableOrders = () => {
                 </svg>
               </button>
             </div>
-            
+
             <div className="p-6 space-y-4">
               <div className="rounded-lg bg-slate-50 p-3 text-sm">
                 <p className="font-semibold text-slate-900">{selectedOrder.product?.productName}</p>
@@ -409,7 +387,7 @@ const AvailableOrders = () => {
                 <p className="text-slate-600">From: {selectedOrder.product?.pickupLocation?.district}</p>
                 <p className="text-slate-600">To: {selectedOrder.deliveryAddress?.city}</p>
               </div>
-              
+
               <div>
                 <label className="mb-1 block text-sm font-semibold text-slate-700">Select Vehicle *</label>
                 <select
@@ -425,7 +403,7 @@ const AvailableOrders = () => {
                   ))}
                 </select>
               </div>
-              
+
               <div>
                 <label className="mb-1 block text-sm font-semibold text-slate-700">Scheduled Pickup *</label>
                 <input
@@ -436,7 +414,7 @@ const AvailableOrders = () => {
                   className="w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
                 />
               </div>
-              
+
               <div>
                 <label className="mb-1 block text-sm font-semibold text-slate-700">Estimated Delivery *</label>
                 <input
@@ -447,7 +425,7 @@ const AvailableOrders = () => {
                   className="w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
                 />
               </div>
-              
+
               <div>
                 <label className="mb-1 block text-sm font-semibold text-slate-700">Base Fare (LKR) *</label>
                 <input
@@ -458,7 +436,7 @@ const AvailableOrders = () => {
                   className="w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
                 />
               </div>
-              
+
               <div>
                 <label className="mb-1 block text-sm font-semibold text-slate-700">Distance Charge (LKR)</label>
                 <input
@@ -469,7 +447,7 @@ const AvailableOrders = () => {
                   className="w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
                 />
               </div>
-              
+
               <div className="rounded-xl bg-emerald-50 p-4">
                 <div className="flex justify-between font-bold">
                   <span>Total Fare:</span>
@@ -478,7 +456,7 @@ const AvailableOrders = () => {
                   </span>
                 </div>
               </div>
-              
+
               <div className="flex gap-3 pt-4">
                 <button
                   onClick={handleCreateTrip}

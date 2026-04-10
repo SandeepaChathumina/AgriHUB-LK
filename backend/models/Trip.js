@@ -47,7 +47,7 @@ const TripSchema = new mongoose.Schema({
   // Trip execution status (after request acceptance)
   tripStatus: {
     type: String,
-    enum: ['Pending', 'Accepted', 'In Progress', 'Completed', 'Cancelled'],
+    enum: ['Pending', 'Accepted', 'Confirmed', 'In Progress', 'Completed', 'Cancelled'],
     default: 'Pending'
   },
 

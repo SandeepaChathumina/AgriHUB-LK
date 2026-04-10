@@ -73,7 +73,7 @@ function Dashboard() {
     }
 
     fetchProfile()
-    
+
     return () => { isMounted = false; }
   }, [token])
 
@@ -160,9 +160,9 @@ function Dashboard() {
       });
 
       if (!res.ok) throw new Error('Failed to update logo');
-      
+
       const data = await res.json();
-      
+
       if (data.logoUrl) {
         setLogoUrl(data.logoUrl);
         toast.success('Logo updated successfully');
@@ -171,7 +171,7 @@ function Dashboard() {
       toast.error(error.message);
     } finally {
       setIsUpdatingLogo(false);
-      if (fileInputRef.current) fileInputRef.current.value = ''; 
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   }
 
@@ -188,8 +188,8 @@ function Dashboard() {
       });
 
       if (!res.ok) throw new Error('Failed to delete logo');
-      
-      setLogoUrl(null); 
+
+      setLogoUrl(null);
       toast.success('Logo removed successfully');
     } catch (error) {
       toast.error(error.message);
@@ -241,9 +241,9 @@ function Dashboard() {
       <div className="mx-auto flex max-w-6xl flex-col gap-8">
         <div className="flex flex-col gap-4 rounded-[28px] bg-white p-6 shadow-sm ring-1 ring-slate-200 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
-            
+
             <div className="relative group flex h-14 w-14 shrink-0 cursor-pointer overflow-hidden rounded-full ring-2 ring-emerald-100">
-              
+
               {(displayRole === 'Distributor' || displayRole === 'Transporter') && logoUrl ? (
                 <img
                   src={logoUrl}
@@ -256,26 +256,26 @@ function Dashboard() {
                 </div>
               )}
 
-              <input 
-                type="file" 
+              <input
+                type="file"
                 ref={fileInputRef}
                 onChange={handleFileChange}
                 accept="image/*"
-                className="hidden" 
+                className="hidden"
               />
 
               {(displayRole === 'Distributor' || displayRole === 'Transporter') && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 opacity-0 transition-opacity group-hover:opacity-100">
-                  <button 
+                  <button
                     onClick={handleEditClick}
                     disabled={isUpdatingLogo}
                     className="w-full flex-1 text-[10px] font-semibold tracking-wide text-white transition hover:bg-emerald-500/80"
                   >
                     EDIT
                   </button>
-                  
+
                   {logoUrl && (
-                    <button 
+                    <button
                       onClick={handleDeleteLogo}
                       disabled={isUpdatingLogo}
                       className="w-full flex-1 border-t border-white/30 text-[10px] font-semibold tracking-wide text-white transition hover:bg-red-500/80"
@@ -312,8 +312,8 @@ function Dashboard() {
 
                 <span
                   className={`rounded-full px-3 py-1 text-xs font-semibold ${isActive
-                      ? 'bg-emerald-100 text-emerald-700'
-                      : 'bg-red-100 text-red-700'
+                    ? 'bg-emerald-100 text-emerald-700'
+                    : 'bg-red-100 text-red-700'
                     }`}
                 >
                   {isActive ? 'Active' : 'Inactive'}

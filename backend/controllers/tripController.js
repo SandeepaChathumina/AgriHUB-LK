@@ -377,7 +377,7 @@ export const getTripById = async (req, res) => {
 export const updateTripStatus = async (req, res) => {
   try {
     const { status, reason } = req.body;
-    const validStatuses = ["Accepted", "In Progress", "Completed", "Cancelled"];
+    const validStatuses = ["Confirmed", "In Progress", "Completed", "Cancelled"];
 
     if (!status || !validStatuses.includes(status)) {
       return res.status(400).json({
@@ -386,7 +386,7 @@ export const updateTripStatus = async (req, res) => {
       });
     }
 
-    const trip = await Trip.findById(req.params.id).populate("transporter");
+    const trip = await Trip.findById(req.params.id).populate("transporter").populate("vehicle");
     if (!trip) {
       return res
         .status(404)
@@ -429,22 +429,25 @@ export const updateTripStatus = async (req, res) => {
     trip.addTimelineEvent(status, `Status updated to ${status}`, req.user._id);
 
     // Update actual times and sync order delivery status
-    if (status === "Accepted") {
-      // Trip accepted - awaiting pickup
-      await Order.findByIdAndUpdate(trip.order, {
-        deliveryStatus: "Accepted",
-      });
+    if (status === "Confirmed") {
+      // Trip confirmed - ready for pickup
+      // No order update needed for this status
     } else if (status === "In Progress") {
-      // Trip in progress - started delivery
+      // Trip in progress - started delivery, vehicle is on delivery
       trip.schedule.actualPickup = new Date();
+      
+      // Update vehicle status to "On Delivery"
+      await Vehicle.findByIdAndUpdate(trip.vehicle._id, { status: "On Delivery" });
+      
+      // Update order delivery status
       await Order.findByIdAndUpdate(trip.order, {
         deliveryStatus: "In Transit",
       });
     } else if (status === "Completed") {
       trip.schedule.actualDelivery = new Date();
 
-      // Update vehicle status
-      await Vehicle.findByIdAndUpdate(trip.vehicle, { status: "Available" });
+      // Update vehicle status to "Available"
+      await Vehicle.findByIdAndUpdate(trip.vehicle._id, { status: "Available" });
 
       // IMPORTANT: Update order to DELIVERED so reviews can be written
       const updatedOrder = await Order.findByIdAndUpdate(
@@ -1145,9 +1148,13 @@ export const getIncomingRequests = async (req, res) => {
         requestStatus: status,
       };
     } else if (userRole === "Distributor") {
-      // Distributor receives transporter-initiated requests
+      // Distributor receives transporter-initiated requests for their orders
+      // Find all orders belonging to this distributor, then find trips for those orders
+      const orders = await Order.find({ distributor: userId }).select('_id');
+      const orderIds = orders.map(o => o._id);
+      
       filter = {
-        proposedBy: userId,
+        order: { $in: orderIds },
         requestType: "transporter-initiated-request",
         requestStatus: status,
       };
@@ -1235,16 +1242,14 @@ export const acceptRequest = async (req, res) => {
     }
 
     if (userRole === "Distributor") {
-      // Distributor must be the one who proposed this request AND be accepting a transporter request
-      if (
-        !trip.proposedBy ||
-        trip.proposedBy._id.toString() !== userId.toString()
-      ) {
+      // Distributor must own the order that this trip is for AND be accepting a transporter request
+      const order = await Order.findById(trip.order);
+      if (!order || order.distributor.toString() !== userId.toString()) {
         return res
           .status(403)
           .json({
             success: false,
-            message: "Not authorized - This is not your request",
+            message: "Not authorized - This order does not belong to you",
           });
       }
       if (trip.requestType !== "transporter-initiated-request") {
@@ -1354,13 +1359,14 @@ export const rejectRequest = async (req, res) => {
         .json({ success: false, message: "Not authorized" });
     }
 
-    if (
-      userRole === "Distributor" &&
-      trip.proposedBy._id.toString() !== userId.toString()
-    ) {
-      return res
-        .status(403)
-        .json({ success: false, message: "Not authorized" });
+    if (userRole === "Distributor") {
+      // Distributor must own the order that this trip is for
+      const order = await Order.findById(trip.order);
+      if (!order || order.distributor.toString() !== userId.toString()) {
+        return res
+          .status(403)
+          .json({ success: false, message: "Not authorized - Order does not belong to you" });
+      }
     }
 
     if (trip.requestStatus !== "pending") {

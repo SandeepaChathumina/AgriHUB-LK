@@ -88,10 +88,10 @@ const Vehicles = () => {
       const available = allVehicles.filter(v => v.status === 'Available').length;
       const onDelivery = allVehicles.filter(v => v.status === 'On Delivery').length;
       const maintenance = allVehicles.filter(v => v.status === 'Maintenance').length;
-      
+
       // Count expired vehicles (insurance or registration expired)
       const today = new Date();
-      const expired = allVehicles.filter(v => 
+      const expired = allVehicles.filter(v =>
         (v.insuranceExpiry && new Date(v.insuranceExpiry) < today) ||
         (v.registrationExpiry && new Date(v.registrationExpiry) < today)
       ).length;
@@ -123,7 +123,7 @@ const Vehicles = () => {
 
   const handleDelete = async (vehicleId, e) => {
     e.stopPropagation();
-    
+
     const result = await Swal.fire({
       title: 'Delete Vehicle',
       text: 'Are you sure you want to delete this vehicle? This action cannot be undone.',
@@ -165,7 +165,7 @@ const Vehicles = () => {
         confirmButtonColor: '#10b981',
         timer: 2000
       });
-      
+
       fetchVehicles();
     } catch (error) {
       Swal.fire({
@@ -179,7 +179,7 @@ const Vehicles = () => {
 
   const updateStatus = async (vehicleId, currentStatus, newStatus, e) => {
     e.stopPropagation();
-    
+
     const result = await Swal.fire({
       title: 'Update Status',
       text: `Change vehicle status to ${newStatus}?`,
@@ -221,7 +221,7 @@ const Vehicles = () => {
         confirmButtonColor: '#10b981',
         timer: 2000
       });
-      
+
       fetchVehicles();
     } catch (error) {
       Swal.fire({
@@ -373,14 +373,13 @@ const Vehicles = () => {
                 const hasExpiredInsurance = isExpired(vehicle.insuranceExpiry);
                 const hasExpiredRegistration = isExpired(vehicle.registrationExpiry);
                 const isExpiredVehicle = hasExpiredInsurance || hasExpiredRegistration;
-                
+
                 return (
-                  <div 
-                    key={vehicle._id} 
+                  <div
+                    key={vehicle._id}
                     onClick={() => navigate(`/vehicles/${vehicle._id}`)}
-                    className={`group cursor-pointer rounded-2xl bg-white shadow-sm ring-1 transition hover:shadow-md hover:ring-emerald-200 ${
-                      isExpiredVehicle ? 'ring-2 ring-red-300 bg-red-50/30' : 'ring-slate-200'
-                    }`}
+                    className={`group cursor-pointer rounded-2xl bg-white shadow-sm ring-1 transition hover:shadow-md hover:ring-emerald-200 ${isExpiredVehicle ? 'ring-2 ring-red-300 bg-red-50/30' : 'ring-slate-200'
+                      }`}
                   >
                     {/* Vehicle Header */}
                     <div className="relative p-4 border-b border-slate-100">
@@ -396,7 +395,7 @@ const Vehicles = () => {
                           {vehicle.status}
                         </span>
                       </div>
-                      
+
                       {/* Expiry Warning Badges */}
                       {(hasExpiredInsurance || hasExpiredRegistration) && (
                         <div className="mt-2 flex gap-2">
