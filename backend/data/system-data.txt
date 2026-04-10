@@ -13,27 +13,46 @@ The system uses strict Role-Based Access Control (RBAC). Users can only perform 
 - Distributor: The buyers. Distributors can browse the marketplace, purchase crops from Farmers, and track their supply orders.
 - Transporter: The logistics partners. Transporters manage delivery vehicles and accept delivery jobs to move crops from Farmers to Distributors.
 
-3. ACCOUNT SECURITY & MANAGEMENT
-- Email Verification: New accounts must be verified before performing core actions (like a Farmer adding a crop). Users must request a verification OTP, which sends a 6-digit code to their email. The code expires in 10 minutes.
-- Forgot Password: If a user forgets their password, they can request a reset OTP from the login page. A 6-digit code will be emailed to them, which expires in 15 minutes.
-- Profile Updates: Users can update their personal details (like Full Name and Phone Number) at any time from their Profile Dashboard. 
-- Password Updates: Passwords cannot be changed directly from the profile update screen for security reasons; users must use the official password reset flow.
-- Account Deletion: Users have the right to permanently delete their own account from the Profile Dashboard.
+3. ACCOUNT CREATION & LOGIN INSTRUCTIONS
+Users can register on the AgriHUB-LK platform by selecting one of the following roles: Farmer, Distributor, or Transporter.
+- **Registration Process:**
+    1. Navigate to the 'Sign Up' page.
+    2. Provide your Full Name, valid Email Address, Phone Number, and a secure Password.
+    3. Select your intended role (Farmer, Distributor, or Transporter).
+    4. Submit the registration form.
+- **Login Access:** After successful registration, users must log in using their registered email and password. However, access to core platform services is restricted until email verification is complete.
 
-4. NOTIFICATION SYSTEM
-- Receiving Messages: Users receive direct, individualized notifications in their inbox. Clicking a notification marks it as "Read".
-- Admin Broadcasts: Admins can send bulk notifications filtered by User Role (e.g., only Farmers) and Verification Status (e.g., only Unverified users). 
-- Notification Security: Once a user has marked a notification as "Read", Admins cannot edit or alter the message. 
+4. EMAIL VERIFICATION & SECURITY PROTOCOLS
+AgriHUB-LK employs a Real-Time Email OTP (One-Time Password) system to ensure account authenticity and prevent unauthorized access.
+- **Verification Requirement:** New accounts must be verified before performing core actions (e.g., a Farmer adding a crop or a Transporter registering a vehicle).
+- **OTP Delivery:** Users must request a verification OTP from their Profile Dashboard. A 6-digit numerical code is sent instantly to the registered email address.
+- **OTP Expiry:** For security reasons, the verification code expires after **10 minutes**. Users must request a new code if the current one expires.
+- **Full Service Access:** Once the correct OTP is entered and the email is marked as 'Verified', the user gains unrestricted access to all role-specific services and dashboards.
 
-5. FREQUENTLY ASKED QUESTIONS (FAQ)
+5. ACCOUNT SECURITY & MANAGEMENT
+AgriHUB-LK provides full security protection for user accounts with the following features:
+- **Forgot Password:** If a user forgets their password, they can request a reset OTP from the login page. A 6-digit code will be emailed to them, which expires in **15 minutes**.
+- **Profile Updates:** Users can update their personal details (like Full Name and Phone Number) at any time from their Profile Dashboard.
+- **Password Updates:** For maximum security, passwords cannot be changed directly from the profile update screen. Users must use the official password reset flow via email verification.
+- **Account Deletion:** Users have the right to permanently delete their own account from the Profile Dashboard at any time.
+
+6. NOTIFICATION SYSTEM
+- **Receiving Messages:** Users receive direct, individualized notifications in their inbox. Clicking a notification marks it as "Read".
+- **Admin Broadcasts:** Admins can send bulk notifications filtered by User Role (e.g., only Farmers) and Verification Status (e.g., only Unverified users).
+- **Notification Security:** Once a user has marked a notification as "Read", Admins cannot edit or alter the message content.
+
+7. FREQUENTLY ASKED QUESTIONS (FAQ)
 Q: How do I add a new crop to sell?
 A: You must be registered as a 'Farmer' and your email must be 'Verified'. Once verified, navigate to the 'My Crops' or 'Products' dashboard and click 'Add New Product'.
 
-Q: I am a Transporter. How do I start?
-A: Ensure your account is verified. You will need to register your vehicle details in the system before you can accept delivery orders.
+Q: I am a Transporter. How do I start accepting jobs?
+A: Ensure your account is verified. You must register your vehicle details (model, license plate, capacity) in the 'My Fleet' section of the Transporter Dashboard before you can view or accept delivery orders.
+
+Q: What should I do if I do not receive the OTP email?
+A: Please check your email spam or junk folder. If the email is not there, wait 2 minutes and click 'Resend OTP'. Ensure you have a stable internet connection. If issues persist, contact support.
 
 Q: Why did an Admin delete my account?
-A: Admins have the authority to remove accounts that violate platform policies, post fake products, or engage in fraudulent activities. 
+A: Admins have the authority to remove accounts that violate platform policies, post fake products, or engage in fraudulent activities.
 
 Q: How do I contact the System Administrator?
-A: For urgent platform issues, please send an email directly to support@agrihub.lk.
+A: For urgent platform issues not covered by this guide, please send an email directly to **support@agrihub.lk**.
