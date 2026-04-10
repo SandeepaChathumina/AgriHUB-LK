@@ -27,6 +27,14 @@ const formatMessage = (message) => ({
   updatedAt: message.updatedAt,
 });
 
+const safeFormatMessage = (message) => {
+  try {
+    return formatMessage(message);
+  } catch {
+    return null;
+  }
+};
+
 export const sendMessage = async (req, res) => {
   try {
     const senderId = req.user._id;
@@ -139,7 +147,9 @@ export const getConversation = async (req, res) => {
       }
     );
 
-    const decryptedMessages = messages.map(formatMessage);
+    const decryptedMessages = messages
+      .map(safeFormatMessage)
+      .filter(Boolean);
 
     return res.status(200).json({
       success: true,
@@ -202,15 +212,29 @@ export const getConversationList = async (req, res) => {
     const conversationMap = new Map();
 
     for (const message of messages) {
+      if (!message.sender || !message.receiver) {
+        continue;
+      }
+
       const otherUser =
         message.sender._id.toString() === currentUserId.toString()
           ? message.receiver
           : message.sender;
 
+      if (!otherUser?._id) {
+        continue;
+      }
+
+      const lastMessage = safeFormatMessage(message);
+
+      if (!lastMessage) {
+        continue;
+      }
+
       if (!conversationMap.has(otherUser._id.toString())) {
         conversationMap.set(otherUser._id.toString(), {
           user: otherUser,
-          lastMessage: formatMessage(message),
+          lastMessage,
         });
       }
     }
