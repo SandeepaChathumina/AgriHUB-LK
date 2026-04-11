@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { toast } from 'react-hot-toast'
 import { useAuth } from '../../context/AuthContext'
 import AdminNav from '../../components/AdminNav'
+import AdminFooter from '../Admin/AdminFooter'
 
 const roleOptions = ['All', 'Farmer', 'Distributor', 'Transporter', 'Member']
 const verifyOptions = ['All', 'Verified', 'Unverified']
@@ -431,6 +432,8 @@ const AdminNotifications = () => {
         )}
       </div>
     </div>
+
+    <AdminFooter />
     </>
   )
 }

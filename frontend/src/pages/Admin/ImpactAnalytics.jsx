@@ -6,6 +6,8 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell, Legend,
 } from "recharts";
+import AdminFooter from "./AdminFooter";
+import AdminNav from "../../components/AdminNav";
 
 /* ─── Animated counter hook ─── */
 function useCountUp(target, duration = 1400, start = false) {
@@ -184,6 +186,7 @@ const ImpactAnalytics = () => {
 
   return (
     <>
+      <AdminNav />
       <style>{`
         *, *::before, *::after { box-sizing: border-box; }
 
@@ -553,6 +556,7 @@ const ImpactAnalytics = () => {
           )}
         </div>
       </div>
+      <AdminFooter/>
     </>
   );
 };

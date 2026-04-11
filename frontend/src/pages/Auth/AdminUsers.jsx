@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
 import { useAuth } from '../../context/AuthContext'
 import AdminNav from '../../components/AdminNav'
+import AdminFooter from '../Admin/AdminFooter'
 
 function AdminUsers() {
   const { token, user, isAuthReady, logout } = useAuth()
@@ -153,7 +154,10 @@ function AdminUsers() {
           </div>
         </div>
       </div>
+      
     </div>
+
+    <AdminFooter/>
     </>
   )
 }
