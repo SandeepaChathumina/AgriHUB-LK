@@ -33,7 +33,6 @@ import Order from '../../models/Order.js';
 import Vehicle from '../../models/Vehicle.js';
 import Trip from '../../models/Trip.js';
 import Product from '../../models/Product.js';
-// --- CRITICAL FIX: Import these so Mongoose registers the discriminators ---
 import Transporter from '../../models/Transporter.js';
 import Farmer from '../../models/Farmer.js';
 import Distributor from '../../models/Distributor.js';
@@ -50,16 +49,20 @@ describe('Trip Routes Integration Tests', () => {
   let testVehicleId;
   let testTripId;
   let testProductId;
+  let validVehicleType;
+  let validCategory;
 
   beforeAll(async () => {
     mongoServer = await MongoMemoryServer.create();
     await mongoose.connect(mongoServer.getUri());
     
-    // Ensure strict mode is off to handle dynamic test data
+    // Auto-detect valid Enums for Vehicle
+    validVehicleType = Vehicle.schema.path('vehicleType').options.enum ? Vehicle.schema.path('vehicleType').options.enum[0] : 'Van';
+    validCategory = Vehicle.schema.path('category').options.enum ? Vehicle.schema.path('category').options.enum[0] : 'Light';
+
     User.schema.set('strict', false);
     Product.schema.set('strict', false);
     
-    // Ensure Geo indexes are ready
     await Product.createIndexes();
     await User.createIndexes();
   });
@@ -70,7 +73,6 @@ describe('Trip Routes Integration Tests', () => {
   });
 
   beforeEach(async () => {
-    // Aggressive cleanup
     await Promise.all([
       User.deleteMany({}),
       Product.deleteMany({}),
@@ -79,23 +81,33 @@ describe('Trip Routes Integration Tests', () => {
       Trip.deleteMany({})
     ]);
 
-    // 1. Create Farmer using the specific Discriminator Model
+    // 1. Create Farmer
     const farmer = await Farmer.create({
       fullName: 'Farmer John',
       role: 'Farmer',
       email: 'f@test.com',
-      location: { city: 'Colombo', coordinates: { type: 'Point', coordinates: [79.86, 6.92] } }
+      phone: '0771112223',
+      password: 'password123',
+      nicNumber: '199012345678',
+      farmSize: 5
     });
 
-    // 2. Create Product (with GeoJSON)
+    // 2. Create Product
     const product = await Product.create({
       farmer: farmer._id,
       productName: 'Veggies',
+      category: 'Vegetables',
+      price: 150,
+      unit: 'kg',
+      quantity: 100,
       pickupLocation: {
         address: 'Farmer Road',
         city: 'Colombo',
         district: 'Colombo',
-        coordinates: { type: 'Point', coordinates: [79.8612, 6.9271] }
+        coordinates: { 
+            lat: 6.9271,
+            lng: 79.8612
+        }
       }
     });
     testProductId = product._id.toString();
@@ -105,12 +117,15 @@ describe('Trip Routes Integration Tests', () => {
       fullName: 'Transporter Pro',
       role: 'Transporter',
       email: 't@test.com',
-      businessName: 'AgriTrans',
+      phone: '0773334445',
+      password: 'password123',
+      businessRegNumber: 'BR-T-999',
+      companyName: 'AgriTrans',
       isVerified: true,
       location: {
         city: 'Colombo',
         district: 'Colombo',
-        coordinates: { type: 'Point', coordinates: [79.8612, 6.9271] }
+        coordinates: { lat: 6.9271, lng: 79.8612 }
       }
     });
     transporterId = transporter._id.toString();
@@ -119,7 +134,11 @@ describe('Trip Routes Integration Tests', () => {
     const distributor = await Distributor.create({
       fullName: 'Distributor Dave',
       role: 'Distributor',
-      email: 'd@test.com'
+      email: 'd@test.com',
+      phone: '0775556667',
+      password: 'password123',
+      businessRegNumber: 'BR-D-888',
+      businessName: 'DaveDistro'
     });
     distributorId = distributor._id.toString();
 
@@ -127,8 +146,13 @@ describe('Trip Routes Integration Tests', () => {
     const vehicle = await Vehicle.create({
       transporter: transporterId,
       registrationNumber: 'CAD-1234',
-      vehicleType: 'Truck',
-      status: 'Available'
+      vehicleType: validVehicleType,
+      brand: 'Toyota',
+      model: 'Dyna',
+      category: validCategory,
+      loadCapacity: { weight: { value: 2000, unit: 'kg' } },
+      status: 'Available',
+      fuelType: 'Diesel'
     });
     testVehicleId = vehicle._id.toString();
 
@@ -141,15 +165,15 @@ describe('Trip Routes Integration Tests', () => {
       totalPrice: 5000,
       quantity: 10,
       deliveryAddress: {
-        addressLine: 'Distributor St',
+        addressLine: 'Main St',
         city: 'Colombo',
         district: 'Colombo',
-        coordinates: { type: 'Point', coordinates: [79.8615, 6.9275] }
+        coordinates: { lat: 6.9275, lng: 79.8615 }
       }
     });
     testOrderId = order._id.toString();
 
-    // 7. Create Seed Trip
+    // 7. Create Initial Trip
     const trip = new Trip({
       order: testOrderId,
       transporter: transporterId,
@@ -163,10 +187,7 @@ describe('Trip Routes Integration Tests', () => {
       schedule: { scheduledPickup: new Date(), estimatedDelivery: new Date() }
     });
     
-    if (Trip.prototype.addTimelineEvent) {
-        Trip.prototype.addTimelineEvent = jest.fn();
-    }
-    
+    if (Trip.prototype.addTimelineEvent) Trip.prototype.addTimelineEvent = jest.fn();
     await trip.save({ validateBeforeSave: false });
     testTripId = trip._id.toString();
   });
@@ -174,12 +195,30 @@ describe('Trip Routes Integration Tests', () => {
   describe('POST /api/trips (Create Trip)', () => {
     it('should successfully create a trip and update vehicle status', async () => {
       const freshVehicle = await Vehicle.create({
-        transporter: transporterId, registrationNumber: 'NEW-999', status: 'Available', vehicleType: 'Truck'
+        transporter: transporterId, 
+        registrationNumber: 'NEW-999', 
+        status: 'Available', 
+        vehicleType: validVehicleType, 
+        brand: 'Toyota', 
+        model: 'Hilux', 
+        category: validCategory,
+        loadCapacity: { weight: { value: 1000, unit: 'kg' } },
+        fuelType: 'Diesel'
       });
 
       const freshOrder = await Order.create({
-        distributor: distributorId, product: testProductId, status: 'Confirmed', deliveryStatus: 'Requested',
-        deliveryAddress: { city: 'Colombo', coordinates: { type: 'Point', coordinates: [79.86, 6.92] } }
+        distributor: distributorId, 
+        product: testProductId, 
+        status: 'Confirmed', 
+        deliveryStatus: 'Requested',
+        deliveryAddress: { 
+          addressLine: '99 Test Road', // FIXED: Path was required
+          city: 'Colombo', 
+          district: 'Colombo', // Added for safety
+          coordinates: { lat: 6.92, lng: 79.86 } 
+        },
+        totalPrice: 500, 
+        quantity: 2
       });
 
       const res = await request(app)
