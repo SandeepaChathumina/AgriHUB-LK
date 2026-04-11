@@ -592,17 +592,17 @@ const AddProduct = () => {
         { key: 'add-product', label: 'Add Product', to: '/products/add' }
       ]} />
       
-      <div className="min-h-screen bg-slate-50 px-4 py-8">
-        <div className="mx-auto max-w-6xl">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-slate-900">Add New Product</h1>
-            <p className="text-slate-600">List your agricultural products for sale</p>
+      <div className="min-h-screen bg-gradient-to-br from-[#f8fafc] via-[#f0fdf4] to-[#f8fafc] px-4 py-8">
+        <div className="mx-auto max-w-5xl">
+          <div className="mb-10 text-center">
+            <h1 className="text-4xl font-extrabold text-emerald-950 drop-shadow-sm mb-2" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>List New Product</h1>
+            <p className="text-emerald-700/80 font-medium tracking-wide">Showcase your harvest to thousands of potential buyers</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-8">
             {/* Image Upload Section */}
-            <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-              <h2 className="mb-4 text-xl font-semibold text-slate-900">Product Images</h2>
+            <div className="rounded-[32px] bg-white/80 backdrop-blur-xl p-8 shadow-xl shadow-emerald-900/5 border border-white transition-all">
+              <h2 className="mb-6 text-2xl font-bold text-emerald-950">Product Images</h2>
               <div className="space-y-4">
                 <div className="flex items-center justify-center w-full">
                   <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl border-emerald-300 bg-emerald-50 cursor-pointer hover:bg-emerald-100 transition">
@@ -657,27 +657,27 @@ const AddProduct = () => {
             </div>
 
             {/* Basic Information */}
-            <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-              <h2 className="mb-4 text-xl font-semibold text-slate-900">Basic Information</h2>
-              <div className="grid gap-4 md:grid-cols-2">
+            <div className="rounded-[32px] bg-white/80 backdrop-blur-xl p-8 shadow-xl shadow-emerald-900/5 border border-white transition-all">
+              <h2 className="mb-6 text-2xl font-bold text-emerald-950">Basic Information</h2>
+              <div className="grid gap-6 md:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700">Product Name *</label>
+                  <label className="block text-xs font-black uppercase tracking-widest text-emerald-600/80 mb-2">Product Name *</label>
                   <input
                     type="text"
                     name="productName"
                     value={formData.productName}
                     onChange={handleChange}
-                    className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
+                    className="w-full rounded-2xl border-0 bg-slate-50/50 px-4 py-4 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all text-emerald-950 font-bold"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700">Category *</label>
+                  <label className="block text-xs font-black uppercase tracking-widest text-emerald-600/80 mb-2">Category *</label>
                   <select
                     name="category"
                     value={formData.category}
                     onChange={handleChange}
-                    className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
+                    className="w-full rounded-2xl border-0 bg-slate-50/50 px-4 py-4 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all text-emerald-950 font-bold"
                   >
                     {categories.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
@@ -685,23 +685,23 @@ const AddProduct = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700">Variety</label>
+                  <label className="block text-xs font-black uppercase tracking-widest text-emerald-600/80 mb-2">Variety</label>
                   <input
                     type="text"
                     name="variety"
                     value={formData.variety}
                     onChange={handleChange}
                     placeholder="e.g., Red Long, White Rose"
-                    className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
+                    className="w-full rounded-2xl border-0 bg-slate-50/50 px-4 py-4 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all placeholder-emerald-800/30 text-emerald-950 font-bold"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700">Quality</label>
+                  <label className="block text-xs font-black uppercase tracking-widest text-emerald-600/80 mb-2">Quality</label>
                   <select
                     name="quality"
                     value={formData.quality}
                     onChange={handleChange}
-                    className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
+                    className="w-full rounded-2xl border-0 bg-slate-50/50 px-4 py-4 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all text-emerald-950 font-bold"
                   >
                     {qualities.map(q => (
                       <option key={q} value={q}>{q}</option>
@@ -712,28 +712,28 @@ const AddProduct = () => {
             </div>
 
             {/* Quantity & Price */}
-            <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-              <h2 className="mb-4 text-xl font-semibold text-slate-900">Quantity & Price</h2>
-              <div className="grid gap-4 md:grid-cols-3">
+            <div className="rounded-[32px] bg-white/80 backdrop-blur-xl p-8 shadow-xl shadow-emerald-900/5 border border-white transition-all">
+              <h2 className="mb-6 text-2xl font-bold text-emerald-950">Quantity & Pricing</h2>
+              <div className="grid gap-6 md:grid-cols-3">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700">Quantity *</label>
+                  <label className="block text-xs font-black uppercase tracking-widest text-emerald-600/80 mb-2">Quantity *</label>
                   <input
                     type="number"
                     name="quantity"
                     value={formData.quantity}
                     onChange={handleChange}
                     step="0.01"
-                    className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
+                    className="w-full rounded-2xl border-0 bg-slate-50/50 px-4 py-4 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all text-emerald-950 font-bold"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700">Unit *</label>
+                  <label className="block text-xs font-black uppercase tracking-widest text-emerald-600/80 mb-2">Unit *</label>
                   <select
                     name="unit"
                     value={formData.unit}
                     onChange={handleChange}
-                    className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
+                    className="w-full rounded-2xl border-0 bg-slate-50/50 px-4 py-4 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all text-emerald-950 font-bold"
                   >
                     {units.map(unit => (
                       <option key={unit} value={unit}>{unit}</option>
@@ -741,52 +741,55 @@ const AddProduct = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700">Price (LKR) *</label>
-                  <input
-                    type="number"
-                    name="price"
-                    value={formData.price}
-                    onChange={handleChange}
-                    step="0.01"
-                    min="0"
-                    className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
-                    required
-                  />
+                  <label className="block text-xs font-black uppercase tracking-widest text-emerald-600/80 mb-2">Price (LKR) *</label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-600/70 font-bold">LKR</span>
+                    <input
+                      type="number"
+                      name="price"
+                      value={formData.price}
+                      onChange={handleChange}
+                      step="0.01"
+                      min="0"
+                      className="w-full rounded-2xl border-0 bg-slate-50/50 pl-14 pr-4 py-4 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all text-emerald-950 font-bold"
+                      required
+                    />
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Pickup Location with Map */}
-            <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-              <div className="mb-4 flex items-center justify-between flex-wrap gap-3">
+            <div className="rounded-[32px] bg-white/80 backdrop-blur-xl p-8 shadow-xl shadow-emerald-900/5 border border-white transition-all">
+              <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-xl font-semibold text-slate-900">Pickup Location</h2>
-                  <p className="text-sm text-slate-500">Click on map or use buttons below</p>
+                  <h2 className="text-2xl font-bold text-emerald-950">Pickup Location</h2>
+                  <p className="text-emerald-700/70 font-medium">Pinpoint exactly where your produce is stored</p>
                 </div>
                 <div className="flex gap-2 flex-wrap">
                   <button
                     type="button"
                     onClick={getCurrentLocation}
                     disabled={gettingLocation}
-                    className="rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-600 transition disabled:opacity-50"
+                    className="rounded-2xl bg-blue-50/80 ring-1 ring-blue-100 px-4 py-2 text-sm font-bold text-blue-600 hover:bg-blue-100 transition disabled:opacity-50 active:scale-95 shadow-sm"
                   >
-                    {gettingLocation ? 'Getting...' : '📍 Current Location'}
+                    {gettingLocation ? 'Getting...' : '📍 Current'}
                   </button>
                   <button
                     type="button"
                     onClick={getRegistrationLocation}
                     disabled={gettingRegistrationLocation}
-                    className="rounded-lg bg-purple-500 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-600 transition disabled:opacity-50"
+                    className="rounded-2xl bg-purple-50/80 ring-1 ring-purple-100 px-4 py-2 text-sm font-bold text-purple-600 hover:bg-purple-100 transition disabled:opacity-50 active:scale-95 shadow-sm"
                   >
-                    {gettingRegistrationLocation ? 'Loading...' : '📋 From Registration'}
+                    {gettingRegistrationLocation ? 'Loading...' : '📋 Registered'}
                   </button>
                   {farmerLocation?.coordinates?.lat && (
                     <button
                       type="button"
                       onClick={useFarmerLocation}
-                      className="rounded-lg bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 transition"
+                      className="rounded-2xl bg-emerald-50/80 ring-1 ring-emerald-100 px-4 py-2 text-sm font-bold text-emerald-600 hover:bg-emerald-100 transition disabled:opacity-50 active:scale-95 shadow-sm"
                     >
-                      🌾 Profile Location
+                      🌾 Profile
                     </button>
                   )}
                 </div>
@@ -806,36 +809,35 @@ const AddProduct = () => {
                   Loading map...
                 </div>
               )}
-              
-              <div className="grid gap-4">
+              <div className="grid gap-6 mt-6">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700">Address *</label>
+                  <label className="block text-xs font-black uppercase tracking-widest text-emerald-600/80 mb-2">Address *</label>
                   <input
                     type="text"
                     value={formData.pickupLocation.address}
                     onChange={(e) => handleLocationChange('address', e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
+                    className="w-full rounded-2xl border-0 bg-slate-50/50 px-4 py-4 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all placeholder-emerald-800/30 text-emerald-950 font-bold"
                     placeholder="Street address, landmark"
                     required
                   />
                 </div>
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-6 md:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700">City</label>
+                    <label className="block text-xs font-black uppercase tracking-widest text-emerald-600/80 mb-2">City</label>
                     <input
                       type="text"
                       value={formData.pickupLocation.city}
                       onChange={(e) => handleLocationChange('city', e.target.value)}
-                      className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
+                      className="w-full rounded-2xl border-0 bg-slate-50/50 px-4 py-4 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all placeholder-emerald-800/30 text-emerald-950 font-bold"
                       placeholder="City"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700">District *</label>
+                    <label className="block text-xs font-black uppercase tracking-widest text-emerald-600/80 mb-2">District *</label>
                     <select
                       value={formData.pickupLocation.district}
                       onChange={(e) => handleLocationChange('district', e.target.value)}
-                      className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
+                      className="w-full rounded-2xl border-0 bg-slate-50/50 px-4 py-4 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all text-emerald-950 font-bold"
                       required
                     >
                       <option value="">Select District</option>
@@ -843,85 +845,83 @@ const AddProduct = () => {
                         <option key={dist} value={dist}>{dist}</option>
                       ))}
                     </select>
-                    <p className="mt-1 text-xs text-slate-400">District auto-detected when using location buttons</p>
                   </div>
                 </div>
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-6 md:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700">Latitude *</label>
+                    <label className="block text-xs font-black uppercase tracking-widest text-emerald-600/80 mb-2">Latitude *</label>
                     <input
                       type="number"
                       step="any"
                       value={formData.pickupLocation.coordinates.lat}
                       onChange={(e) => handleCoordinatesChange('lat', e.target.value)}
-                      className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
-                      placeholder="Click on map or use location button"
+                      className="w-full rounded-2xl border-0 bg-slate-50/50 px-4 py-4 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all placeholder-emerald-800/30 text-emerald-950 font-bold"
+                      placeholder="Click on map"
                       required
                     />
-                    <p className="mt-1 text-xs text-slate-400">Click on map or use location buttons</p>
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700">Longitude *</label>
+                    <label className="block text-xs font-black uppercase tracking-widest text-emerald-600/80 mb-2">Longitude *</label>
                     <input
                       type="number"
                       step="any"
                       value={formData.pickupLocation.coordinates.lng}
                       onChange={(e) => handleCoordinatesChange('lng', e.target.value)}
-                      className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
-                      placeholder="Click on map or use location button"
+                      className="w-full rounded-2xl border-0 bg-slate-50/50 px-4 py-4 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all placeholder-emerald-800/30 text-emerald-950 font-bold"
+                      placeholder="Click on map"
                       required
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700">Pickup Instructions</label>
+                  <label className="block text-xs font-black uppercase tracking-widest text-emerald-600/80 mb-2">Pickup Instructions</label>
                   <textarea
                     value={formData.pickupLocation.instructions}
                     onChange={(e) => handleLocationChange('instructions', e.target.value)}
                     rows="2"
                     placeholder="e.g., Call before arrival, Gate code, Landmarks, etc."
-                    className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
+                    className="w-full rounded-2xl border-0 bg-slate-50/50 px-4 py-4 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all placeholder-emerald-800/30 text-emerald-950 font-bold"
                   />
                 </div>
               </div>
             </div>
 
             {/* Additional Details */}
-            <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-              <h2 className="mb-4 text-xl font-semibold text-slate-900">Additional Details</h2>
-              <div className="grid gap-4">
+            <div className="rounded-[32px] bg-white/80 backdrop-blur-xl p-8 shadow-xl shadow-emerald-900/5 border border-white transition-all">
+              <h2 className="mb-6 text-2xl font-bold text-emerald-950">Additional Details</h2>
+              <div className="grid gap-6">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700">Description</label>
+                  <label className="block text-xs font-black uppercase tracking-widest text-emerald-600/80 mb-2">Description</label>
                   <textarea
                     name="description"
                     value={formData.description}
                     onChange={handleChange}
                     rows="4"
                     placeholder="Describe your product (quality, freshness, farming method, etc.)"
-                    className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
+                    className="w-full rounded-2xl border-0 bg-slate-50/50 px-4 py-4 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all placeholder-emerald-800/30 text-emerald-950 font-bold"
                   />
                 </div>
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-6 md:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700">Harvest Date</label>
+                    <label className="block text-xs font-black uppercase tracking-widest text-emerald-600/80 mb-2">Harvest Date</label>
                     <input
                       type="date"
                       name="harvestDate"
                       value={formData.harvestDate}
                       onChange={handleChange}
                       max={formData.expiryDate || undefined}
-                      className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
+                      className="w-full rounded-2xl border-0 bg-slate-50/50 px-4 py-4 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all placeholder-emerald-800/30 text-emerald-950 font-bold"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700">Expiry Date</label>
+                    <label className="block text-xs font-black uppercase tracking-widest text-emerald-600/80 mb-2">Expiry Date</label>
                     <input
                       type="date"
                       name="expiryDate"
                       value={formData.expiryDate}
                       onChange={handleChange}
                       min={formData.harvestDate || new Date().toISOString().split('T')[0]}
-                      className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
+                      className="w-full rounded-2xl border-0 bg-slate-50/50 px-4 py-4 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all placeholder-emerald-800/30 text-emerald-950 font-bold"
                     />
                   </div>
                 </div>
@@ -929,18 +929,18 @@ const AddProduct = () => {
             </div>
 
             {/* Submit Buttons */}
-            <div className="flex gap-4">
+            <div className="flex gap-4 pt-4">
               <button
                 type="submit"
                 disabled={loading || uploadingImages}
-                className="flex-1 rounded-xl bg-emerald-600 px-6 py-3 font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
+                className="flex-1 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 px-6 py-4 text-lg font-black text-white shadow-xl shadow-emerald-500/30 transition-all hover:scale-[1.01] hover:shadow-2xl hover:shadow-emerald-500/40 active:scale-[0.99] disabled:opacity-50 disabled:grayscale"
               >
-                {loading ? 'Creating...' : uploadingImages ? 'Uploading Images...' : 'Create Product'}
+                {loading ? 'Creating...' : uploadingImages ? 'Uploading Images...' : 'Publish Product'}
               </button>
               <button
                 type="button"
                 onClick={() => navigate('/my-products')}
-                className="rounded-xl border border-slate-300 px-6 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
+                className="rounded-2xl border-2 border-slate-200 bg-white/80 px-8 py-4 text-lg font-bold text-slate-600 transition-all hover:bg-slate-50 hover:border-slate-300 active:scale-95"
               >
                 Cancel
               </button>

@@ -234,36 +234,36 @@ const EditProduct = () => {
         { key: 'add-product', label: 'Add Product', to: '/products/add' }
       ]} />
       
-      <div className="min-h-screen bg-slate-50 px-4 py-8">
-        <div className="mx-auto max-w-3xl">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-slate-900">Edit Product</h1>
-            <p className="text-slate-600">Update your product information</p>
+      <div className="min-h-screen bg-gradient-to-br from-[#f8fafc] via-[#f0fdf4] to-[#f8fafc] px-4 py-8">
+        <div className="mx-auto max-w-4xl">
+          <div className="mb-10 text-center">
+            <h1 className="text-4xl font-extrabold text-emerald-950 drop-shadow-sm mb-2" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>Edit Product</h1>
+            <p className="text-emerald-700/80 font-medium tracking-wide">Update your product information and listings</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-8">
             {/* Basic Information */}
-            <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-              <h2 className="mb-4 text-xl font-semibold text-slate-900">Basic Information</h2>
-              <div className="grid gap-4 md:grid-cols-2">
+            <div className="rounded-[32px] bg-white/80 backdrop-blur-xl p-8 shadow-xl shadow-emerald-900/5 border border-white transition-all">
+              <h2 className="mb-6 text-2xl font-bold text-emerald-950">Basic Information</h2>
+              <div className="grid gap-6 md:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700">Product Name *</label>
+                  <label className="block text-xs font-black uppercase tracking-widest text-emerald-600/80 mb-2">Product Name *</label>
                   <input
                     type="text"
                     name="productName"
                     value={formData.productName}
                     onChange={handleChange}
-                    className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
+                    className="w-full rounded-2xl border-0 bg-slate-50/50 px-4 py-4 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all text-emerald-950 font-bold"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700">Category *</label>
+                  <label className="block text-xs font-black uppercase tracking-widest text-emerald-600/80 mb-2">Category *</label>
                   <select
                     name="category"
                     value={formData.category}
                     onChange={handleChange}
-                    className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
+                    className="w-full rounded-2xl border-0 bg-slate-50/50 px-4 py-4 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all text-emerald-950 font-bold"
                   >
                     {categories.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
@@ -271,23 +271,23 @@ const EditProduct = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700">Variety</label>
+                  <label className="block text-xs font-black uppercase tracking-widest text-emerald-600/80 mb-2">Variety</label>
                   <input
                     type="text"
                     name="variety"
                     value={formData.variety}
                     onChange={handleChange}
                     placeholder="e.g., Red Long, White Rose"
-                    className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
+                    className="w-full rounded-2xl border-0 bg-slate-50/50 px-4 py-4 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all placeholder-emerald-800/30 text-emerald-950 font-bold"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700">Quality</label>
+                  <label className="block text-xs font-black uppercase tracking-widest text-emerald-600/80 mb-2">Quality</label>
                   <select
                     name="quality"
                     value={formData.quality}
                     onChange={handleChange}
-                    className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
+                    className="w-full rounded-2xl border-0 bg-slate-50/50 px-4 py-4 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all text-emerald-950 font-bold"
                   >
                     {qualities.map(q => (
                       <option key={q} value={q}>{q}</option>
@@ -298,28 +298,28 @@ const EditProduct = () => {
             </div>
 
             {/* Quantity & Price */}
-            <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-              <h2 className="mb-4 text-xl font-semibold text-slate-900">Quantity & Price</h2>
-              <div className="grid gap-4 md:grid-cols-3">
+            <div className="rounded-[32px] bg-white/80 backdrop-blur-xl p-8 shadow-xl shadow-emerald-900/5 border border-white transition-all">
+              <h2 className="mb-6 text-2xl font-bold text-emerald-950">Quantity & Pricing</h2>
+              <div className="grid gap-6 md:grid-cols-3">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700">Quantity *</label>
+                  <label className="block text-xs font-black uppercase tracking-widest text-emerald-600/80 mb-2">Quantity *</label>
                   <input
                     type="number"
                     name="quantity"
                     value={formData.quantity}
                     onChange={handleChange}
                     step="0.01"
-                    className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
+                    className="w-full rounded-2xl border-0 bg-slate-50/50 px-4 py-4 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all text-emerald-950 font-bold"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700">Unit *</label>
+                  <label className="block text-xs font-black uppercase tracking-widest text-emerald-600/80 mb-2">Unit *</label>
                   <select
                     name="unit"
                     value={formData.unit}
                     onChange={handleChange}
-                    className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
+                    className="w-full rounded-2xl border-0 bg-slate-50/50 px-4 py-4 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all text-emerald-950 font-bold"
                   >
                     {units.map(unit => (
                       <option key={unit} value={unit}>{unit}</option>
@@ -327,139 +327,147 @@ const EditProduct = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700">Price (LKR) *</label>
-                  <input
-                    type="number"
-                    name="price"
-                    value={formData.price}
-                    onChange={handleChange}
-                    step="0.01"
-                    min="0"
-                    className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
-                    required
-                  />
+                  <label className="block text-xs font-black uppercase tracking-widest text-emerald-600/80 mb-2">Price (LKR) *</label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-600/70 font-bold">LKR</span>
+                    <input
+                      type="number"
+                      name="price"
+                      value={formData.price}
+                      onChange={handleChange}
+                      step="0.01"
+                      min="0"
+                      className="w-full rounded-2xl border-0 bg-slate-50/50 pl-14 pr-4 py-4 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all text-emerald-950 font-bold"
+                      required
+                    />
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Pickup Location */}
-            <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-slate-900">Pickup Location</h2>
+            <div className="rounded-[32px] bg-white/80 backdrop-blur-xl p-8 shadow-xl shadow-emerald-900/5 border border-white transition-all">
+              <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                   <h2 className="text-2xl font-bold text-emerald-950">Pickup Location</h2>
+                   <p className="text-emerald-700/70 font-medium">Pinpoint exactly where your produce is stored</p>
+                </div>
                 {farmerLocation && (
                   <button
                     type="button"
                     onClick={useFarmerLocation}
-                    className="rounded-lg bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100"
+                    className="rounded-2xl bg-emerald-50/80 ring-1 ring-emerald-100 px-4 py-2 text-sm font-bold text-emerald-600 hover:bg-emerald-100 transition active:scale-95 shadow-sm"
                   >
-                    Use My Location
+                    Use Profile Location
                   </button>
                 )}
               </div>
-              <div className="grid gap-4">
+              <div className="grid gap-6">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700">Address *</label>
+                  <label className="block text-xs font-black uppercase tracking-widest text-emerald-600/80 mb-2">Address *</label>
                   <input
                     type="text"
                     value={formData.pickupLocation.address}
                     onChange={(e) => handleLocationChange('address', e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
+                    className="w-full rounded-2xl border-0 bg-slate-50/50 px-4 py-4 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all placeholder-emerald-800/30 text-emerald-950 font-bold"
+                    placeholder="Street address, landmark"
                     required
                   />
                 </div>
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-6 md:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700">City</label>
+                    <label className="block text-xs font-black uppercase tracking-widest text-emerald-600/80 mb-2">City</label>
                     <input
                       type="text"
                       value={formData.pickupLocation.city}
                       onChange={(e) => handleLocationChange('city', e.target.value)}
-                      className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
+                      className="w-full rounded-2xl border-0 bg-slate-50/50 px-4 py-4 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all placeholder-emerald-800/30 text-emerald-950 font-bold"
+                      placeholder="City"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700">District</label>
+                    <label className="block text-xs font-black uppercase tracking-widest text-emerald-600/80 mb-2">District</label>
                     <input
                       type="text"
                       value={formData.pickupLocation.district}
                       onChange={(e) => handleLocationChange('district', e.target.value)}
-                      className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
+                      className="w-full rounded-2xl border-0 bg-slate-50/50 px-4 py-4 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all text-emerald-950 font-bold"
                     />
                   </div>
                 </div>
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-6 md:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700">Latitude *</label>
+                    <label className="block text-xs font-black uppercase tracking-widest text-emerald-600/80 mb-2">Latitude *</label>
                     <input
                       type="number"
                       step="any"
                       value={formData.pickupLocation.coordinates.lat}
                       onChange={(e) => handleCoordinatesChange('lat', e.target.value)}
-                      className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
+                      className="w-full rounded-2xl border-0 bg-slate-50/50 px-4 py-4 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all text-emerald-950 font-bold"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700">Longitude *</label>
+                    <label className="block text-xs font-black uppercase tracking-widest text-emerald-600/80 mb-2">Longitude *</label>
                     <input
                       type="number"
                       step="any"
                       value={formData.pickupLocation.coordinates.lng}
                       onChange={(e) => handleCoordinatesChange('lng', e.target.value)}
-                      className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
+                      className="w-full rounded-2xl border-0 bg-slate-50/50 px-4 py-4 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all text-emerald-950 font-bold"
                       required
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700">Pickup Instructions</label>
+                  <label className="block text-xs font-black uppercase tracking-widest text-emerald-600/80 mb-2">Pickup Instructions</label>
                   <textarea
                     value={formData.pickupLocation.instructions}
                     onChange={(e) => handleLocationChange('instructions', e.target.value)}
                     rows="2"
-                    placeholder="e.g., Call before arrival, Gate code, etc."
-                    className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
+                    placeholder="e.g., Call before arrival, Gate code, Landmarks, etc."
+                    className="w-full rounded-2xl border-0 bg-slate-50/50 px-4 py-4 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all placeholder-emerald-800/30 text-emerald-950 font-bold"
                   />
                 </div>
               </div>
             </div>
 
             {/* Additional Details */}
-            <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-              <h2 className="mb-4 text-xl font-semibold text-slate-900">Additional Details</h2>
-              <div className="grid gap-4">
+            <div className="rounded-[32px] bg-white/80 backdrop-blur-xl p-8 shadow-xl shadow-emerald-900/5 border border-white transition-all">
+              <h2 className="mb-6 text-2xl font-bold text-emerald-950">Additional Details</h2>
+              <div className="grid gap-6">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700">Description</label>
+                  <label className="block text-xs font-black uppercase tracking-widest text-emerald-600/80 mb-2">Description</label>
                   <textarea
                     name="description"
                     value={formData.description}
                     onChange={handleChange}
                     rows="4"
-                    placeholder="Describe your product (quality, freshness, etc.)"
-                    className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
+                    placeholder="Describe your product (quality, freshness, farming method, etc.)"
+                    className="w-full rounded-2xl border-0 bg-slate-50/50 px-4 py-4 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all placeholder-emerald-800/30 text-emerald-950 font-bold"
                   />
                 </div>
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-6 md:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700">Harvest Date</label>
+                    <label className="block text-xs font-black uppercase tracking-widest text-emerald-600/80 mb-2">Harvest Date</label>
                     <input
                       type="date"
                       name="harvestDate"
                       value={formData.harvestDate}
                       onChange={handleChange}
                       max={formData.expiryDate || undefined}
-                      className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
+                      className="w-full rounded-2xl border-0 bg-slate-50/50 px-4 py-4 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all placeholder-emerald-800/30 text-emerald-950 font-bold"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700">Expiry Date</label>
+                    <label className="block text-xs font-black uppercase tracking-widest text-emerald-600/80 mb-2">Expiry Date</label>
                     <input
                       type="date"
                       name="expiryDate"
                       value={formData.expiryDate}
                       onChange={handleChange}
                       min={formData.harvestDate || new Date().toISOString().split('T')[0]}
-                      className="mt-1 w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
+                      className="w-full rounded-2xl border-0 bg-slate-50/50 px-4 py-4 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all placeholder-emerald-800/30 text-emerald-950 font-bold"
                     />
                   </div>
                 </div>
@@ -467,45 +475,57 @@ const EditProduct = () => {
             </div>
 
             {/* Status */}
-            <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-              <h2 className="mb-4 text-xl font-semibold text-slate-900">Product Status</h2>
-              <div className="flex items-center gap-4">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="isAvailable"
-                    value="true"
-                    checked={formData.isAvailable === true}
-                    onChange={() => setFormData(prev => ({ ...prev, isAvailable: true, status: 'Available' }))}
-                  />
-                  <span>Available for Sale</span>
+            <div className="rounded-[32px] bg-white/80 backdrop-blur-xl p-8 shadow-xl shadow-emerald-900/5 border border-white transition-all">
+              <h2 className="mb-6 text-2xl font-bold text-emerald-950">Product Status</h2>
+              <div className="flex flex-wrap items-center gap-6">
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <div className="relative flex items-center justify-center">
+                    <input
+                      type="radio"
+                      name="isAvailable"
+                      value="true"
+                      checked={formData.isAvailable === true}
+                      onChange={() => setFormData(prev => ({ ...prev, isAvailable: true, status: 'Available' }))}
+                      className="peer sr-only"
+                    />
+                    <div className="w-6 h-6 rounded-full border-2 border-slate-300 peer-checked:border-emerald-500 peer-checked:bg-emerald-500 transition-all group-hover:border-emerald-400 flex items-center justify-center">
+                       <div className="w-2 h-2 rounded-full bg-white opacity-0 peer-checked:opacity-100 transition-opacity"></div>
+                    </div>
+                  </div>
+                  <span className="font-bold text-emerald-950">Available for Sale</span>
                 </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="isAvailable"
-                    value="false"
-                    checked={formData.isAvailable === false}
-                    onChange={() => setFormData(prev => ({ ...prev, isAvailable: false, status: 'Sold Out' }))}
-                  />
-                  <span>Sold Out</span>
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <div className="relative flex items-center justify-center">
+                    <input
+                      type="radio"
+                      name="isAvailable"
+                      value="false"
+                      checked={formData.isAvailable === false}
+                      onChange={() => setFormData(prev => ({ ...prev, isAvailable: false, status: 'Sold Out' }))}
+                      className="peer sr-only"
+                    />
+                    <div className="w-6 h-6 rounded-full border-2 border-slate-300 peer-checked:border-orange-500 peer-checked:bg-orange-500 transition-all group-hover:border-orange-400 flex items-center justify-center">
+                       <div className="w-2 h-2 rounded-full bg-white opacity-0 peer-checked:opacity-100 transition-opacity"></div>
+                    </div>
+                  </div>
+                  <span className="font-bold text-emerald-950">Sold Out</span>
                 </label>
               </div>
             </div>
 
             {/* Submit Buttons */}
-            <div className="flex gap-4">
+            <div className="flex gap-4 pt-4">
               <button
                 type="submit"
                 disabled={saving}
-                className="flex-1 rounded-xl bg-emerald-600 px-6 py-3 font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
+                className="flex-1 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 px-6 py-4 text-lg font-black text-white shadow-xl shadow-emerald-500/30 transition-all hover:scale-[1.01] hover:shadow-2xl hover:shadow-emerald-500/40 active:scale-[0.99] disabled:opacity-50 disabled:grayscale"
               >
-                {saving ? 'Saving...' : 'Save Changes'}
+                {saving ? 'Updating Information...' : 'Save Changes'}
               </button>
               <button
                 type="button"
                 onClick={() => navigate('/products')}
-                className="rounded-xl border border-slate-300 px-6 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
+                className="rounded-2xl border-2 border-slate-200 bg-white/80 px-8 py-4 text-lg font-bold text-slate-600 transition-all hover:bg-slate-50 hover:border-slate-300 active:scale-95"
               >
                 Cancel
               </button>

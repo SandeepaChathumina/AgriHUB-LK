@@ -164,14 +164,17 @@ const MyProducts = () => {
           { key: 'my-products', label: 'My Products', to: '/my-products' },
           { key: 'add-product', label: 'Add Product', to: '/products/add' }
         ]} />
-        <div className="min-h-screen bg-slate-50 px-4 py-8">
+        <div className="min-h-screen bg-gradient-to-br from-[#f8fafc] via-[#f0fdf4] to-[#f8fafc] px-4 py-8">
           <div className="mx-auto max-w-7xl">
-            <div className="rounded-2xl bg-red-50 p-8 text-center">
-              <h2 className="text-xl font-semibold text-red-700 mb-2">Error Loading Products</h2>
-              <p className="text-red-600">{error}</p>
+            <div className="rounded-[32px] bg-white/60 backdrop-blur-xl border border-white shadow-xl shadow-red-900/5 p-12 text-center">
+              <div className="w-20 h-20 mx-auto bg-red-50 rounded-full flex items-center justify-center mb-6 ring-1 ring-red-100">
+                <span className="text-4xl">⚠️</span>
+              </div>
+              <h2 className="text-2xl font-extrabold text-red-900 mb-3">Error Loading Data</h2>
+              <p className="text-red-700/80 font-medium">{error}</p>
               <button
                 onClick={fetchMyProducts}
-                className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+                className="mt-8 rounded-2xl bg-gradient-to-r from-red-500 to-red-600 px-8 py-3 text-white font-bold tracking-wide shadow-lg shadow-red-500/30 hover:scale-[1.02] active:scale-95 transition-all"
               >
                 Try Again
               </button>
@@ -189,59 +192,71 @@ const MyProducts = () => {
         { key: 'add-product', label: 'Add Product', to: '/products/add' }
       ]} />
       
-      <div className="min-h-screen bg-slate-50 px-4 py-8">
+      <div className="min-h-screen bg-gradient-to-br from-[#f8fafc] via-[#f0fdf4] to-[#f8fafc] px-4 py-8">
         <div className="mx-auto max-w-7xl">
           {/* Header */}
-          <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="mb-8 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-slate-900">My Products</h1>
-              <p className="text-slate-600">Manage your agricultural products inventory</p>
+              <h1 className="text-4xl font-extrabold text-emerald-950 drop-shadow-sm mb-2" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>My Inventory</h1>
+              <p className="text-emerald-700/80 font-medium tracking-wide">Manage your agricultural products and listings</p>
             </div>
             <Link
               to="/products/add"
-              className="rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+              className="rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 px-6 py-3.5 text-sm font-bold text-white shadow-xl shadow-emerald-500/20 transition-all hover:scale-[1.02] hover:shadow-2xl hover:shadow-emerald-500/30 active:scale-95"
             >
-              + Add New Product
+              + List New Product
             </Link>
           </div>
 
           {/* Stats Cards */}
-          <div className="mb-8 grid gap-4 md:grid-cols-4">
-            <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-              <p className="text-sm text-slate-500">Total Products</p>
-              <p className="text-3xl font-bold text-emerald-600">{stats.totalProducts}</p>
+          <div className="mb-8 grid gap-5 md:grid-cols-4">
+            <div className="rounded-3xl bg-white/80 backdrop-blur-xl p-6 shadow-xl shadow-emerald-900/5 border border-white transition-transform hover:-translate-y-1">
+              <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center text-teal-600 mb-4 ring-1 ring-teal-100">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+              </div>
+              <p className="text-[11px] font-black uppercase tracking-widest text-emerald-600/70 mb-1">Total Products</p>
+              <p className="text-3xl font-black text-emerald-950">{stats.totalProducts}</p>
             </div>
-            <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-              <p className="text-sm text-slate-500">Available</p>
-              <p className="text-3xl font-bold text-green-600">{stats.availableProducts}</p>
+            <div className="rounded-3xl bg-white/80 backdrop-blur-xl p-6 shadow-xl shadow-emerald-900/5 border border-white transition-transform hover:-translate-y-1">
+               <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center text-green-600 mb-4 ring-1 ring-green-100">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              </div>
+              <p className="text-[11px] font-black uppercase tracking-widest text-emerald-600/70 mb-1">Available</p>
+              <p className="text-3xl font-black text-green-600">{stats.availableProducts}</p>
             </div>
-            <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-              <p className="text-sm text-slate-500">Sold Out</p>
-              <p className="text-3xl font-bold text-red-600">{stats.soldOutProducts}</p>
+            <div className="rounded-3xl bg-white/80 backdrop-blur-xl p-6 shadow-xl shadow-emerald-900/5 border border-white transition-transform hover:-translate-y-1">
+               <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600 mb-4 ring-1 ring-orange-100">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+              </div>
+              <p className="text-[11px] font-black uppercase tracking-widest text-emerald-600/70 mb-1">Sold Out</p>
+              <p className="text-3xl font-black text-orange-600">{stats.soldOutProducts}</p>
             </div>
-            <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-              <p className="text-sm text-slate-500">Total Inventory Value</p>
-              <p className="text-3xl font-bold text-emerald-600">LKR {stats.totalValue.toLocaleString()}</p>
+            <div className="rounded-3xl bg-white/80 backdrop-blur-xl p-6 shadow-xl shadow-emerald-900/5 border border-white transition-transform hover:-translate-y-1">
+               <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 mb-4 ring-1 ring-emerald-100 bg-gradient-to-br from-emerald-50 to-teal-50">
+                <span className="font-bold">LKR</span>
+              </div>
+              <p className="text-[11px] font-black uppercase tracking-widest text-emerald-600/70 mb-1">Total Value</p>
+              <p className="text-3xl font-black text-emerald-500 max-w-[200px] truncate" title={`LKR ${stats.totalValue.toLocaleString()}`}>LKR {stats.totalValue >= 1000000 ? (stats.totalValue / 1000000).toFixed(2) + 'M' : stats.totalValue.toLocaleString()}</p>
             </div>
           </div>
 
           {/* Filters */}
-          <div className="mb-6 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-            <form onSubmit={handleSearch} className="flex flex-wrap gap-4">
-              <div className="flex-1 min-w-50">
+          <div className="mb-8 rounded-3xl bg-white/60 backdrop-blur-2xl p-5 shadow-xl shadow-emerald-900/5 border border-white/80">
+            <form onSubmit={handleSearch} className="flex flex-wrap gap-4 items-center">
+              <div className="flex-1 min-w-[200px]">
                 <input
                   type="text"
                   placeholder="Search by product name..."
                   value={filters.search}
                   onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                  className="w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
+                  className="w-full rounded-2xl border-0 bg-white/80 px-4 py-3 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all placeholder-emerald-800/40 text-emerald-900 font-medium"
                 />
               </div>
-              <div className="w-48">
+              <div className="w-full sm:w-48">
                 <select
                   value={filters.status}
                   onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-                  className="w-full rounded-xl border border-emerald-200 px-4 py-2 focus:border-emerald-500 focus:outline-none"
+                  className="w-full rounded-2xl border-0 bg-white/80 px-4 py-3 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all text-emerald-900 font-medium"
                 >
                   <option value="">All Status</option>
                   <option value="Available">Available</option>
@@ -250,7 +265,7 @@ const MyProducts = () => {
               </div>
               <button
                 type="submit"
-                className="rounded-xl bg-emerald-600 px-6 py-2 text-white font-semibold hover:bg-emerald-700 transition"
+                className="rounded-2xl bg-emerald-500 px-8 py-3 text-white font-bold shadow-lg shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all w-full sm:w-auto"
               >
                 Search
               </button>
@@ -261,97 +276,110 @@ const MyProducts = () => {
                   setPagination(prev => ({ ...prev, page: 1 }));
                   setTimeout(fetchMyProducts, 100);
                 }}
-                className="rounded-xl border border-slate-300 px-6 py-2 text-slate-700 font-semibold hover:bg-slate-50 transition"
+                className="rounded-2xl border-2 border-emerald-100 bg-white/80 px-8 py-3 text-emerald-700 font-bold hover:bg-emerald-50 hover:border-emerald-200 active:scale-95 transition-all w-full sm:w-auto"
               >
-                Clear
+                Reset
               </button>
             </form>
           </div>
 
           {/* Products Grid */}
           {loading ? (
-            <div className="flex justify-center py-12">
-              <div className="text-slate-500">Loading your products...</div>
+            <div className="flex justify-center py-16">
+              <div className="text-emerald-500/60 font-semibold tracking-widest uppercase">Loading inventory...</div>
             </div>
           ) : products.length === 0 ? (
-            <div className="rounded-2xl bg-white p-12 text-center shadow-sm ring-1 ring-slate-200">
-              <div className="text-6xl mb-4">🌾</div>
-              <p className="text-slate-500 mb-4">You haven't added any products yet.</p>
+            <div className="rounded-[32px] bg-white/60 backdrop-blur-xl p-16 text-center shadow-xl shadow-emerald-900/5 border border-white/80 flex flex-col items-center justify-center">
+              <div className="text-7xl mb-6 opacity-40 grayscale">🌾</div>
+              <p className="text-emerald-900/40 font-bold tracking-wide mb-6">You haven't added any products yet.</p>
               <Link
                 to="/products/add"
-                className="inline-block rounded-xl bg-emerald-600 px-6 py-3 text-white font-semibold hover:bg-emerald-700 transition"
+                className="inline-block rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 px-8 py-4 text-white font-black tracking-wide shadow-xl shadow-emerald-500/30 hover:scale-[1.02] active:scale-95 transition-all text-lg"
               >
-                Add Your First Product
+                List Your First Product
               </Link>
             </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {products.map(product => (
-                <div key={product._id} className="group rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
-                  <div className="relative h-48 overflow-hidden rounded-t-2xl bg-slate-100">
+                <div key={product._id} className="group flex flex-col rounded-3xl bg-white/80 backdrop-blur-xl shadow-xl shadow-emerald-900/5 border border-white transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-emerald-900/10 overflow-hidden relative">
+                  <div className="relative h-52 overflow-hidden bg-emerald-50/50">
                     {product.images && product.images.length > 0 ? (
                       <img
                         src={product.images[0]}
                         alt={product.productName}
-                        className="h-full w-full object-cover group-hover:scale-105 transition duration-300"
+                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />
                     ) : (
-                      <div className="flex h-full items-center justify-center text-slate-400">
-                        <div className="text-center">
-                          <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          <span className="text-xs">No Image</span>
-                        </div>
+                      <div className="flex h-full items-center justify-center text-emerald-200">
+                        <svg className="w-16 h-16 mx-auto opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
                       </div>
                     )}
                     {product.images && product.images.length > 1 && (
-                      <div className="absolute bottom-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
-                        +{product.images.length - 1}
+                      <div className="absolute bottom-3 right-3 bg-black/40 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-lg shadow-sm">
+                        +{product.images.length - 1} images
                       </div>
                     )}
-                    <span className={`absolute right-2 top-2 rounded-full px-2 py-1 text-xs font-semibold ${
-                      product.isAvailable ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                    
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 pointer-events-none" />
+
+                    <span className={`absolute left-3 top-3 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest backdrop-blur-md shadow-sm ${
+                      product.isAvailable ? 'bg-white/95 text-emerald-700' : 'bg-orange-50/95 text-orange-700'
                     }`}>
-                      {product.isAvailable ? 'Available' : 'Sold Out'}
+                      {product.isAvailable ? 'Active' : 'Sold Out'}
                     </span>
                   </div>
                   
-                  <div className="p-4">
-                    <h3 className="text-lg font-semibold text-slate-900 line-clamp-1">{product.productName}</h3>
-                    <p className="text-sm text-slate-500">{product.category} • {product.quantity}{product.unit}</p>
-                    <p className="mt-2 text-xl font-bold text-emerald-600">LKR {product.price.toLocaleString()}</p>
-                    
-                    <div className="mt-2 text-xs text-slate-400 space-y-1">
-                      <p>📍 {product.pickupLocation?.district || 'N/A'}</p>
-                      {product.harvestDate && (
-                        <p>🌾 Harvest: {formatDate(product.harvestDate)}</p>
-                      )}
-                      <p>📦 Stock: {product.quantity}{product.unit}</p>
+                  <div className="flex flex-col flex-1 p-5">
+                    <div className="flex-1">
+                      <h3 className="text-xl font-extrabold text-emerald-950 line-clamp-1 mb-1">{product.productName}</h3>
+                      <p className="text-xs font-semibold tracking-wide text-emerald-600/70 uppercase">{product.category}</p>
+                      
+                      <p className="mt-4 text-2xl font-black text-emerald-500 drop-shadow-sm">LKR {product.price.toLocaleString()}</p>
+                      
+                      <div className="mt-4 grid grid-cols-2 gap-2 text-[10px] uppercase font-bold tracking-widest">
+                        <div className="rounded-xl bg-slate-50/50 border border-slate-100 p-2 text-slate-500">
+                           <span className="opacity-60 block mb-0.5">Location</span>
+                           <span className="text-slate-700 truncate">{product.pickupLocation?.district || 'N/A'}</span>
+                        </div>
+                        <div className="rounded-xl bg-emerald-50/50 border border-emerald-100/50 p-2 text-emerald-700">
+                           <span className="opacity-60 block mb-0.5">Stock</span>
+                           <span className="text-emerald-900 truncate">{product.quantity}{product.unit}</span>
+                        </div>
+                      </div>
                     </div>
                     
-                    <div className="mt-4 flex gap-2">
+                    <div className="mt-5 grid grid-cols-3 gap-2">
                       <Link
                         to={`/products/edit/${product._id}`}
-                        className="flex-1 rounded-lg border border-emerald-200 px-3 py-2 text-center text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50"
+                        className="rounded-2xl border-2 border-emerald-100 bg-emerald-50/50 py-2.5 text-center flex justify-center items-center text-sm font-bold text-emerald-700 transition hover:bg-emerald-100 hover:border-emerald-200 active:scale-95"
+                        aria-label="Edit product"
                       >
-                        Edit
+                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                       </Link>
                       <button
                         onClick={() => toggleAvailability(product._id, product.isAvailable)}
-                        className={`flex-1 rounded-lg px-3 py-2 text-center text-sm font-semibold transition ${
+                        className={`rounded-2xl border-2 py-2.5 text-center flex justify-center items-center text-sm font-bold transition active:scale-95 ${
                           product.isAvailable
-                            ? 'border border-amber-200 text-amber-700 hover:bg-amber-50'
-                            : 'border border-emerald-200 text-emerald-700 hover:bg-emerald-50'
+                            ? 'border-orange-100 bg-orange-50/50 text-orange-600 hover:bg-orange-100 hover:border-orange-200'
+                            : 'border-emerald-100 bg-emerald-50/50 text-emerald-600 hover:bg-emerald-100 hover:border-emerald-200'
                         }`}
+                        aria-label={product.isAvailable ? 'Mark as Out of Stock' : 'Mark as Available'}
+                        title={product.isAvailable ? 'Set as Sold Out' : 'Set as Available'}
                       >
-                        {product.isAvailable ? 'Deactivate' : 'Activate'}
+                         {product.isAvailable ? 
+                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M18.364 5.636l-12.728 12.728M5.636 5.636l12.728 12.728"/></svg> :
+                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"/></svg>
+                         }
                       </button>
                       <button
                         onClick={() => handleDelete(product._id)}
-                        className="rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-50"
+                        className="rounded-2xl border-2 border-rose-100 bg-rose-50/50 py-2.5 text-center flex justify-center items-center text-sm font-bold text-rose-600 transition hover:bg-rose-100 hover:border-rose-200 active:scale-95"
+                        aria-label="Delete product"
                       >
-                        Delete
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                       </button>
                     </div>
                   </div>
