@@ -16,6 +16,7 @@ import chatRoutes from './routes/chatRoutes.js';
 import tripRoutes from './routes/tripRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 import messageRoutes from './routes/messageRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 
 dotenv.config();
 
@@ -64,6 +65,7 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/trips', tripRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/admin', adminRoutes);
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {

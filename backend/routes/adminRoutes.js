@@ -1,3 +1,9 @@
+import express from "express";
 import { getImpactStats } from "../controllers/adminController.js";
+import { protect, authorizeRoles } from "../middleware/authMiddleware.js";
 
-router.get("/impact-stats", authorizeRoles("Admin"), getImpactStats);
+const router = express.Router();
+
+router.get("/impact-stats", protect, authorizeRoles("Admin"), getImpactStats);
+
+export default router;
