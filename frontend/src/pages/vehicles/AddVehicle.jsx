@@ -65,7 +65,7 @@ const AddVehicle = () => {
 
   const fetchTransporterId = async () => {
     try {
-      const res = await fetch('http://localhost:3000/api/users/profile', {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users/profile`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -135,7 +135,7 @@ const AddVehicle = () => {
     });
     
     try {
-      const res = await fetch('http://localhost:3000/api/vehicles/upload-images', {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/vehicles/upload-images`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`
@@ -288,7 +288,7 @@ const AddVehicle = () => {
         images: imageUrls
       };
 
-      const res = await fetch('http://localhost:3000/api/vehicles', {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/vehicles`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

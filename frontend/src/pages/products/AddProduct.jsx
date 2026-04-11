@@ -501,7 +501,7 @@ const AddProduct = () => {
 
     try {
       const res = await fetch(
-        "http://localhost:3000/api/products/upload-images",
+        `${import.meta.env.VITE_API_BASE_URL}/api/products/upload-images`,
         {
           method: "POST",
           headers: {
@@ -677,14 +677,17 @@ const AddProduct = () => {
         },
       };
 
-      const res = await fetch("http://localhost:3000/api/products", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      const res = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/products`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
         },
-        body: JSON.stringify(payload),
-      });
+      );
 
       if (!res.ok) {
         const error = await res.json();
