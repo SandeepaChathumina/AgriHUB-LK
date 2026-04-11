@@ -172,3 +172,37 @@ export const fetchTripStats = async (token) => {
   
   return response.json();
 };
+
+// Review aggregates for dashboard (role-specific)
+export const fetchReviewStats = async (token) => {
+  const response = await fetch(`${API_BASE_URL}/api/reviews/stats`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || 'Failed to fetch review statistics');
+  }
+  return response.json();
+};
+
+// Update vehicle status
+export const updateVehicleStatus = async (token, vehicleId, status) => {
+  const response = await fetch(`${API_BASE_URL}/api/vehicles/${vehicleId}/status`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ status })
+  });
+  
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to update vehicle status');
+  }
+  
+  return response.json();
+};

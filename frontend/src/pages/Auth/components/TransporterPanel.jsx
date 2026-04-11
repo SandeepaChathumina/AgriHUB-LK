@@ -1,11 +1,47 @@
 // src/pages/Auth/components/TransporterPanel.jsx
-import React from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../../context/AuthContext'
+import { fetchTripStats, fetchReviewStats } from '../../../api/trips'
+
+const clampPct = (n) => Math.min(100, Math.max(0, Number(n) || 0))
 
 const TransporterPanel = ({ links = [], unreadMessages = 0 }) => {
-  const { user } = useAuth()
-  
+  const { token } = useAuth()
+  const [tripStats, setTripStats] = useState(null)
+  const [reviewStats, setReviewStats] = useState(null)
+  const [loadingInsights, setLoadingInsights] = useState(true)
+
+  const loadDashboardData = useCallback(async () => {
+    if (!token) return
+    setLoadingInsights(true)
+    try {
+      const [tripsRes, reviewsRes] = await Promise.allSettled([
+        fetchTripStats(token),
+        fetchReviewStats(token),
+      ])
+      if (tripsRes.status === 'fulfilled' && tripsRes.value?.stats) {
+        setTripStats(tripsRes.value.stats)
+      } else {
+        setTripStats(null)
+      }
+      if (reviewsRes.status === 'fulfilled' && reviewsRes.value?.stats) {
+        setReviewStats(reviewsRes.value.stats)
+      } else {
+        setReviewStats(null)
+      }
+    } catch {
+      setTripStats(null)
+      setReviewStats(null)
+    } finally {
+      setLoadingInsights(false)
+    }
+  }, [token])
+
+  useEffect(() => {
+    void loadDashboardData()
+  }, [loadDashboardData])
+
   const defaultLinks = [
     {
       title: '👤 Profile',
@@ -47,9 +83,25 @@ const TransporterPanel = ({ links = [], unreadMessages = 0 }) => {
 
   const items = links.length ? links : defaultLinks
 
-  const stats = [
-    { label: 'Active Trips', value: '0' },
-    { label: 'Completed Orders', value: '0' },
+  const activeTrips = tripStats?.activeTrips ?? 0
+  const completedTrips = tripStats?.completedTrips ?? 0
+  const totalTrips = tripStats?.totalTrips ?? 0
+  const cancelledTrips = tripStats?.cancelledTrips ?? 0
+  const completionRate = clampPct(tripStats?.completionRate)
+  const onTimeRate =
+    tripStats?.onTimeDeliveryRate != null
+      ? clampPct(tripStats.onTimeDeliveryRate)
+      : null
+  const onTimeN = tripStats?.onTimeSampleSize ?? 0
+  const revenue = Number(tripStats?.revenueCompleted) || 0
+  const avgRating = Number(reviewStats?.averageRating) || 0
+  const totalReviews = Number(reviewStats?.totalReviews) || 0
+  const ratingBarPct = clampPct((avgRating / 5) * 100)
+  const timeliness = Number(reviewStats?.timeliness) || 0
+
+  const headerStats = [
+    { label: 'Active trips', value: loadingInsights ? '…' : String(activeTrips) },
+    { label: 'Completed', value: loadingInsights ? '…' : String(completedTrips) },
     { label: 'Messages', value: String(unreadMessages) },
   ]
 
@@ -76,6 +128,24 @@ const TransporterPanel = ({ links = [], unreadMessages = 0 }) => {
     },
   ]
 
+  const MetricBar = ({ label, valuePct, sublabel, accentClass = 'bg-blue-500' }) => (
+    <div>
+      <div className="mb-2 flex justify-between text-sm">
+        <span className="text-slate-600">{label}</span>
+        <span className="font-bold text-slate-900">
+          {valuePct != null ? `${Number(valuePct).toFixed(0)}%` : '—'}
+        </span>
+      </div>
+      <div className="h-2.5 overflow-hidden rounded-full bg-slate-200">
+        <div
+          className={`h-full rounded-full transition-all duration-700 ${accentClass}`}
+          style={{ width: `${valuePct != null ? clampPct(valuePct) : 0}%` }}
+        />
+      </div>
+      {sublabel ? <p className="mt-1.5 text-xs text-slate-500">{sublabel}</p> : null}
+    </div>
+  )
+
   return (
     <div className="space-y-6">
       {/* Top card */}
@@ -97,7 +167,7 @@ const TransporterPanel = ({ links = [], unreadMessages = 0 }) => {
             </p>
 
             <div className="mt-5 flex flex-wrap gap-3">
-              {stats.map((stat) => (
+              {headerStats.map((stat) => (
                 <div
                   key={stat.label}
                   className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2"
@@ -183,7 +253,7 @@ const TransporterPanel = ({ links = [], unreadMessages = 0 }) => {
                 key={item.step}
                 className="flex items-start gap-4 rounded-2xl bg-slate-50 p-4"
               >
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-100 font-bold text-blue-700">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-100 font-bold text-blue-700">
                   {item.step}
                 </div>
                 <div>
@@ -197,47 +267,112 @@ const TransporterPanel = ({ links = [], unreadMessages = 0 }) => {
           </div>
         </div>
 
-        {/* Insights */}
-        <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-blue-500">
+        {/* Insights — live trip + review data */}
+        <div className="relative overflow-hidden rounded-[28px] border border-slate-200 bg-gradient-to-br from-white via-slate-50/80 to-blue-50/60 p-6 shadow-sm ring-1 ring-slate-100">
+          <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-blue-400/10 blur-2xl" />
+          <div className="pointer-events-none absolute -bottom-12 -left-8 h-32 w-32 rounded-full bg-emerald-400/10 blur-2xl" />
+
+          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-blue-600">
             Insights
           </p>
           <h3 className="mt-2 text-2xl font-bold text-slate-900">
             Transporter performance
           </h3>
-
-          <p className="mt-3 text-sm text-slate-600">
-            Overview of your operational performance and system activity.
+          <p className="mt-2 text-sm text-slate-600">
+            Live metrics from your trips and distributor reviews.
           </p>
 
-          <div className="mt-6 space-y-4">
-            <div>
-              <div className="mb-2 flex justify-between text-sm">
-                <span className="text-slate-600">Trip Completion</span>
-                <span className="font-bold text-blue-600">85%</span>
+          {loadingInsights ? (
+            <div className="mt-6 space-y-4 animate-pulse">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="h-16 rounded-2xl bg-slate-200/80" />
+                ))}
               </div>
-              <div className="h-2 rounded-full bg-slate-200">
-                <div className="h-full w-[85%] rounded-full bg-blue-500 transition-all duration-700" />
-              </div>
+              <div className="h-16 rounded-2xl bg-slate-200/80" />
+              <div className="h-16 rounded-2xl bg-slate-200/80" />
+              <div className="h-16 rounded-2xl bg-slate-200/80" />
             </div>
-
-            <div>
-              <div className="mb-2 flex justify-between text-sm">
-                <span className="text-slate-600">On-Time Delivery</span>
-                <span className="font-bold text-blue-600">92%</span>
+          ) : (
+            <>
+              <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className="rounded-2xl border border-white/80 bg-white/90 p-3 shadow-sm backdrop-blur-sm">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Total trips</p>
+                  <p className="mt-1 text-2xl font-black text-slate-900">{totalTrips}</p>
+                </div>
+                <div className="rounded-2xl border border-white/80 bg-white/90 p-3 shadow-sm backdrop-blur-sm">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Active</p>
+                  <p className="mt-1 text-2xl font-black text-blue-600">{activeTrips}</p>
+                </div>
+                <div className="rounded-2xl border border-white/80 bg-white/90 p-3 shadow-sm backdrop-blur-sm">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Completed</p>
+                  <p className="mt-1 text-2xl font-black text-emerald-600">{completedTrips}</p>
+                </div>
+                <div className="rounded-2xl border border-white/80 bg-white/90 p-3 shadow-sm backdrop-blur-sm">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Cancelled</p>
+                  <p className="mt-1 text-2xl font-black text-slate-700">{cancelledTrips}</p>
+                </div>
               </div>
-              <div className="h-2 rounded-full bg-slate-200">
-                <div className="h-full w-[92%] rounded-full bg-blue-500 transition-all duration-700" />
-              </div>
-            </div>
 
-            <Link
-              to="/transporter-ratings"
-              className="mt-4 block rounded-2xl border border-dashed border-blue-300 bg-blue-50 p-4 text-center text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
-            >
-              ⭐ View your ratings and customer reviews
-            </Link>
-          </div>
+              <div className="mt-5 rounded-2xl border border-slate-200/80 bg-white/95 p-4 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Revenue (completed trips)</p>
+                <p className="mt-1 text-xl font-bold text-slate-900">
+                  LKR {revenue.toLocaleString()}
+                </p>
+              </div>
+
+              <div className="mt-5 space-y-5 rounded-2xl border border-slate-200/80 bg-white/95 p-4 shadow-sm">
+                <MetricBar
+                  label="Trip completion rate"
+                  valuePct={totalTrips > 0 ? completionRate : 0}
+                  sublabel={
+                    totalTrips > 0
+                      ? `${completedTrips} of ${totalTrips} trips finished successfully`
+                      : 'Complete your first trip to see this metric'
+                  }
+                  accentClass="bg-gradient-to-r from-blue-500 to-blue-600"
+                />
+                <MetricBar
+                  label="On-time delivery"
+                  valuePct={onTimeRate}
+                  sublabel={
+                    onTimeN > 0
+                      ? `Among ${onTimeN} completed trip${onTimeN === 1 ? '' : 's'} with scheduled vs actual delivery times`
+                      : 'Needs completed trips with both estimated and actual delivery times'
+                  }
+                  accentClass="bg-gradient-to-r from-emerald-500 to-teal-600"
+                />
+                <div>
+                  <div className="mb-2 flex justify-between text-sm">
+                    <span className="text-slate-600">Customer rating</span>
+                    <span className="font-bold text-slate-900">
+                      {totalReviews > 0
+                        ? `${avgRating.toFixed(1)} / 5`
+                        : 'No reviews yet'}
+                    </span>
+                  </div>
+                  <div className="h-2.5 overflow-hidden rounded-full bg-slate-200">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-500 transition-all duration-700"
+                      style={{ width: `${totalReviews > 0 ? ratingBarPct : 0}%` }}
+                    />
+                  </div>
+                  <p className="mt-1.5 text-xs text-slate-500">
+                    {totalReviews > 0
+                      ? `${totalReviews} review${totalReviews === 1 ? '' : 's'} · Timeliness score ${timeliness.toFixed(1)}/5`
+                      : 'Distributor reviews appear here after deliveries'}
+                  </p>
+                </div>
+              </div>
+
+              <Link
+                to="/transporter-ratings"
+                className="mt-4 flex items-center justify-center gap-2 rounded-2xl border border-dashed border-blue-300 bg-blue-50/90 px-4 py-3 text-center text-sm font-semibold text-blue-800 transition hover:bg-blue-100"
+              >
+                <span>⭐</span> View full ratings and reviews
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </div>

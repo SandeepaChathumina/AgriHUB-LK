@@ -641,12 +641,13 @@ export const deleteVehicle = async (req, res) => {
 // @route   PATCH /api/vehicles/:id/status
 export const updateVehicleStatus = async (req, res) => {
   try {
-    const { transporterId, status } = req.body;
+    const { status } = req.body;
+    const transporterId = req.user._id.toString();
 
-    if (!transporterId || !status) {
-      return res.status(400).json({ 
+    if (!status) {
+      return res.status(400).json({
         success: false,
-        message: 'transporterId and status are required' 
+        message: 'status is required',
       });
     }
 
@@ -676,7 +677,7 @@ export const updateVehicleStatus = async (req, res) => {
       });
     }
 
-    // Check ownership
+    // Ownership: authenticated transporter only (ignore body transporterId)
     if (vehicle.transporter.toString() !== transporterId) {
       return res.status(403).json({ 
         success: false,
