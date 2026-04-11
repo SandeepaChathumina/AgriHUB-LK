@@ -458,14 +458,14 @@ const MyOrders = () => {
 
       {/* Request Delivery Modal */}
       {showDeliveryModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-black/60 to-black/40 p-4 backdrop-blur-sm">
-          <div className="rounded-3xl bg-gradient-to-br from-white via-slate-50 to-white p-8 shadow-2xl max-w-md w-full transform transition-all duration-300 animate-in fade-in zoom-in-95">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-linear-to-br from-black/60 to-black/40 p-4 backdrop-blur-sm">
+          <div className="rounded-3xl bg-linear-to-br from-white via-slate-50 to-white p-8 shadow-2xl max-w-md w-full transform transition-all duration-300 animate-in fade-in zoom-in-95">
             {/* Header */}
             <div className="mb-8 text-center">
-              <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-emerald-100 to-blue-100">
+              <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-linear-to-br from-emerald-100 to-blue-100">
                 <span className="text-3xl">📦</span>
               </div>
-              <h2 className="text-3xl font-black bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent mb-2">
+              <h2 className="text-3xl font-black bg-linear-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent mb-2">
                 Request Delivery
               </h2>
               <p className="text-sm leading-relaxed text-slate-500">
@@ -481,12 +481,12 @@ const MyOrders = () => {
                 className="group relative w-full rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
               >
                 {/* Background gradient */}
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute inset-0 bg-linear-to-br from-emerald-500 via-emerald-600 to-teal-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 
                 {/* Content */}
-                <div className="relative rounded-2xl border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 px-6 py-5 text-left group-hover:border-emerald-500 group-hover:from-emerald-500 group-hover:to-teal-500 transition-all duration-300">
+                <div className="relative rounded-2xl border-2 border-emerald-200 bg-linear-to-br from-emerald-50 to-teal-50 px-6 py-5 text-left group-hover:border-emerald-500 group-hover:from-emerald-500 group-hover:to-teal-500 transition-all duration-300">
                   <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 mt-1">
+                    <div className="shrink-0 mt-1">
                       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-lg group-hover:bg-white group-hover:text-emerald-600 transition-colors duration-300">
                         🚛
                       </div>
@@ -512,12 +512,12 @@ const MyOrders = () => {
                 className="group relative w-full rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
               >
                 {/* Background gradient */}
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute inset-0 bg-linear-to-br from-blue-500 via-blue-600 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 
                 {/* Content */}
-                <div className="relative rounded-2xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 px-6 py-5 text-left group-hover:border-blue-500 group-hover:from-blue-500 group-hover:to-indigo-500 transition-all duration-300">
+                <div className="relative rounded-2xl border-2 border-blue-200 bg-linear-to-br from-blue-50 to-indigo-50 px-6 py-5 text-left group-hover:border-blue-500 group-hover:from-blue-500 group-hover:to-indigo-500 transition-all duration-300">
                   <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 mt-1">
+                    <div className="shrink-0 mt-1">
                       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-lg group-hover:bg-white group-hover:text-blue-600 transition-colors duration-300">
                         🏢
                       </div>
