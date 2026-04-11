@@ -321,7 +321,7 @@ const AvailableVehicles = () => {
 
           {/* Order Summary */}
           {order && (
-            <div className="mb-6 rounded-2xl bg-gradient-to-r from-emerald-50 to-emerald-100 p-6 shadow-sm ring-1 ring-emerald-200">
+            <div className="mb-6 rounded-2xl bg-linear-to-br from-emerald-50 to-emerald-100 p-6 shadow-sm ring-1 ring-emerald-200">
               <h2 className="mb-3 text-lg font-semibold text-slate-900">Order Summary</h2>
               <div className="grid gap-3 text-sm md:grid-cols-4">
                 <div>
@@ -411,7 +411,7 @@ const AvailableVehicles = () => {
                       <div className="flex gap-4">
                         {/* Vehicle Image */}
                         <div 
-                          className="flex-shrink-0 cursor-pointer"
+                          className="shrink-0 cursor-pointer"
                           onClick={(e) => handleViewDetails(vehicle, e)}
                         >
                           {vehicle.images && vehicle.images.length > 0 ? (
