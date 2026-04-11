@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { toast } from 'react-hot-toast';
+import Swal from 'sweetalert2';
 import { MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import ProfileNav from '../../components/ProfileNav';
@@ -64,7 +64,11 @@ const CreateOrder = () => {
     }
 
     if (user?.role !== 'Distributor') {
-      toast.error('Only distributors can place orders');
+      Swal.fire({
+        icon: 'error',
+        title: 'Access Denied',
+        text: 'Only distributors can place orders',
+      });
       navigate('/products');
       return;
     }
@@ -84,7 +88,11 @@ const CreateOrder = () => {
       const data = await res.json();
       setProduct(data?.product || null);
     } catch (error) {
-      toast.error(error.message || 'Failed to fetch product');
+      Swal.fire({
+        icon: 'error',
+        title: 'Product Error',
+        text: error.message || 'Failed to fetch product',
+      });
     } finally {
       setLoadingProduct(false);
     }
@@ -150,7 +158,11 @@ const CreateOrder = () => {
         city: city || prev.city,
       }));
     } catch {
-      toast.error('Could not auto-fill address details for this location');
+      Swal.fire({
+        icon: 'error',
+        title: 'Address Error',
+        text: 'Could not auto-fill address details for this location',
+      });
     } finally {
       setResolvingAddress(false);
     }
@@ -163,7 +175,11 @@ const CreateOrder = () => {
 
   const handleUseCurrentLocation = () => {
     if (!navigator.geolocation) {
-      toast.error('Geolocation is not supported by your browser');
+      Swal.fire({
+        icon: 'error',
+        title: 'Geolocation Error',
+        text: 'Geolocation is not supported by your browser',
+      });
       return;
     }
 
@@ -174,11 +190,20 @@ const CreateOrder = () => {
         const lng = position.coords.longitude;
         setCoordinates(lat, lng);
         await fillAddressFromCoordinates(lat, lng);
-        toast.success('Current location selected');
+        Swal.fire({
+          icon: 'success',
+          title: 'Success',
+          text: 'Current location selected',
+          timer: 1500,
+        });
         setLocating(false);
       },
       () => {
-        toast.error('Unable to get your current location');
+        Swal.fire({
+          icon: 'error',
+          title: 'Location Error',
+          text: 'Unable to get your current location',
+        });
         setLocating(false);
       },
       {
@@ -213,7 +238,11 @@ const CreateOrder = () => {
 
     const validationError = validateForm();
     if (validationError) {
-      toast.error(validationError);
+      Swal.fire({
+        icon: 'error',
+        title: 'Validation Error',
+        text: validationError,
+      });
       return;
     }
 
@@ -233,7 +262,12 @@ const CreateOrder = () => {
       };
 
       const data = await createOrder(token, payload);
-      toast.success(data?.message || 'Order created');
+      Swal.fire({
+        icon: 'success',
+        title: 'Order Initiated',
+        text: data?.message || 'Order initiated successfully',
+        timer: 2000,
+      });
 
       if (data?.checkoutUrl) {
         window.location.href = data.checkoutUrl;
@@ -242,7 +276,11 @@ const CreateOrder = () => {
 
       navigate('/orders');
     } catch (error) {
-      toast.error(error.message || 'Failed to place order');
+      Swal.fire({
+        icon: 'error',
+        title: 'Order Error',
+        text: error.message || 'Failed to place order',
+      });
     } finally {
       setSubmitting(false);
     }
