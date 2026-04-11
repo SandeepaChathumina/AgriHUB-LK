@@ -235,15 +235,17 @@ export const createReview = async (req, res) => {
       criteria: criteria || {},
       images: images || [],
       isVerifiedPurchase: true,
-      moderationStatus: 'Pending',
-      isPublished: false
+      moderationStatus: 'Approved',
+      isPublished: true
     });
     
     await review.save();
     
+    await updateAggregatedRatings(targetType, targetId);
+    
     res.status(201).json({
       success: true,
-      message: 'Review submitted successfully and pending moderation',
+      message: 'Review submitted successfully',
       review
     });
     
