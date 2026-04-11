@@ -5,7 +5,11 @@
   "type": "module",
   "scripts": {
     "start": "nodemon index.js",
-    "test": "jest"
+    "coverage": "jest --coverage",
+    "test": "jest --verbose --runInBand",
+    "test:unit": "jest controllers/__tests__ --verbose",
+    "test:int": "jest routes/__tests__ --verbose --runInBand",
+    "test:all": "jest --verbose --runInBand --coverage"
   },
   "keywords": [],
   "author": "",
