@@ -52,7 +52,7 @@ const Vehicles = () => {
   const fetchVehicles = async () => {
     setLoading(true);
     try {
-      const profileRes = await fetch('http://localhost:3000/api/users/profile', {
+      const profileRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users/profile`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const profileData = await profileRes.json();
@@ -70,7 +70,7 @@ const Vehicles = () => {
         ...(filters.category && filters.category !== 'All' && { category: filters.category })
       });
 
-      const res = await fetch(`http://localhost:3000/api/vehicles?${params}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/vehicles?${params}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -138,13 +138,13 @@ const Vehicles = () => {
     if (!result.isConfirmed) return;
 
     try {
-      const profileRes = await fetch('http://localhost:3000/api/users/profile', {
+      const profileRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users/profile`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const profileData = await profileRes.json();
       const transporterId = profileData.user?._id;
 
-      const res = await fetch(`http://localhost:3000/api/vehicles/${vehicleId}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/vehicles/${vehicleId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -194,13 +194,13 @@ const Vehicles = () => {
     if (!result.isConfirmed) return;
 
     try {
-      const profileRes = await fetch('http://localhost:3000/api/users/profile', {
+      const profileRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users/profile`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const profileData = await profileRes.json();
       const transporterId = profileData.user?._id;
 
-      const res = await fetch(`http://localhost:3000/api/vehicles/${vehicleId}/status`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/vehicles/${vehicleId}/status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

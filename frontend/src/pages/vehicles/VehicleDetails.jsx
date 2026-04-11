@@ -35,7 +35,7 @@ const VehicleDetails = () => {
   const fetchVehicleDetails = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:3000/api/vehicles/${id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/vehicles/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -84,13 +84,13 @@ const VehicleDetails = () => {
 
     setUpdatingStatus(true);
     try {
-      const profileRes = await fetch('http://localhost:3000/api/users/profile', {
+      const profileRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users/profile`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const profileData = await profileRes.json();
       const transporterId = profileData.user?._id;
 
-      const res = await fetch(`http://localhost:3000/api/vehicles/${id}/status`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/vehicles/${id}/status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -140,13 +140,13 @@ const VehicleDetails = () => {
     if (!result.isConfirmed) return;
 
     try {
-      const profileRes = await fetch('http://localhost:3000/api/users/profile', {
+      const profileRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users/profile`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const profileData = await profileRes.json();
       const transporterId = profileData.user?._id;
 
-      const res = await fetch(`http://localhost:3000/api/vehicles/${id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/vehicles/${id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
