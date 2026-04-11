@@ -467,11 +467,7 @@ const AvailableVehicles = () => {
                               <span className="text-slate-500">Transporter:</span>{' '}
                               <span className="font-semibold text-slate-900">{vehicle.transporter?.businessName || vehicle.transporter?.companyName || 'N/A'}</span>
                             </div>
-                            <div className="col-span-2 flex items-center">
-                              <span className="text-slate-500 mr-2">Rating:</span>{' '}
-                              {renderStars(vehicle.transporter?.rating?.averageRating || 0)}
-                              <span className="text-xs text-slate-500 ml-1">({vehicle.transporter?.rating?.totalReviews || 0} reviews)</span>
-                            </div>
+
                             <div className="col-span-2">
                               <span className="text-slate-500">📍 Transporter Location:</span>{' '}
                               <span className="font-semibold text-slate-900">
