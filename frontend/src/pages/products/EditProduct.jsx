@@ -366,7 +366,7 @@ const EditProduct = () => {
                     name="quantity"
                     value={formData.quantity}
                     onChange={handleChange}
-                    step="0.01"
+                    step="1"
                     className="w-full rounded-2xl border-0 bg-slate-50/50 px-4 py-4 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all text-emerald-950 font-bold"
                     required
                   />
@@ -401,7 +401,7 @@ const EditProduct = () => {
                       name="price"
                       value={formData.price}
                       onChange={handleChange}
-                      step="0.01"
+                      step="1"
                       min="0"
                       className="w-full rounded-2xl border-0 bg-slate-50/50 pl-14 pr-4 py-4 shadow-inner ring-1 ring-emerald-100 focus:bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none transition-all text-emerald-950 font-bold"
                       required
