@@ -876,7 +876,7 @@ export const getAvailableVehicles = async (req, res) => {
     
     // Fetch vehicles with transporter details
     let vehicles = await Vehicle.find(filter)
-      .populate('transporter', 'businessName companyName phone email location')
+      .populate('transporter', 'businessName companyName phone email location logo')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
