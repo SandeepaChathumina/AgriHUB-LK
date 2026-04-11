@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // Get all trips for logged-in transporter
 export const fetchMyTrips = async (token, page = 1, limit = 10, status = '') => {

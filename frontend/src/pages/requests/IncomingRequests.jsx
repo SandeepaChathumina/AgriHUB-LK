@@ -4,7 +4,7 @@ import Swal from 'sweetalert2';
 import ProfileNav from '../../components/ProfileNav';
 import { useAuth } from '../../context/AuthContext';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const IncomingRequests = () => {
   const { token, user } = useAuth();

@@ -48,7 +48,7 @@ const ProfilePage = () => {
     const fetchProfile = async () => {
       setLoading(true)
       try {
-        const res = await fetch('http://localhost:3000/api/users/profile', {
+        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users/profile`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -169,7 +169,7 @@ const ProfilePage = () => {
         }
       }
 
-      const res = await fetch('http://localhost:3000/api/users/profile', {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -205,7 +205,7 @@ const ProfilePage = () => {
 
     setRemoving(true)
     try {
-      const res = await fetch('http://localhost:3000/api/users/profile', {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users/profile`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,

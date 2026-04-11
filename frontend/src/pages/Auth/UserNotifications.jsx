@@ -41,7 +41,7 @@ const UserNotifications = () => {
   const loadNotifications = async () => {
     setLoading(true)
     try {
-      const res = await authedFetch('http://localhost:3000/api/notifications/my-notifications')
+      const res = await authedFetch(`${import.meta.env.VITE_API_BASE_URL}/api/notifications/my-notifications`)
       const body = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(body?.message || 'Failed to load notifications')
       setNotifications(body.notifications || [])
@@ -60,7 +60,7 @@ const UserNotifications = () => {
   const markAsRead = async (id) => {
     setMarking(true)
     try {
-      const res = await authedFetch(`http://localhost:3000/api/notifications/${id}/read`, { method: 'PUT' })
+      const res = await authedFetch(`${import.meta.env.VITE_API_BASE_URL}/api/notifications/${id}/read`, { method: 'PUT' })
       const body = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(body?.message || 'Failed to mark as read')
       setNotifications((prev) => prev.map((n) => (n._id === id ? { ...n, isRead: true } : n)))

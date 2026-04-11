@@ -26,16 +26,19 @@ const Homepage = () => {
 
   useEffect(() => {
     const fetchLogos = async () => {
+      // Access the Vite environment variable
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; 
+
       try {
         const distRes = await fetch(
-          "http://localhost:3000/api/users/distributors/logos",
+          `${API_BASE_URL}/api/users/distributors/logos`
         );
         if (distRes.ok) {
           const distData = await distRes.json();
           if (distData.success) setDistributors(distData.data);
         }
         const transRes = await fetch(
-          "http://localhost:3000/api/users/transporters/logos",
+          `${API_BASE_URL}/api/users/transporters/logos`
         );
         if (transRes.ok) {
           const transData = await transRes.json();
@@ -171,7 +174,7 @@ const Homepage = () => {
     setInputValue("");
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:3000/api/chat/ask", {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/chat/ask`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question }),

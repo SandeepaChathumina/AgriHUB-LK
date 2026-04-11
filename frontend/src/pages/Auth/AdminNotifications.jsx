@@ -49,7 +49,7 @@ const AdminNotifications = () => {
       const params = new URLSearchParams()
       if (filters.role) params.set('role', filters.role)
       if (filters.isRead) params.set('isRead', filters.isRead)
-      const res = await authedFetch(`http://localhost:3000/api/notifications/admin/manage?${params.toString()}`)
+      const res = await authedFetch(`${import.meta.env.VITE_API_BASE_URL}/api/notifications/admin/manage?${params.toString()}`)
       const body = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(body?.message || 'Failed to load notifications')
       setNotifications(body.notifications || [])
@@ -66,7 +66,7 @@ const AdminNotifications = () => {
       const params = new URLSearchParams()
       params.set('role', form.role || 'All')
       params.set('status', form.verificationStatus || 'All')
-      const res = await authedFetch(`http://localhost:3000/api/notifications/admin/users?${params.toString()}`)
+      const res = await authedFetch(`${import.meta.env.VITE_API_BASE_URL}/api/notifications/admin/users?${params.toString()}`)
       const body = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(body?.message || 'Failed to load users')
       setUsers(body.users || [])
@@ -99,7 +99,7 @@ const AdminNotifications = () => {
         title: form.title,
         message: form.message,
       }
-      const res = await authedFetch('http://localhost:3000/api/notifications/admin/send', {
+      const res = await authedFetch(`${import.meta.env.VITE_API_BASE_URL}/api/notifications/admin/send`, {
         method: 'POST',
         body: JSON.stringify(payload),
       })
@@ -116,7 +116,7 @@ const AdminNotifications = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this notification?')) return
     try {
-      const res = await authedFetch(`http://localhost:3000/api/notifications/admin/manage/${id}`, { method: 'DELETE' })
+      const res = await authedFetch(`${import.meta.env.VITE_API_BASE_URL}/api/notifications/admin/manage/${id}`, { method: 'DELETE' })
       const body = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(body?.message || 'Failed to delete')
       toast.success(body?.message || 'Deleted')
@@ -133,7 +133,7 @@ const AdminNotifications = () => {
 
   const handleEditSave = async () => {
     try {
-      const res = await authedFetch(`http://localhost:3000/api/notifications/admin/manage/${editId}`, {
+      const res = await authedFetch(`${import.meta.env.VITE_API_BASE_URL}/api/notifications/admin/manage/${editId}`, {
         method: 'PUT',
         body: JSON.stringify(editDraft),
       })

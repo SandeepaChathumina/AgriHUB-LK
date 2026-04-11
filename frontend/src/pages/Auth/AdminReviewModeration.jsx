@@ -45,7 +45,7 @@ const AdminReviewModeration = () => {
         ...(targetTypeFilter !== 'All' && { targetType: targetTypeFilter })
       })
 
-      const res = await fetch(`http://localhost:3000/api/reviews/admin/moderation?${params}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/reviews/admin/moderation?${params}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       const data = await res.json()
@@ -68,7 +68,7 @@ const AdminReviewModeration = () => {
   const handleModerate = async (reviewId, status) => {
     setModeratingId(reviewId)
     try {
-      const res = await fetch(`http://localhost:3000/api/reviews/admin/${reviewId}/moderate`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/reviews/admin/${reviewId}/moderate`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -93,7 +93,7 @@ const AdminReviewModeration = () => {
     if (!window.confirm('Are you sure you want to delete this review? This action cannot be undone.')) return
     
     try {
-      const res = await fetch(`http://localhost:3000/api/reviews/admin/${reviewId}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/reviews/admin/${reviewId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       })

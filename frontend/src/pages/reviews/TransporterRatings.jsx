@@ -46,7 +46,7 @@ const TransporterRatings = () => {
         ...(ratingFilter && { rating: ratingFilter })
       });
 
-      const res = await fetch(`http://localhost:3000/api/reviews/target/Transporter/${user?.id}?${params}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/reviews/target/Transporter/${user?.id}?${params}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -68,7 +68,7 @@ const TransporterRatings = () => {
 
   const fetchStats = async () => {
     try {
-      const res = await fetch('http://localhost:3000/api/reviews/stats', {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/reviews/stats`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -87,7 +87,7 @@ const TransporterRatings = () => {
     }
 
     try {
-      const res = await fetch(`http://localhost:3000/api/reviews/${reviewId}/respond`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/reviews/${reviewId}/respond`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -110,7 +110,7 @@ const TransporterRatings = () => {
 
   const markHelpful = async (reviewId) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/reviews/${reviewId}/helpful`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/reviews/${reviewId}/helpful`, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${token}` }
       });

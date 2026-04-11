@@ -36,7 +36,7 @@ const PendingReviews = () => {
   const fetchPendingReviews = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:3000/api/reviews/pending', {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/reviews/pending`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -93,7 +93,7 @@ const PendingReviews = () => {
         criteria: reviewForm.criteria
       };
 
-      const res = await fetch('http://localhost:3000/api/reviews', {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/reviews`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

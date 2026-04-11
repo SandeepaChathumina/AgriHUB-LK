@@ -41,7 +41,7 @@ const ProductReviews = () => {
 
       console.log('Fetching reviews for:', targetType, targetId);
       
-      const res = await fetch(`http://localhost:3000/api/reviews/target/${targetType}/${targetId}?${params}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/reviews/target/${targetType}/${targetId}?${params}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
 
@@ -73,7 +73,7 @@ const ProductReviews = () => {
     }
 
     try {
-      const res = await fetch(`http://localhost:3000/api/reviews/${reviewId}/respond`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/reviews/${reviewId}/respond`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -101,7 +101,7 @@ const ProductReviews = () => {
     }
 
     try {
-      const res = await fetch(`http://localhost:3000/api/reviews/${reviewId}/helpful`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/reviews/${reviewId}/helpful`, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${token}` }
       });

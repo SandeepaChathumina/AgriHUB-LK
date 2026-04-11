@@ -335,7 +335,7 @@ function AdminDashboard() {
     (async () => {
       setLoadingProfile(true);
       try {
-        const r = await fetch("http://localhost:3000/api/users/profile", {
+        const r = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!r.ok) throw new Error((await r.json().catch(() => ({}))).message);
@@ -351,10 +351,10 @@ function AdminDashboard() {
     try {
       const h = { Authorization: `Bearer ${token}` };
       const [uR, iR, pR, rR] = await Promise.all([
-        fetch("http://localhost:3000/api/auth/users", { headers: h }),
-        fetch("http://localhost:3000/api/admin/impact-stats", { headers: h }),
-        fetch("http://localhost:3000/api/products/stats/overview", { headers: h }),
-        fetch("http://localhost:3000/api/reviews/admin/moderation?status=Pending&limit=1", { headers: h }),
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/users`, { headers: h }),
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/admin/impact-stats`, { headers: h }),
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/products/stats/overview`, { headers: h }),
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/reviews/admin/moderation?status=Pending&limit=1`, { headers: h }),
       ]);
       const [uD, iD, pD, rD] = await Promise.all([uR, iR, pR, rR].map(r => r.json().catch(() => ({}))));
       const imp = iR.ok ? iD?.stats || {} : {};
@@ -382,7 +382,7 @@ function AdminDashboard() {
     if (!email) { toast.error("Email not available"); return; }
     setRequestingOtp(true);
     try {
-      const r = await fetch("http://localhost:3000/api/auth/request-otp", {
+      const r = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/request-otp`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
