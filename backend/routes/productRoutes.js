@@ -10,9 +10,11 @@ import {
   getProductsByDistrict,
   findProductsNearby,
   getProductsByFarmer,
-  getProductStats
+  getProductStats,
+  uploadProductImages  // Make sure this is imported
 } from '../controllers/productController.js';
 import { protect, authorizeRoles } from '../middleware/authMiddleware.js';
+import upload from '../middleware/upload.js';
 
 const router = express.Router();
 
@@ -20,19 +22,24 @@ const router = express.Router();
 router.get('/', getAllProducts);
 router.get('/nearby/search', findProductsNearby);
 router.get('/location/:district', getProductsByDistrict);
-router.get('/farmer/:farmerId', getProductsByFarmer);
 router.get('/:id', getProductById);
 
-// Protected routes - Admin only
-router.get('/stats/overview', protect, authorizeRoles('Admin', 'SuperAdmin'), getProductStats);
+// Farmer specific routes
+router.get('/farmer/my-products', protect, authorizeRoles('Farmer'), getMyProducts);
+router.get('/farmer/:farmerId', getProductsByFarmer);
+
+// Image upload route - THIS MUST BE PRESENT
+router.post('/upload-images', protect, authorizeRoles('Farmer'), upload.array('images', 5), uploadProductImages);
 
 // Protected routes - Farmers only
 router.post('/', protect, authorizeRoles('Farmer'), createProduct);
-router.get('/farmer/my-products', protect, authorizeRoles('Farmer'), getMyProducts);
 router.put('/:id', protect, authorizeRoles('Farmer'), updateProduct);
 router.patch('/:id/availability', protect, authorizeRoles('Farmer'), toggleAvailability);
 
 // Protected routes - Owner or Admin
 router.delete('/:id', protect, deleteProduct);
+
+// Stats route
+router.get('/stats/overview', protect, authorizeRoles('Admin', 'SuperAdmin'), getProductStats);
 
 export default router;

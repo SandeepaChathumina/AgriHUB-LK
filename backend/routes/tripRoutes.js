@@ -7,38 +7,41 @@ import {
   updateTripStatus,
   changeVehicle,
   cancelTrip,
-  getTripStats
+  getTripStats,
+  requestTrip,
+  getOrderForTrip,
+  requestOrderDelivery,
+  getIncomingRequests,
+  acceptRequest,
+  rejectRequest
 } from '../controllers/tripController.js';
 import { protect, authorizeRoles } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// All routes require authentication and Transporter role
+// All routes require authentication
 router.use(protect);
-router.use(authorizeRoles('Transporter', 'Admin'));
 
-// Get available orders for transport
-router.get('/available-orders', getAvailableOrders);
+// Specific routes first (before generic :id route)
+router.get('/available-orders', authorizeRoles('Transporter', 'Admin'), getAvailableOrders);
+router.get('/order/:orderId', authorizeRoles('Transporter', 'Admin'), getOrderForTrip);
+router.get('/my-trips', authorizeRoles('Transporter', 'Admin'), getMyTrips);
+router.get('/stats', authorizeRoles('Transporter', 'Admin'), getTripStats);
+router.get('/incoming-requests', authorizeRoles('Transporter', 'Distributor', 'Admin'), getIncomingRequests);
 
-// Get my trips
-router.get('/my-trips', getMyTrips);
+// Request routes
+router.post('/request', authorizeRoles('Distributor', 'Admin'), requestTrip);
+router.post('/request-order', authorizeRoles('Transporter', 'Admin'), requestOrderDelivery);
+router.patch('/requests/:id/accept', authorizeRoles('Transporter', 'Distributor', 'Admin'), acceptRequest);
+router.patch('/requests/:id/reject', authorizeRoles('Transporter', 'Distributor', 'Admin'), rejectRequest);
 
-// Get trip statistics
-router.get('/stats', getTripStats);
+// Trip creation
+router.post('/', authorizeRoles('Transporter', 'Admin'), createTrip);
 
-// Create new trip
-router.post('/', createTrip);
-
-// Get single trip
-router.get('/:id', getTripById);
-
-// Update trip status
-router.patch('/:id/status', updateTripStatus);
-
-// Change vehicle for trip
-router.patch('/:id/vehicle', changeVehicle);
-
-// Cancel trip
-router.delete('/:id', cancelTrip);
+// General trip routes (most generic - last)
+router.get('/:id', authorizeRoles('Transporter', 'Distributor', 'Admin'), getTripById);
+router.patch('/:id/status', authorizeRoles('Transporter', 'Admin'), updateTripStatus);
+router.patch('/:id/vehicle', authorizeRoles('Transporter', 'Admin'), changeVehicle);
+router.delete('/:id', authorizeRoles('Transporter', 'Admin'), cancelTrip);
 
 export default router;

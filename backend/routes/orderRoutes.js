@@ -1,27 +1,36 @@
-import express from 'express';
-
-import { 
-  placeOrder, 
-  getMyOrders, 
-  updateOrder, 
+import express from "express";
+import {
+  placeOrder,
+  getMyOrders,
+  updateOrder,
   deleteOrder,
-  verifyPayment
-
-} from '../controllers/orderController.js'; 
-
-import { protect, authorizeRoles } from '../middleware/authMiddleware.js';
+  verifyPayment,
+  cancelPayment,
+  getOrderById,
+  retryPayment,
+  getFarmerOrders,
+  acceptOrderByFarmer,
+  rejectOrderByFarmer,
+} from "../controllers/orderController.js";
+import { protect, authorizeRoles } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// 1. Public Route (No 'protect' middleware)
-router.get('/success', verifyPayment);
+// Public routes
+router.get("/success", verifyPayment);
+router.get("/cancel", cancelPayment);
 
-// 2. Protected Routes
+// Protected routes
 router.use(protect);
 
-router.post('/', authorizeRoles('Distributor'), placeOrder);
-router.get('/my-orders', authorizeRoles('Distributor'), getMyOrders);
-router.put('/:id', updateOrder);
-router.delete('/:id', deleteOrder);
+router.get("/my-orders", authorizeRoles("Distributor"), getMyOrders);
+router.get("/farmer-orders", authorizeRoles("Farmer"), getFarmerOrders);
+router.post("/", authorizeRoles("Distributor"), placeOrder);
+router.post("/:id/retry-payment", authorizeRoles("Distributor"), retryPayment);
+router.patch("/:id/farmer-accept", authorizeRoles("Farmer"), acceptOrderByFarmer);
+router.patch("/:id/farmer-reject", authorizeRoles("Farmer"), rejectOrderByFarmer);
+router.get("/:id", authorizeRoles("Distributor", "Admin"), getOrderById);
+router.put("/:id", authorizeRoles("Distributor"), updateOrder);
+router.delete("/:id", authorizeRoles("Distributor"), deleteOrder);
 
 export default router;

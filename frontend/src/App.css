@@ -1,0 +1,202 @@
+/* App.css - Alternative version if CDN imports don't work */
+@import "tailwindcss";
+
+/* Fix Leaflet marker icons */
+.leaflet-default-icon-path {
+  background-image: url(https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png);
+}
+
+/* Leaflet container styling */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* Hide the itinerary panel */
+.leaflet-routing-container {
+  display: none;
+}
+
+/* Ensure map tiles load properly */
+.leaflet-tile-pane {
+  z-index: 1;
+}
+
+/* Ensure controls are clickable */
+.leaflet-control-container {
+  z-index: 2;
+}
+
+/* Fix marker popup z-index */
+.leaflet-popup {
+  z-index: 3;
+}
+
+/* Custom marker styles */
+.custom-marker {
+  background-color: #10b981;
+  border: 2px solid white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* Loading state for map */
+.leaflet-map-loading {
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}
+
+/* Responsive map container */
+@media (max-width: 768px) {
+  .leaflet-container {
+    min-height: 300px;
+  }
+}
+
+/* Animation for map markers */
+@keyframes markerPulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Custom draggable marker style */
+.leaflet-marker-dragging {
+  cursor: move;
+}
+
+/* Ensure map is visible on all browsers */
+.leaflet-map-pane {
+  z-index: 1;
+}
+
+/* Routing instructions styling */
+.leaflet-routing-alt {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* Map container styling */
+.map-container {
+  border-radius: 0.75rem;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Admin dashboard system snapshot animation */
+@keyframes adminLivePulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.45);
+  }
+  70% {
+    transform: scale(1.12);
+    box-shadow: 0 0 0 9px rgba(255, 255, 255, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+  }
+}
+
+@keyframes adminMetricEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes adminFlow {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(240%);
+  }
+}
+
+.admin-stats-card {
+  isolation: isolate;
+}
+
+.admin-stats-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 14% 18%, rgba(255, 255, 255, 0.18), transparent 42%);
+  pointer-events: none;
+}
+
+.admin-metric-grid {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-metric-card {
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 0.9rem;
+  padding: 0.7rem 0.8rem;
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  animation: adminMetricEnter 0.45s ease forwards;
+  animation-delay: var(--delay, 0s);
+}
+
+.admin-progress-track {
+  position: relative;
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.admin-progress-fill {
+  position: relative;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.7), #ffffff);
+  transition: width 0.6s ease;
+}
+
+.admin-progress-fill::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 36px;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0));
+  animation: adminFlow 2.8s linear infinite;
+}
+
+.admin-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  display: inline-block;
+  animation: adminLivePulse 1.8s ease-out infinite;
+}
