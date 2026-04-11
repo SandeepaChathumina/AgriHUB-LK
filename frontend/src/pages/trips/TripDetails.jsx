@@ -8,12 +8,14 @@ import {
   updateTripStatus,
   changeTripVehicle,
   cancelTrip,
-  fetchMyVehicles
+  fetchMyVehicles,
+  updateVehicleStatus
 } from '../../api/trips';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-routing-machine';
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
+import { getRoutingControlBase } from '../../lib/leafletRouting';
 
 // Fix Leaflet marker icon issue
 delete L.Icon.Default.prototype._getIconUrl;
@@ -110,22 +112,11 @@ const TripDetails = () => {
     
     // Add routing control to show the route
     routingControlRef.current = L.Routing.control({
+      ...getRoutingControlBase(),
       waypoints: [
         L.latLng(pickupLocation.lat, pickupLocation.lng),
-        L.latLng(dropoffLocation.lat, dropoffLocation.lng)
+        L.latLng(dropoffLocation.lat, dropoffLocation.lng),
       ],
-      routeWhileDragging: false,
-      showAlternatives: false,
-      fitSelectedRoutes: true,
-      show: false, // Hide the default itinerary panel
-      lineOptions: {
-        styles: [{ color: '#10b981', weight: 4, opacity: 0.7 }]
-      },
-      // Use OpenStreetMap's routing service (free)
-      router: L.Routing.osrmv1({
-        serviceUrl: 'https://router.project-osrm.org/route/v1',
-        profile: 'driving'
-      })
     }).addTo(map);
     
     // Listen for route calculation to get distance and duration
@@ -251,6 +242,16 @@ const TripDetails = () => {
       Cancelled: 'cancel'
     };
 
+    // Map display status to API status
+    const statusMap = {
+      'Accepted': 'Confirmed',
+      'In Progress': 'In Progress',
+      'Completed': 'Completed',
+      'Cancelled': 'Cancelled'
+    };
+
+    const apiStatus = statusMap[newStatus] || newStatus;
+
     let reason = '';
     if (newStatus === 'Cancelled') {
       const { value } = await Swal.fire({
@@ -285,8 +286,18 @@ const TripDetails = () => {
       if (newStatus === 'Cancelled') {
         await cancelTrip(token, id, reason);
       } else {
-        await updateTripStatus(token, id, newStatus);
+        await updateTripStatus(token, id, apiStatus, reason);
       }
+
+      const vehicleId = trip?.vehicle?._id ?? trip?.vehicle;
+      if (vehicleId) {
+        if (apiStatus === 'In Progress') {
+          await updateVehicleStatus(token, vehicleId, 'On Delivery');
+        } else if (apiStatus === 'Completed') {
+          await updateVehicleStatus(token, vehicleId, 'Available');
+        }
+      }
+
       Swal.fire({
         icon: 'success',
         title: 'Updated!',
@@ -311,6 +322,7 @@ const TripDetails = () => {
     switch (status) {
       case 'Pending': return 'bg-amber-100 text-amber-700';
       case 'Accepted': return 'bg-blue-100 text-blue-700';
+      case 'Confirmed': return 'bg-sky-100 text-sky-800';
       case 'In Progress': return 'bg-purple-100 text-purple-700';
       case 'Completed': return 'bg-green-100 text-green-700';
       case 'Cancelled': return 'bg-red-100 text-red-700';
@@ -330,7 +342,8 @@ const TripDetails = () => {
 
   const canChangeVehicle = trip?.tripStatus === 'Pending' || trip?.tripStatus === 'Accepted';
   const canAccept = trip?.tripStatus === 'Pending';
-  const canStart = trip?.tripStatus === 'Accepted';
+  const canStart =
+    trip?.tripStatus === 'Accepted' || trip?.tripStatus === 'Confirmed';
   const canComplete = trip?.tripStatus === 'In Progress';
   const canCancel = trip?.tripStatus === 'Pending' || trip?.tripStatus === 'Accepted';
 

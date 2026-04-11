@@ -8,6 +8,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-routing-machine';
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
+import { getRoutingControlBase } from '../../lib/leafletRouting';
 
 // Fix Leaflet marker icon issue
 delete L.Icon.Default.prototype._getIconUrl;
@@ -179,22 +180,11 @@ const CreateTripPage = () => {
     
     // Add routing control to show the route [citation:7]
     routingControlRef.current = L.Routing.control({
+      ...getRoutingControlBase(),
       waypoints: [
         L.latLng(pickupLocation.lat, pickupLocation.lng),
-        L.latLng(dropoffLocation.lat, dropoffLocation.lng)
+        L.latLng(dropoffLocation.lat, dropoffLocation.lng),
       ],
-      routeWhileDragging: false,
-      showAlternatives: false,
-      fitSelectedRoutes: true,
-      show: false, // Hide the default itinerary panel
-      lineOptions: {
-        styles: [{ color: '#10b981', weight: 4, opacity: 0.7 }]
-      },
-      // Use OpenStreetMap's routing service (free)
-      router: L.Routing.osrmv1({
-        serviceUrl: 'https://router.project-osrm.org/route/v1',
-        profile: 'driving'
-      })
     }).addTo(map);
     
     // Listen for route calculation to get distance and duration

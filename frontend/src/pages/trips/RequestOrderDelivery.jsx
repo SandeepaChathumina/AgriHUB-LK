@@ -7,6 +7,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-routing-machine';
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
+import { getRoutingControlBase } from '../../lib/leafletRouting';
 
 // Fix Leaflet marker icon issue
 delete L.Icon.Default.prototype._getIconUrl;
@@ -109,15 +110,11 @@ const RequestOrderDelivery = () => {
       }
 
       routingControlRef.current = L.Routing.control({
+        ...getRoutingControlBase(),
         waypoints: [
           L.latLng(pickupLocation.lat, pickupLocation.lng),
-          L.latLng(dropoffLocation.lat, dropoffLocation.lng)
+          L.latLng(dropoffLocation.lat, dropoffLocation.lng),
         ],
-        routeWhileDragging: false,
-        show: false,
-        lineOptions: {
-          styles: [{ color: '#10b981', opacity: 0.7, weight: 4 }]
-        }
       }).addTo(map);
     } catch (error) {
       console.error('Map initialization error:', error);

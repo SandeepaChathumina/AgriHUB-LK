@@ -654,8 +654,10 @@ export const cancelTrip = async (req, res) => {
 // @route   GET /api/trips/stats
 export const getTripStats = async (req, res) => {
   try {
+    const transporterId = req.user._id;
+
     const stats = await Trip.aggregate([
-      { $match: { transporter: req.user._id } },
+      { $match: { transporter: transporterId } },
       {
         $group: {
           _id: "$tripStatus",
@@ -665,15 +667,69 @@ export const getTripStats = async (req, res) => {
       },
     ]);
 
-    const totalTrips = await Trip.countDocuments({ transporter: req.user._id });
+    const totalTrips = await Trip.countDocuments({ transporter: transporterId });
     const completedTrips = await Trip.countDocuments({
-      transporter: req.user._id,
+      transporter: transporterId,
       tripStatus: "Completed",
     });
     const cancelledTrips = await Trip.countDocuments({
-      transporter: req.user._id,
+      transporter: transporterId,
       tripStatus: "Cancelled",
     });
+    const activeTrips = await Trip.countDocuments({
+      transporter: transporterId,
+      tripStatus: {
+        $in: ["Pending", "Accepted", "Confirmed", "In Progress"],
+      },
+    });
+
+    const onTimeAgg = await Trip.aggregate([
+      {
+        $match: {
+          transporter: transporterId,
+          tripStatus: "Completed",
+          "schedule.actualDelivery": { $exists: true, $ne: null },
+          "schedule.estimatedDelivery": { $exists: true, $ne: null },
+        },
+      },
+      {
+        $project: {
+          onTime: {
+            $lte: ["$schedule.actualDelivery", "$schedule.estimatedDelivery"],
+          },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+          onTimeCount: { $sum: { $cond: ["$onTime", 1, 0] } },
+        },
+      },
+    ]);
+
+    const onTimeRow = onTimeAgg[0];
+    const onTimeSampleSize = onTimeRow?.total || 0;
+    const onTimeDeliveryRate =
+      onTimeSampleSize > 0
+        ? ((onTimeRow.onTimeCount / onTimeSampleSize) * 100).toFixed(1)
+        : null;
+
+    const revenueAgg = await Trip.aggregate([
+      {
+        $match: {
+          transporter: transporterId,
+          tripStatus: "Completed",
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: "$costs.totalCost" },
+        },
+      },
+    ]);
+    const revenueCompleted = revenueAgg[0]?.totalRevenue || 0;
 
     res.status(200).json({
       success: true,
@@ -682,9 +738,13 @@ export const getTripStats = async (req, res) => {
         totalTrips,
         completedTrips,
         cancelledTrips,
+        activeTrips,
         completionRate: totalTrips
-          ? ((completedTrips / totalTrips) * 100).toFixed(2)
-          : 0,
+          ? ((completedTrips / totalTrips) * 100).toFixed(1)
+          : "0",
+        onTimeDeliveryRate,
+        onTimeSampleSize,
+        revenueCompleted,
       },
     });
   } catch (error) {
