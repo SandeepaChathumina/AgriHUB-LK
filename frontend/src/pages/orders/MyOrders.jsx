@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { toast } from "react-hot-toast";
+import Swal from "sweetalert2";
 import ProfileNav from "../../components/ProfileNav";
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -37,7 +37,11 @@ const MyOrders = () => {
     }
 
     if (user?.role !== "Distributor") {
-      toast.error("Only distributors can view orders");
+      Swal.fire({
+        icon: "error",
+        title: "Access Denied",
+        text: "Only distributors can view orders",
+      });
       navigate("/dashboard");
       return;
     }
@@ -49,28 +53,38 @@ const MyOrders = () => {
     const payment = searchParams.get("payment");
     if (!payment || toastShownRef.current) return;
 
-    const orderId = searchParams.get("orderId");
+    const showPaymentAlert = async () => {
+      if (payment === "success") {
+        await Swal.fire({
+          icon: "success",
+          title: "Payment Successful",
+          text: "Your payment has been processed successfully",
+        });
+      } else if (payment === "failed") {
+        await Swal.fire({
+          icon: "error",
+          title: "Payment Failed",
+          text: "Payment was not completed. Please try again.",
+        });
+      } else if (payment === "cancelled") {
+        await Swal.fire({
+          icon: "warning",
+          title: "Payment Cancelled",
+          text: "Your payment was cancelled. You can retry anytime.",
+        });
+      } else {
+        await Swal.fire({
+          icon: "error",
+          title: "Payment Error",
+          text: "Payment verification failed.",
+        });
+      }
 
-    if (payment === "success") {
-      toast.success(
-        orderId
-          ? `Payment successful. Order ID: ${orderId}`
-          : "Payment successful",
-      );
-    } else if (payment === "failed") {
-      toast.error("Payment was not completed");
-    } else if (payment === "cancelled") {
-      toast("Payment was cancelled");
-    } else {
-      toast.error("Payment verification failed");
-    }
-
-    toastShownRef.current = true;
-
-    // Remove query params AFTER showing toast
-    setTimeout(() => {
+      toastShownRef.current = true;
       setSearchParams({}, { replace: true });
-    }, 0);
+    };
+
+    void showPaymentAlert();
   }, [searchParams]);
 
   const loadOrders = async () => {
@@ -88,7 +102,11 @@ const MyOrders = () => {
         pages: data?.pages || 0,
       }));
     } catch (error) {
-      toast.error(error.message || "Failed to load orders");
+      Swal.fire({
+        icon: "error",
+        title: "Failed to Load Orders",
+        text: error.message || "Failed to load orders",
+      });
     } finally {
       setLoading(false);
     }
@@ -110,7 +128,11 @@ const MyOrders = () => {
     const quantity = Number(editForm.quantity);
 
     if (!Number.isFinite(quantity) || quantity < 1) {
-      toast.error("Quantity must be at least 1");
+      Swal.fire({
+        icon: "error",
+        title: "Invalid Quantity",
+        text: "Quantity must be at least 1",
+      });
       return;
     }
 
@@ -128,10 +150,19 @@ const MyOrders = () => {
         ),
       );
 
-      toast.success("Order updated successfully");
+      Swal.fire({
+        icon: "success",
+        title: "Order Updated",
+        text: "Order updated successfully",
+        timer: 1500,
+      });
       stopEdit();
     } catch (error) {
-      toast.error(error.message || "Failed to update order");
+      Swal.fire({
+        icon: "error",
+        title: "Update Failed",
+        text: error.message || "Failed to update order",
+      });
     }
   };
 
@@ -141,10 +172,19 @@ const MyOrders = () => {
 
     try {
       await cancelMyOrder(token, orderId);
-      toast.success("Order cancelled");
+      Swal.fire({
+        icon: "success",
+        title: "Order Cancelled",
+        text: "Order cancelled successfully",
+        timer: 1500,
+      });
       void loadOrders();
     } catch (error) {
-      toast.error(error.message || "Failed to cancel order");
+      Swal.fire({
+        icon: "error",
+        title: "Cancellation Failed",
+        text: error.message || "Failed to cancel order",
+      });
     }
   };
 
@@ -155,10 +195,18 @@ const MyOrders = () => {
       if (data?.checkoutUrl) {
         window.location.href = data.checkoutUrl;
       } else {
-        toast.error("Failed to start payment");
+        Swal.fire({
+          icon: "error",
+          title: "Payment Error",
+          text: "Failed to start payment",
+        });
       }
     } catch (error) {
-      toast.error(error.message || "Retry payment failed");
+      Swal.fire({
+        icon: "error",
+        title: "Retry Failed",
+        text: error.message || "Retry payment failed",
+      });
     }
   };
 

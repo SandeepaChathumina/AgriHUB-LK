@@ -266,15 +266,13 @@ const CreateOrder = () => {
         icon: 'success',
         title: 'Order Initiated',
         text: data?.message || 'Order initiated successfully',
-        timer: 2000,
+      }).then(() => {
+        if (data?.checkoutUrl) {
+          window.location.href = data.checkoutUrl;
+          return;
+        }
+        navigate('/orders');
       });
-
-      if (data?.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
-        return;
-      }
-
-      navigate('/orders');
     } catch (error) {
       Swal.fire({
         icon: 'error',
