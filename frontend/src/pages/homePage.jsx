@@ -611,7 +611,7 @@ const Homepage = () => {
               className={`role-card fade-up delay-${i + 1} ${visibleSections["roles"] ? "visible" : ""} group relative rounded-3xl overflow-hidden bg-white border border-gray-100 shadow-sm cursor-pointer`}
             >
               {/* Image area */}
-              <div className="relative h-56 overflow-hidden">
+              <div className="relative h-96 overflow-hidden">
                 <img
                   src={card.image}
                   alt={card.title}
