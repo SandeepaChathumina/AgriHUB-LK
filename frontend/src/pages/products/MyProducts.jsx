@@ -327,12 +327,12 @@ const MyProducts = () => {
               </p>
               <p
                 className="text-3xl font-black text-emerald-500 max-w-[200px] truncate"
-                title={`LKR ${stats.totalValue.toLocaleString()}`}
+                title={`LKR ${Math.round(stats.totalValue).toLocaleString()}`}
               >
                 LKR{" "}
                 {stats.totalValue >= 1000000
                   ? (stats.totalValue / 1000000).toFixed(2) + "M"
-                  : stats.totalValue.toLocaleString()}
+                  : Math.round(stats.totalValue).toLocaleString()}
               </p>
             </div>
           </div>
@@ -467,7 +467,7 @@ const MyProducts = () => {
                       </p>
 
                       <p className="mt-4 text-2xl font-black text-emerald-500 drop-shadow-sm">
-                        LKR {product.price.toLocaleString()}
+                        LKR {Math.round(product.price).toLocaleString()}
                       </p>
 
                       <div className="mt-4 grid grid-cols-2 gap-2 text-[10px] uppercase font-bold tracking-widest">
@@ -482,7 +482,7 @@ const MyProducts = () => {
                         <div className="rounded-xl bg-emerald-50/50 border border-emerald-100/50 p-2 text-emerald-700">
                           <span className="opacity-60 block mb-0.5">Stock</span>
                           <span className="text-emerald-900 truncate">
-                            {product.quantity}
+                            {Math.round(product.quantity)}
                             {product.unit}
                           </span>
                         </div>
