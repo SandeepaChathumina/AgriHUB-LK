@@ -287,6 +287,26 @@ const AvailableTransporters = () => {
     }
   };
 
+  const renderStars = (rating) => {
+    const fullStars = Math.floor(rating || 0);
+    const hasHalfStar = (rating || 0) % 1 >= 0.5;
+    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+    
+    return (
+      <span className="inline-flex items-center gap-0.5">
+        {[...Array(fullStars)].map((_, i) => (
+          <span key={`full-${i}`} className="text-amber-500 text-sm">★</span>
+        ))}
+        {hasHalfStar && (
+          <span className="text-amber-500 text-sm">½</span>
+        )}
+        {[...Array(emptyStars)].map((_, i) => (
+          <span key={`empty-${i}`} className="text-slate-300 text-sm">★</span>
+        ))}
+      </span>
+    );
+  };
+
   if (loading && !order) {
     return (
       <>
@@ -437,6 +457,10 @@ const AvailableTransporters = () => {
                             <h3 className="text-lg font-bold text-slate-900">
                               {transporter.businessName || transporter.companyName}
                             </h3>
+                            <div className="flex items-center gap-2 mb-1">
+                              {renderStars(transporter.rating?.averageRating || 0)}
+                              <span className="text-xs text-slate-500">({transporter.rating?.totalReviews || 0} reviews)</span>
+                            </div>
                             <p className="text-sm text-slate-600">
                               📍 {transporter.location?.city}, {transporter.location?.district}
                             </p>

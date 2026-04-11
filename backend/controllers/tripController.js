@@ -3,7 +3,11 @@ import Trip from "../models/Trip.js";
 import Order from "../models/Order.js";
 import Vehicle from "../models/Vehicle.js";
 import Transporter from "../models/Transporter.js";
+import Product from "../models/Product.js";
+import User from "../models/User.js";
 import mongoose from "mongoose";
+
+const escapeRegex = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 // Check vehicle availability
 const checkVehicleAvailability = async (
@@ -286,10 +290,53 @@ export const createTrip = async (req, res) => {
 // @route   GET /api/trips/my-trips
 export const getMyTrips = async (req, res) => {
   try {
-    const { status, page = 1, limit = 10 } = req.query;
+    const { status, page = 1, limit = 10, search = "", sort = "desc" } =
+      req.query;
 
     const filter = { transporter: req.user._id };
     if (status) filter.tripStatus = status;
+
+    const searchTrim = typeof search === "string" ? search.trim() : "";
+    if (searchTrim) {
+      const regex = new RegExp(escapeRegex(searchTrim), "i");
+      const productIds = await Product.find({ productName: regex }).distinct(
+        "_id",
+      );
+      const orderIdsFromProduct = await Order.find({
+        product: { $in: productIds },
+      }).distinct("_id");
+      const distributorIds = await User.find({
+        $or: [{ fullName: regex }, { businessName: regex }],
+      }).distinct("_id");
+      const orderIdsFromDistributor = await Order.find({
+        distributor: { $in: distributorIds },
+      }).distinct("_id");
+      const vehicleIds = await Vehicle.find({
+        transporter: req.user._id,
+        $or: [
+          { registrationNumber: regex },
+          { brand: regex },
+          { model: regex },
+          { vehicleId: regex },
+        ],
+      }).distinct("_id");
+
+      const orClauses = [
+        { tripId: regex },
+        { "pickupLocation.address": regex },
+        { "dropoffLocation.address": regex },
+        { "dropoffLocation.city": regex },
+      ];
+      if (orderIdsFromProduct.length)
+        orClauses.push({ order: { $in: orderIdsFromProduct } });
+      if (orderIdsFromDistributor.length)
+        orClauses.push({ order: { $in: orderIdsFromDistributor } });
+      if (vehicleIds.length) orClauses.push({ vehicle: { $in: vehicleIds } });
+
+      filter.$or = orClauses;
+    }
+
+    const sortDirection = sort === "asc" ? 1 : -1;
 
     const trips = await Trip.find(filter)
       .populate({
@@ -302,8 +349,8 @@ export const getMyTrips = async (req, res) => {
           { path: "distributor", select: "fullName" },
         ],
       })
-      .populate("vehicle", "vehicleId category")
-      .sort({ createdAt: -1 })
+      .populate("vehicle", "vehicleId category brand model registrationNumber")
+      .sort({ createdAt: sortDirection })
       .skip((parseInt(page) - 1) * parseInt(limit))
       .limit(parseInt(limit));
 
