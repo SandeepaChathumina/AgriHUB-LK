@@ -22,14 +22,15 @@ const server = http.createServer(app);
 // Socket.io Setup
 const io = new Server(server, {
   cors: {
-    origin: '*',
+    origin: process.env.CLIENT_URL,
     methods: ['GET', 'POST'],
+    credentials: true
   },
 });
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:5173', 
+  origin: process.env.CLIENT_URL, 
   credentials: true
 }));
 
