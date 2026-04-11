@@ -17,10 +17,7 @@ const LoginForm = () => {
   const { login } = useAuth();
 
   const demoProfiles = {
-    Admin: { email: 'admin@agrihub.lk', password: 'Password@123' },
-    Farmer: { email: 'kamal.farmer@gmail.com', password: 'Password@123' },
-    Transporter: { email: 'sunil.logistics@hotmail.com', password: 'Password@123' },
-    Distributor: { email: 'nimal.dist@yahoo.com', password: 'Password@123' },
+    
   };
 
   const handleChange = (event) => {
