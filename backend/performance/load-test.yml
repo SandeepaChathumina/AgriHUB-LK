@@ -1,0 +1,23 @@
+config:
+  target: "http://localhost:3000" # Where your server is running
+  phases:
+    - duration: 30          # Run for 30 seconds
+      arrivalRate: 2        # Start with 2 new users per second
+      name: Warm up
+    - duration: 60          # Then run for 60 seconds
+      arrivalRate: 10       # Increase to 10 new users per second
+      name: Heavy load
+  payload:
+    path: "test-data.csv"   # The file where we keep dummy logins
+    fields:
+      - "email"
+      - "password"
+
+scenarios:
+  - name: "Login Stress Test"
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "{{ email }}"
+            password: "{{ password }}"
