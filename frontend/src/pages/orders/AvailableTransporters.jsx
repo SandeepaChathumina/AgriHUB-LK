@@ -348,7 +348,7 @@ const AvailableTransporters = () => {
 
           {/* Order Summary */}
           {order && (
-            <div className="mb-6 rounded-2xl bg-gradient-to-r from-emerald-50 to-emerald-100 p-6 shadow-sm ring-1 ring-emerald-200">
+            <div className="mb-6 rounded-2xl bg-linear-to-r from-emerald-50 to-emerald-100 p-6 shadow-sm ring-1 ring-emerald-200">
               <h2 className="mb-3 text-lg font-semibold text-slate-900">Order Summary</h2>
               <div className="grid gap-3 text-sm md:grid-cols-4">
                 <div>
@@ -436,7 +436,7 @@ const AvailableTransporters = () => {
                       <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div className="flex items-center gap-4">
                           {/* Transporter Logo / profile picture (same as dashboard) */}
-                          <div className="flex-shrink-0">
+                          <div className="shrink-0">
                             {avatarSrc && !avatarFailed ? (
                               <img
                                 src={avatarSrc}
@@ -447,7 +447,7 @@ const AvailableTransporters = () => {
                                 }}
                               />
                             ) : (
-                              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-2xl font-bold text-white shadow-md border-2 border-emerald-200">
+                              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-linear-to-br from-emerald-400 to-emerald-600 text-2xl font-bold text-white shadow-md border-2 border-emerald-200">
                                 {(transporter.businessName || transporter.companyName || 'T').charAt(0).toUpperCase()}
                               </div>
                             )}
@@ -490,7 +490,7 @@ const AvailableTransporters = () => {
                           >
                             <div className="flex gap-5">
                               {/* Vehicle Image */}
-                              <div className="flex-shrink-0">
+                              <div className="shrink-0">
                                 {vehicle.images && vehicle.images.length > 0 ? (
                                   <img
                                     src={vehicle.images[0].url}
@@ -694,7 +694,7 @@ const AvailableTransporters = () => {
               )}
 
               {/* Basic Info */}
-              <div className="mb-6 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 p-6 ring-1 ring-emerald-200">
+              <div className="mb-6 rounded-2xl bg-linear-to-br from-emerald-50 to-teal-50 p-6 ring-1 ring-emerald-200">
                 <div className="flex items-center gap-3 mb-3">
                   <span className="text-4xl">{getCategoryIcon(detailsModalVehicle.category)}</span>
                   <div>
@@ -784,7 +784,7 @@ const AvailableTransporters = () => {
                           }}
                         />
                       ) : (
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-lg font-bold text-white shadow-md border-2 border-emerald-200">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-linear-to-br from-emerald-400 to-emerald-600 text-lg font-bold text-white shadow-md border-2 border-emerald-200">
                           {(modalT?.businessName || modalT?.companyName || 'T').charAt(0).toUpperCase()}
                         </div>
                       );
