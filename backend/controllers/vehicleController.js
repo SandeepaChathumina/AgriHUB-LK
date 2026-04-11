@@ -3,6 +3,7 @@ import Transporter from '../models/Transporter.js';
 import mongoose from 'mongoose';
 import cloudinary from '../config/cloudinary.js';
 import fs from 'fs';
+import AggregatedRating from '../models/AggregatedRating.js';
 
 // Helper function for Sri Lankan number plate validation
 const validateSLPlate = (plate) => {
@@ -293,13 +294,37 @@ export const getAllVehicles = async (req, res) => {
     // Pagination
     const skip = (parseInt(page) - 1) * parseInt(limit);
     
-    const vehicles = await Vehicle.find(filter)
-      .populate('transporter', 'businessName phone')
+    let vehicles = await Vehicle.find(filter)
+      .populate('transporter', 'businessName companyName phone')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
 
     const total = await Vehicle.countDocuments(filter);
+    
+    // Fetch transporter ratings
+    const transporterIds = [...new Set(vehicles.map(v => v.transporter && v.transporter._id.toString()).filter(Boolean))];
+    const ratings = await AggregatedRating.find({ 
+      targetType: 'Transporter', 
+      targetId: { $in: transporterIds } 
+    });
+    
+    const ratingMap = {};
+    ratings.forEach(r => {
+      ratingMap[r.targetId.toString()] = {
+        averageRating: r.averageRating,
+        totalReviews: r.totalReviews
+      };
+    });
+    
+    // Attach ratings to vehicles
+    vehicles = vehicles.map(v => {
+      const vObj = v.toObject();
+      if (vObj.transporter && vObj.transporter._id) {
+        vObj.transporter.rating = ratingMap[vObj.transporter._id.toString()] || { averageRating: 0, totalReviews: 0 };
+      }
+      return vObj;
+    });
 
     res.status(200).json({
       success: true,

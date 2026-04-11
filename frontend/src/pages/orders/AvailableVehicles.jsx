@@ -258,6 +258,26 @@ const AvailableVehicles = () => {
     }
   };
 
+  const renderStars = (rating) => {
+    const fullStars = Math.floor(rating || 0);
+    const hasHalfStar = (rating || 0) % 1 >= 0.5;
+    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+    
+    return (
+      <span className="inline-flex items-center gap-0.5">
+        {[...Array(fullStars)].map((_, i) => (
+          <span key={`full-${i}`} className="text-amber-500 text-sm">★</span>
+        ))}
+        {hasHalfStar && (
+          <span className="text-amber-500 text-sm">½</span>
+        )}
+        {[...Array(emptyStars)].map((_, i) => (
+          <span key={`empty-${i}`} className="text-slate-300 text-sm">★</span>
+        ))}
+      </span>
+    );
+  };
+
   if (loading && !order) {
     return (
       <>
@@ -442,6 +462,15 @@ const AvailableVehicles = () => {
                             <div>
                               <span className="text-slate-500">Capacity:</span>{' '}
                               <span className="font-semibold text-slate-900">{vehicle.loadCapacity?.weight?.value || 'N/A'} kg</span>
+                            </div>
+                            <div>
+                              <span className="text-slate-500">Transporter:</span>{' '}
+                              <span className="font-semibold text-slate-900">{vehicle.transporter?.businessName || vehicle.transporter?.companyName || 'N/A'}</span>
+                            </div>
+                            <div className="col-span-2 flex items-center">
+                              <span className="text-slate-500 mr-2">Rating:</span>{' '}
+                              {renderStars(vehicle.transporter?.rating?.averageRating || 0)}
+                              <span className="text-xs text-slate-500 ml-1">({vehicle.transporter?.rating?.totalReviews || 0} reviews)</span>
                             </div>
                             <div className="col-span-2">
                               <span className="text-slate-500">📍 Transporter Location:</span>{' '}
@@ -637,6 +666,15 @@ const AvailableVehicles = () => {
                 <div className="rounded-xl bg-slate-50 p-3">
                   <p className="text-xs text-slate-500">Transporter</p>
                   <p className="font-semibold text-slate-900">{selectedVehicle.transporter?.businessName || selectedVehicle.transporter?.companyName || 'N/A'}</p>
+                </div>
+                <div className="rounded-xl bg-slate-50 p-3">
+                  <p className="text-xs text-slate-500">Transporter Rating</p>
+                  <div className="flex items-center mt-1">
+                    {renderStars(selectedVehicle.transporter?.rating?.averageRating || 0)}
+                    <span className="text-xs font-semibold text-slate-600 ml-2">
+                      ({selectedVehicle.transporter?.rating?.totalReviews || 0} reviews)
+                    </span>
+                  </div>
                 </div>
               </div>
 

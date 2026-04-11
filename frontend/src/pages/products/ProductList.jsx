@@ -12,6 +12,8 @@ const ProductList = () => {
   const [loading, setLoading] = useState(true);
   const [farmerRatings, setFarmerRatings] = useState({});
   const [loadingRatings, setLoadingRatings] = useState({});
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [filters, setFilters] = useState({
     category: '',
     minPrice: '',
@@ -117,6 +119,11 @@ const ProductList = () => {
 
   const handleOrderNow = (product) => {
     navigate(`/order/${product._id}`, { state: { product } });
+  };
+
+  const handleViewDetails = (product) => {
+    setSelectedProduct(product);
+    setShowDetailsModal(true);
   };
 
   const renderStars = (rating) => {
@@ -276,10 +283,16 @@ const ProductList = () => {
                       <p className="mt-1 text-xs text-slate-400">📍 Pickup: {product.pickupLocation?.district || 'N/A'}</p>
                       
                       {product.isAvailable ? (
-                        <div className="mt-4">
+                        <div className="mt-4 flex gap-2">
+                          <button
+                            onClick={() => handleViewDetails(product)}
+                            className="flex-1 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-center text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50"
+                          >
+                            View Details
+                          </button>
                           <button
                             onClick={() => handleOrderNow(product)}
-                            className="w-full rounded-lg bg-emerald-600 px-4 py-2 text-center text-sm font-semibold text-white transition hover:bg-emerald-700"
+                            className="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-center text-sm font-semibold text-white transition hover:bg-emerald-700"
                           >
                             Order Now
                           </button>
@@ -320,6 +333,109 @@ const ProductList = () => {
           )}
         </div>
       </div>
+
+      {/* Product Details Modal */}
+      {showDetailsModal && selectedProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4" onClick={() => setShowDetailsModal(false)}>
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 flex items-center justify-between border-b border-slate-200 bg-white p-4 z-10">
+              <h2 className="text-xl font-bold text-slate-900">Product Details</h2>
+              <button
+                onClick={() => setShowDetailsModal(false)}
+                className="rounded-full p-1 hover:bg-slate-100 transition"
+              >
+                <svg className="h-6 w-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-6">
+              {/* Product Info */}
+              <div className="mb-6 flex gap-6 flex-col md:flex-row">
+                <div className="w-full md:w-1/3 flex-shrink-0">
+                  {selectedProduct.images && selectedProduct.images.length > 0 ? (
+                    <img
+                      src={selectedProduct.images[0]}
+                      alt={selectedProduct.productName}
+                      className="h-48 w-full rounded-xl object-cover border border-slate-100"
+                    />
+                  ) : (
+                    <div className="flex h-48 w-full items-center justify-center rounded-xl bg-slate-100 text-4xl">
+                      🥬
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex-1">
+                  <h3 className="text-2xl font-bold text-slate-900 mb-1">{selectedProduct.productName}</h3>
+                  <p className="text-emerald-600 font-semibold mb-3">LKR {selectedProduct.price.toLocaleString()} / {selectedProduct.unit}</p>
+                  
+                  <div className="inline-block rounded-lg bg-emerald-50 px-3 py-2 border border-emerald-100 mb-4">
+                    <p className="text-xs text-emerald-800 uppercase tracking-wide font-semibold">Available Quantity</p>
+                    <p className="text-lg font-bold text-emerald-900">{selectedProduct.quantity} {selectedProduct.unit}</p>
+                  </div>
+                  
+                  <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap">
+                    {selectedProduct.description || 'No description provided for this product.'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Specifications */}
+              <div className="grid gap-4 md:grid-cols-2 mb-6">
+                <div className="rounded-xl border border-slate-200 p-4">
+                  <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-1">Category</p>
+                  <p className="font-medium text-slate-900">{selectedProduct.category}</p>
+                </div>
+                <div className="rounded-xl border border-slate-200 p-4">
+                  <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-1">Quality</p>
+                  <p className="font-medium text-slate-900">{selectedProduct.quality || 'Standard'}</p>
+                </div>
+                {selectedProduct.harvestDate && (
+                  <div className="rounded-xl border border-slate-200 p-4">
+                    <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-1">Harvest Date</p>
+                    <p className="font-medium text-slate-900">{new Date(selectedProduct.harvestDate).toLocaleDateString()}</p>
+                  </div>
+                )}
+                {selectedProduct.expiryDate && (
+                  <div className="rounded-xl border border-slate-200 p-4">
+                    <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-1">Expiry Date</p>
+                    <p className="font-medium text-slate-900">{new Date(selectedProduct.expiryDate).toLocaleDateString()}</p>
+                  </div>
+                )}
+              </div>
+              
+              {/* Seller Info */}
+              <div className="rounded-xl bg-slate-50 p-4 border border-slate-100">
+                <p className="text-sm font-semibold text-slate-800 mb-2">Seller Information</p>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-slate-600">Farmer:</span>
+                  <span className="font-medium text-slate-900">{selectedProduct.farmer?.fullName || 'Unknown'}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm mt-1">
+                  <span className="text-slate-600">Location:</span>
+                  <span className="font-medium text-slate-900">{selectedProduct.pickupLocation?.district || 'Not specified'}</span>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="mt-6 flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowDetailsModal(false);
+                    if (selectedProduct.isAvailable) handleOrderNow(selectedProduct);
+                  }}
+                  disabled={!selectedProduct.isAvailable}
+                  className="flex-1 rounded-xl bg-emerald-600 px-4 py-3 font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-center"
+                >
+                  {selectedProduct.isAvailable ? 'Order Now' : 'Sold Out'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
