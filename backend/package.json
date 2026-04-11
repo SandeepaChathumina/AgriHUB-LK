@@ -4,7 +4,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "nodemon index.js",
+    "start": "node index.js",
     "coverage": "jest --coverage",
     "test": "jest --verbose --runInBand",
     "test:unit": "jest controllers/__tests__ --verbose",
