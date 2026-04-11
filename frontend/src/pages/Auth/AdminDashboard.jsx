@@ -10,12 +10,31 @@ function AdminDashboard() {
   const [loadingProfile, setLoadingProfile] = useState(false);
   const [requestingOtp, setRequestingOtp] = useState(false);
   const [pendingReviewsCount, setPendingReviewsCount] = useState(0);
+  const [statsLoading, setStatsLoading] = useState(false);
+  const [dashboardStats, setDashboardStats] = useState({
+    totalUsers: 0,
+    totalOrders: 0,
+    totalProducts: 0,
+    completedDeliveries: 0,
+    successRate: 0,
+    availableProducts: 0,
+  });
   const navigate = useNavigate();
 
   const displayName = profile?.fullName || user?.fullName || "Admin";
   const displayRole = profile?.role || user?.role || "Admin";
   const initial = (displayName?.[0] || "A").toUpperCase();
   const isVerified = Boolean(profile?.isVerified ?? user?.isVerified);
+  const formatNumber = (value) =>
+    new Intl.NumberFormat().format(Number(value) || 0);
+
+  const availabilityRate =
+    dashboardStats.totalProducts > 0
+      ? Math.round(
+          (dashboardStats.availableProducts / dashboardStats.totalProducts) *
+            100,
+        )
+      : 0;
 
   useEffect(() => {
     if (!isAuthReady) return;
@@ -27,7 +46,7 @@ function AdminDashboard() {
     if (role && role !== "Admin") {
       navigate("/dashboard");
     }
-    fetchPendingReviewsCount();
+    fetchDashboardStats();
   }, [token, user?.role, profile?.role, navigate, isAuthReady]);
 
   useEffect(() => {
@@ -53,20 +72,51 @@ function AdminDashboard() {
     fetchProfile();
   }, [token]);
 
-  const fetchPendingReviewsCount = async () => {
+  const fetchDashboardStats = async () => {
+    if (!token) return;
+
+    setStatsLoading(true);
     try {
-      const res = await fetch(
-        "http://localhost:3000/api/reviews/admin/moderation?status=Pending&limit=1",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-      const data = await res.json();
-      if (data.success) {
-        setPendingReviewsCount(data.total || 0);
-      }
+      const headers = { Authorization: `Bearer ${token}` };
+
+      const [usersRes, impactRes, productRes, pendingRes] = await Promise.all([
+        fetch("http://localhost:3000/api/auth/users", { headers }),
+        fetch("http://localhost:3000/api/admin/impact-stats", { headers }),
+        fetch("http://localhost:3000/api/products/stats/overview", { headers }),
+        fetch(
+          "http://localhost:3000/api/reviews/admin/moderation?status=Pending&limit=1",
+          { headers },
+        ),
+      ]);
+
+      const [usersData, impactData, productData, pendingData] =
+        await Promise.all([
+          usersRes.json().catch(() => ({})),
+          impactRes.json().catch(() => ({})),
+          productRes.json().catch(() => ({})),
+          pendingRes.json().catch(() => ({})),
+        ]);
+
+      const totalUsers = usersRes.ok
+        ? (usersData?.count ?? usersData?.users?.length ?? 0)
+        : 0;
+      const impactStats = impactRes.ok ? impactData?.stats || {} : {};
+      const productStats = productRes.ok ? productData?.stats || {} : {};
+      const pending = pendingRes.ok ? pendingData?.total || 0 : 0;
+
+      setPendingReviewsCount(pending);
+      setDashboardStats({
+        totalUsers,
+        totalOrders: impactStats.totalOrders || 0,
+        totalProducts: productStats.totalProducts || 0,
+        completedDeliveries: impactStats.completedDeliveries || 0,
+        successRate: impactStats.successRate || 0,
+        availableProducts: productStats.availableProducts || 0,
+      });
     } catch (error) {
-      console.error("Failed to fetch pending reviews count:", error);
+      console.error("Failed to fetch dashboard stats:", error);
+    } finally {
+      setStatsLoading(false);
     }
   };
 
@@ -201,18 +251,73 @@ function AdminDashboard() {
 
         <div className="grid gap-4 md:grid-cols-2">
           {/* Stats Card */}
-          <div className="rounded-2xl bg-linear-to-r from-emerald-500 to-emerald-600 p-6 text-white shadow-sm">
-            <p className="text-sm font-semibold uppercase tracking-wide opacity-80">
-              Admin Stats
-            </p>
-            <p className="mt-2 text-3xl font-bold">Welcome, {displayName}</p>
-            <p className="mt-1 text-sm opacity-80">
-              You have full control over the platform
-            </p>
-            <div className="mt-4 flex gap-4">
-              <div className="rounded-lg bg-white/20 px-3 py-2">
-                <p className="text-2xl font-bold">{pendingReviewsCount}</p>
-                <p className="text-xs">Pending Reviews</p>
+          <div className="admin-stats-card relative overflow-hidden rounded-2xl bg-linear-to-r from-emerald-500 via-emerald-600 to-teal-600 p-6 text-white shadow-sm">
+            <div className="relative z-10">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm font-semibold uppercase tracking-wide opacity-80">
+                  System Snapshot
+                </p>
+                <p className="flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">
+                  <span className="admin-live-dot" />
+                  Live Data
+                </p>
+              </div>
+
+              <p className="mt-3 text-2xl font-bold md:text-3xl">
+                Welcome, {displayName}
+              </p>
+              <p className="mt-1 text-sm opacity-85">
+                Real-time operational metrics from users, orders, reviews, and products.
+              </p>
+
+              <div className="admin-metric-grid mt-5">
+                <div className="admin-metric-card" style={{ "--delay": "0s" }}>
+                  <p className="text-[11px] uppercase tracking-wide opacity-80">Users</p>
+                  <p className="mt-1 text-2xl font-bold">{formatNumber(dashboardStats.totalUsers)}</p>
+                </div>
+                <div className="admin-metric-card" style={{ "--delay": "0.08s" }}>
+                  <p className="text-[11px] uppercase tracking-wide opacity-80">Orders</p>
+                  <p className="mt-1 text-2xl font-bold">{formatNumber(dashboardStats.totalOrders)}</p>
+                </div>
+                <div className="admin-metric-card" style={{ "--delay": "0.16s" }}>
+                  <p className="text-[11px] uppercase tracking-wide opacity-80">Products</p>
+                  <p className="mt-1 text-2xl font-bold">{formatNumber(dashboardStats.totalProducts)}</p>
+                </div>
+                <div className="admin-metric-card" style={{ "--delay": "0.24s" }}>
+                  <p className="text-[11px] uppercase tracking-wide opacity-80">Pending Reviews</p>
+                  <p className="mt-1 text-2xl font-bold">{formatNumber(pendingReviewsCount)}</p>
+                </div>
+              </div>
+
+              <div className="mt-5 space-y-3">
+                <div>
+                  <div className="mb-1 flex items-center justify-between text-xs font-semibold">
+                    <span>Delivery Success</span>
+                    <span>{dashboardStats.successRate}%</span>
+                  </div>
+                  <div className="admin-progress-track">
+                    <div
+                      className="admin-progress-fill"
+                      style={{ width: `${dashboardStats.successRate}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="mb-1 flex items-center justify-between text-xs font-semibold">
+                    <span>Available Product Stock</span>
+                    <span>{availabilityRate}%</span>
+                  </div>
+                  <div className="admin-progress-track">
+                    <div className="admin-progress-fill" style={{ width: `${availabilityRate}%` }} />
+                  </div>
+                </div>
+
+                <div className="pt-1 text-xs opacity-90">
+                  {statsLoading
+                    ? "Refreshing live metrics..."
+                    : `Completed deliveries: ${formatNumber(dashboardStats.completedDeliveries)}`}
+                </div>
               </div>
             </div>
           </div>
