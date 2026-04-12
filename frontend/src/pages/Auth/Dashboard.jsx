@@ -10,10 +10,8 @@ import MemberPanel from './components/MemberPanel'
 
 const CHAT_ROLES = ['Farmer', 'Distributor', 'Transporter']
 
-// Use environment variables for deployment, fallback to localhost for development
-const rawBaseUrl = import.meta.env.VITE_API_URL;
-// Removes trailing slash if present, then appends /api
-const API_BASE_URL = `${rawBaseUrl.replace(/\/$/, '')}/api`;
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 function Dashboard() {
   const { user, token, isAuthReady, logout } = useAuth()
@@ -54,7 +52,7 @@ function Dashboard() {
     const fetchProfile = async () => {
       setLoadingProfile(true)
       try {
-        const res = await fetch(`${API_BASE_URL}/users/profile`, {
+        const res = await fetch(`${API_BASE_URL}/api/users/profile`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -119,7 +117,7 @@ function Dashboard() {
     if ((displayRole === 'Distributor' || displayRole === 'Transporter') && userId) {
       const fetchLogo = async () => {
         try {
-          const res = await fetch(`${API_BASE_URL}/users/${userId}/logo`);
+          const res = await fetch(`${API_BASE_URL}/api/users/${userId}/logo`);
 
           if (res.ok) {
             const data = await res.json();
@@ -153,7 +151,7 @@ function Dashboard() {
 
     setIsUpdatingLogo(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/users/profile/logo`, {
+      const res = await fetch(`${API_BASE_URL}/api/users/profile/logo`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`
@@ -182,7 +180,7 @@ function Dashboard() {
 
     setIsUpdatingLogo(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/users/profile/logo`, {
+      const res = await fetch(`${API_BASE_URL}/api/users/profile/logo`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`
@@ -217,7 +215,7 @@ function Dashboard() {
 
     setRequestingOtp(true)
     try {
-      const res = await fetch(`${API_BASE_URL}/auth/request-otp`, {
+      const res = await fetch(`${API_BASE_URL}/api/auth/request-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
