@@ -34,7 +34,7 @@ import CreateOrder from './pages/orders/CreateOrder.jsx'
 import MyOrders from './pages/orders/MyOrders.jsx'
 import AvailableVehicles from './pages/orders/AvailableVehicles.jsx';
 import AvailableTransporters from './pages/orders/AvailableTransporters.jsx';
-import FarmerOrders from "./pages/Orders/FarmerOrders";
+import FarmerOrders from "./pages/orders/FarmerOrders";
 
 // Messaging
 import MessagesPage from './pages/messages/MessagesPage.jsx'
