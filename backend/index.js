@@ -56,6 +56,13 @@ io.on('connection', (socket) => {
   });
 });
 
+app.get('/', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'AgrihubLK API Server'
+  });
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
