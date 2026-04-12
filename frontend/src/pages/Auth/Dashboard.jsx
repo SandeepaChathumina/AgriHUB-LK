@@ -11,7 +11,7 @@ import MemberPanel from './components/MemberPanel'
 const CHAT_ROLES = ['Farmer', 'Distributor', 'Transporter']
 
 // Use environment variables for deployment, fallback to localhost for development
-const rawBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const rawBaseUrl = import.meta.env.VITE_API_URL;
 // Removes trailing slash if present, then appends /api
 const API_BASE_URL = `${rawBaseUrl.replace(/\/$/, '')}/api`;
 
