@@ -12,6 +12,11 @@ AgriHUB-LK is a MERN-based full-stack application developed for the **SE3040 –
 ### Testing Report
 [View Testing Report](./reports/SE-26-Testing-Report.pdf)
 
+## Urls
+
+- live backend URL : https://agrihub-lk-production.up.railway.app
+- live frontend URL : https://agri-hub-lk-frontend.vercel.app
+
 This project is designed to satisfy the assignment requirement of delivering:
 - a **secure RESTful API backend with at least four components**,
 - a **React frontend application integrated with the backend**,
@@ -470,17 +475,12 @@ Possible enhancements for future iterations:
 
 ## Contributors
 
-- **IT23818620** — KARUNANAYAKE K.M.S.G
+- **IT23818620** — KARUNANAYAKE K.M.S.G.S.C
 - **IT23819092** — HANDARAGAMA M.U.
 - **IT23831254** — ABEYKOON A.M.H.M
 - **IT23800632** — GEETHANJANA K.M.G.T
 
----
 
-## Submission Note
 
-Before final submission, update the following placeholders:
-- live backend URL : https://agrihub-lk-production.up.railway.app
-- live frontend URL : https://agri-hub-lk-frontend.vercel.app
 
 
