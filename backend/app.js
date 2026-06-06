@@ -1,4 +1,5 @@
 import express from 'express';
+import bodyParser from 'body-parser';
 import http from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
@@ -18,29 +19,22 @@ import messageRoutes from './routes/messageRoutes.js';
 const app = express();
 const server = http.createServer(app);
 
-const allowedOrigins = [
-  process.env.CLIENT_URL,
-  'http://localhost:5173',
-  'http://localhost:3000'
-].filter(Boolean);
-
 // Socket.io Setup
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    origin: process.env.CLIENT_URL,
+    methods: ['GET', 'POST'],
     credentials: true
   },
 });
 
 // Middleware
 app.use(cors({
-  origin: allowedOrigins,
+  origin: process.env.CLIENT_URL, 
   credentials: true
 }));
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 // Pass IO instance to every request
 app.use((req, res, next) => {
@@ -73,24 +67,6 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/trips', tripRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/messages', messageRoutes);
-
-// Unknown route handler
-app.use((req, res) => {
-  return res.status(404).json({
-    success: false,
-    message: `Route not found: ${req.originalUrl}`
-  });
-});
-
-// Global error handler
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-
-  return res.status(err.statusCode || 500).json({
-    success: false,
-    message: err.message || 'Server Error'
-  });
-});
 
 // Export app for testing and server for index.js
 export { app, server };
